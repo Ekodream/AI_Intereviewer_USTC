@@ -3,275 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 面试官</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>AI 面试官 — Cybernetic Command</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <div class="app-container">
-        <!-- 侧边栏 -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h2>面试官设置</h2>
+    <div class="command-center">
+        <!-- ============ 顶部指挥条 ============ -->
+        <header class="command-bar">
+            <div class="command-bar-left">
+                <button class="icon-btn sidebar-toggle-btn" id="sidebar-toggle" title="控制面板">
+                    <i class="fas fa-sliders-h"></i>
+                </button>
+                <div class="brand">
+                    <div class="brand-icon">
+                        <i class="fas fa-satellite-dish"></i>
+                    </div>
+                    <div class="brand-text">
+                        <h1>AI Interview</h1>
+                        <span class="brand-sub">Cybernetic Command</span>
+                    </div>
+                </div>
             </div>
-            
-            <div class="sidebar-content">
-                <!-- 面试官类型选择 -->
-                <div class="setting-group">
-                    <label for="prompt-select">选择面试官类型</label>
-                    <select id="prompt-select">
+            <div class="command-bar-center">
+                <!-- 面试阶段进度条 -->
+                <div class="phase-timeline" id="phase-indicator">
+                    <div class="phase-node active" data-phase="0" title="开始">
+                        <div class="node-dot"></div>
+                        <span class="node-label">开始</span>
+                    </div>
+                    <div class="phase-line"></div>
+                    <div class="phase-node" data-phase="1" title="自我介绍">
+                        <div class="node-dot"></div>
+                        <span class="node-label">介绍</span>
+                    </div>
+                    <div class="phase-line"></div>
+                    <div class="phase-node" data-phase="3" title="项目">
+                        <div class="node-dot"></div>
+                        <span class="node-label">项目</span>
+                    </div>
+                    <div class="phase-line"></div>
+                    <div class="phase-node" data-phase="5" title="技术">
+                        <div class="node-dot"></div>
+                        <span class="node-label">技术</span>
+                    </div>
+                    <div class="phase-line"></div>
+                    <div class="phase-node" data-phase="6" title="代码">
+                        <div class="node-dot"></div>
+                        <span class="node-label">代码</span>
+                    </div>
+                    <div class="phase-line"></div>
+                    <div class="phase-node" data-phase="7" title="反问">
+                        <div class="node-dot"></div>
+                        <span class="node-label">反问</span>
+                    </div>
+                    <div class="phase-line"></div>
+                    <div class="phase-node" data-phase="8" title="结束">
+                        <div class="node-dot"></div>
+                        <span class="node-label">结束</span>
+                    </div>
+                </div>
+            </div>
+            <div class="command-bar-right">
+                <button class="icon-btn" id="new-chat-btn" title="新对话">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button class="icon-btn" id="toggle-report-btn" title="面试报告">
+                    <i class="fas fa-chart-bar"></i>
+                </button>
+                <button class="icon-btn" id="toggle-rag-btn" title="知识库">
+                    <i class="fas fa-database"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- ============ 主体区域 ============ -->
+        <div class="command-body">
+
+            <!-- ====== 左侧控制面板 ====== -->
+            <aside class="control-panel" id="sidebar">
+                <div class="panel-section">
+                    <div class="panel-section-title">
+                        <i class="fas fa-user-tie"></i> 面试官人格
+                    </div>
+                    <select id="prompt-select" class="cyber-select">
                         <option value="温和型面试官">温和型面试官</option>
-                        <option value="正常型面试官（默认）" selected>正常型面试官（默认）</option>
+                        <option value="正常型面试官（默认）" selected>正常型面试官</option>
                         <option value="压力型面试官">压力型面试官</option>
                         <option value="自定义">自定义</option>
                     </select>
-                </div>
-                
-                <!-- 提示词预览/编辑 -->
-                <div class="setting-group">
-                    <div class="collapsible" id="prompt-toggle">
-                        <span>查看/微调当前提示词</span>
-                        <span class="arrow">▼</span>
+                    <div class="collapsible-trigger" id="prompt-toggle">
+                        <span>微调提示词</span>
+                        <i class="fas fa-chevron-down arrow-icon"></i>
                     </div>
-                    <div class="collapsible-content" id="prompt-content">
-                        <textarea id="system-prompt" rows="6" placeholder="系统提示词..."></textarea>
+                    <div class="collapsible-body" id="prompt-content">
+                        <textarea id="system-prompt" rows="5" placeholder="系统提示词..."></textarea>
                     </div>
                 </div>
-                
-                <!-- TTS 开关 -->
-                <div class="setting-group checkbox-group">
-                    <label>
+
+                <div class="panel-divider"></div>
+
+                <div class="panel-section">
+                    <div class="panel-section-title">
+                        <i class="fas fa-microphone-alt"></i> 语音控制
+                    </div>
+                    <label class="cyber-toggle">
                         <input type="checkbox" id="enable-tts" checked>
-                        <span>开启语音播报（TTS）</span>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">TTS 语音播报</span>
                     </label>
                 </div>
-                
-                <hr class="divider">
-                
-                <!-- RAG 知识库设置 -->
-                <div class="setting-group">
-                    <h3>知识库（RAG）</h3>
-                    <label class="checkbox-label">
+
+                <div class="panel-divider"></div>
+
+                <div class="panel-section">
+                    <div class="panel-section-title">
+                        <i class="fas fa-brain"></i> 知识库 (RAG)
+                    </div>
+                    <label class="cyber-toggle">
                         <input type="checkbox" id="enable-rag" checked>
-                        <span>开启知识库检索</span>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">知识库检索</span>
                     </label>
+                    <div class="rag-settings" id="rag-settings">
+                        <label class="field-label">检索领域</label>
+                        <select id="rag-domain" class="cyber-select">
+                            <option value="cs">cs</option>
+                        </select>
+                        <label class="field-label">Top-K: <span id="topk-value">6</span></label>
+                        <input type="range" id="rag-topk" min="1" max="15" value="6" class="cyber-range">
+                    </div>
                 </div>
-                
-                <div class="setting-group rag-settings" id="rag-settings">
-                    <label for="rag-domain">检索领域</label>
-                    <select id="rag-domain">
-                        <option value="cs">cs</option>
-                    </select>
-                    
-                    <label for="rag-topk">检索条数（Top-K）: <span id="topk-value">6</span></label>
-                    <input type="range" id="rag-topk" min="1" max="15" value="6">
-                </div>
-                
-                <hr class="divider">
-                
-                <!-- 简历上传 -->
-                <div class="setting-group">
-                    <h3>📄 简历上传</h3>
+
+                <div class="panel-divider"></div>
+
+                <div class="panel-section">
+                    <div class="panel-section-title">
+                        <i class="fas fa-file-alt"></i> 简历上传
+                    </div>
                     <div id="resume-status">
-                        <p class="resume-hint">上传 PDF 简历，让 AI 面试官更了解你</p>
+                        <p class="hint-text">上传 PDF 简历，AI 将更了解你</p>
                     </div>
-                    <div id="resume-upload-area" class="resume-upload-area">
+                    <div id="resume-upload-area">
                         <input type="file" id="resume-input" accept=".pdf" style="display: none;">
-                        <button class="btn btn-upload" id="resume-upload-btn">
-                            📤 选择 PDF 简历
+                        <button class="cyber-btn cyber-btn-accent full-width" id="resume-upload-btn">
+                            <i class="fas fa-cloud-upload-alt"></i> 选择 PDF 简历
                         </button>
                     </div>
-                    <div id="resume-uploaded" class="resume-uploaded" style="display: none;">
-                        <div class="resume-file-info">
-                            <span class="resume-icon">📄</span>
-                            <span id="resume-file-name" class="resume-file-name"></span>
+                    <div id="resume-uploaded" style="display: none;">
+                        <div class="resume-file-row">
+                            <i class="fas fa-file-pdf file-icon"></i>
+                            <span id="resume-file-name" class="file-name-text"></span>
                         </div>
-                        <button class="btn btn-small btn-danger" id="resume-delete-btn">🗑️ 删除</button>
+                        <button class="cyber-btn cyber-btn-danger cyber-btn-sm" id="resume-delete-btn">
+                            <i class="fas fa-trash-alt"></i> 删除
+                        </button>
                     </div>
-                    <div id="resume-progress" class="resume-progress" style="display: none;">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="resume-progress-fill"></div>
+                    <div id="resume-progress" style="display: none;">
+                        <div class="progress-track">
+                            <div class="progress-glow" id="resume-progress-fill"></div>
                         </div>
-                        <p class="progress-text" id="resume-progress-text">正在解析...</p>
+                        <p class="hint-text" id="resume-progress-text">正在解析...</p>
                     </div>
                 </div>
-                
-                <hr class="divider">
-                
-                <!-- 新对话按钮 -->
-                <button class="btn btn-primary" id="new-chat-btn">新对话</button>
-                
-                <p class="sidebar-hint">语音输入需浏览器授权麦克风；TTS 为流式播报。</p>
-            </div>
-        </aside>
-        
-        <!-- 主内容区 -->
-        <main class="main-content">
-            <header class="header">
-                <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
-                <h1>AI 面试官</h1>
-                <p>支持<strong>语音</strong>或<strong>文字</strong>输入，结合<strong>知识库检索(RAG)</strong>与面试官对话。</p>
-                <!-- 面试阶段指示器 -->
-                <div class="phase-indicator" id="phase-indicator"></div>
-            </header>
-            
-            <!-- Tab 导航 -->
-            <nav class="tabs">
-                <button class="tab-btn active" data-tab="voice">🎙️ 语音对话</button>
-                <button class="tab-btn" data-tab="chat">💬 文字对话</button>
-                <button class="tab-btn" data-tab="rag">📚 RAG 知识检索</button>
-                <button class="tab-btn" data-tab="report">📊 面试报告</button>
-            </nav>
-            
-            <!-- Tab 内容 -->
-            <div class="tab-content">
-                <!-- 语音对话 Tab -->
-                <div class="tab-pane active" id="tab-voice">
-                    <h3>🎙️ 语音面试模式</h3>
-                    <p class="tab-hint">录音结束后自动识别并发送，面试官回复自动语音播放</p>
-                    
-                    <div class="voice-controls">
-                        <button class="record-btn" id="record-btn">
-                            <span class="record-icon">🎤</span>
-                            <span class="record-text">点击开始录音</span>
-                        </button>
-                        <div class="recording-indicator" id="recording-indicator">
-                            <span class="pulse"></span>
-                            <span>正在录音...</span>
+
+                <div class="panel-footer">
+                    <p class="hint-text">录音需授权麦克风 · TTS 流式播报</p>
+                </div>
+            </aside>
+
+            <!-- ====== 中央主舞台 ====== -->
+            <main class="main-stage">
+                <div class="chat-viewport" id="chat-history">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-satellite"></i>
                         </div>
+                        <h3>准备就绪</h3>
+                        <p>输入文字或点击麦克风，开始你的面试之旅</p>
                     </div>
-                    
-                    <!-- TTS 播放器 -->
-                    <div class="tts-player" id="tts-player">
-                        <div class="tts-header">
-                            <strong>🔊 语音播放</strong>
-                            <span id="tts-status">(等待中)</span>
+                </div>
+                <div id="voice-history" style="display:none;"></div>
+
+                <!-- TTS 浮层 -->
+                <div class="tts-float" id="tts-player">
+                    <div class="tts-float-inner">
+                        <div class="tts-info">
+                            <i class="fas fa-volume-up"></i>
+                            <span id="tts-status">等待中</span>
                         </div>
-                        <div class="tts-controls">
-                            <button class="tts-btn" id="tts-play">▶️ 播放</button>
-                            <button class="tts-btn" id="tts-pause">⏸️ 暂停</button>
-                            <button class="tts-btn" id="tts-stop">⏹️ 停止</button>
-                            <div class="tts-progress">
+                        <div class="tts-controls-bar">
+                            <button class="tts-ctrl-btn" id="tts-play" title="播放"><i class="fas fa-play"></i></button>
+                            <button class="tts-ctrl-btn" id="tts-pause" title="暂停"><i class="fas fa-pause"></i></button>
+                            <button class="tts-ctrl-btn" id="tts-stop" title="停止"><i class="fas fa-stop"></i></button>
+                            <div class="tts-progress-track">
                                 <div class="tts-progress-bar" id="tts-progress-bar"></div>
                             </div>
                         </div>
                     </div>
-                    
-                    <hr class="divider">
-                    
-                    <!-- 最近对话 -->
-                    <h4>最近对话</h4>
-                    <div class="chat-history" id="voice-history">
-                        <div class="empty-hint">点击上方麦克风开始语音面试</div>
-                    </div>
                 </div>
-                
-                <!-- 文字对话 Tab -->
-                <div class="tab-pane" id="tab-chat">
-                    <div class="chat-container">
-                        <div class="chat-history" id="chat-history">
-                            <div class="empty-hint">暂无聊天记录，在下方输入文字开始对话。</div>
-                        </div>
-                        
-                        <form class="chat-input-form" id="chat-form">
-                            <input type="text" id="chat-input" placeholder="输入文字与面试官对话..." autocomplete="off">
-                            <button type="submit" class="btn btn-send">发送</button>
-                        </form>
-                    </div>
-                </div>
-                
-                <!-- RAG 知识检索 Tab -->
-                <div class="tab-pane" id="tab-rag">
-                    <h3>📚 RAG 知识检索记录</h3>
-                    <div id="rag-history">
-                        <div class="empty-hint">暂无检索记录。开启 RAG 并发送消息后，检索到的知识片段会在此展示。</div>
-                    </div>
-                </div>
-                
-                <!-- 面试报告 Tab -->
-                <div class="tab-pane" id="tab-report">
-                    <h3>📊 面试报告</h3>
-                    <p class="tab-hint">结束面试后，可下载对话记录或生成 AI 评价报告</p>
-                    
-                    <div class="report-stats" id="report-stats">
-                        <p>当前对话：<strong id="msg-count">0</strong> 条消息</p>
-                    </div>
-                    
-                    <hr class="divider">
-                    
-                    <h4>下载对话记录</h4>
-                    <div class="download-btns">
-                        <button class="btn" id="download-json">📥 下载 JSON</button>
-                        <button class="btn" id="download-txt">📥 下载 TXT</button>
-                    </div>
-                    
-                    <hr class="divider">
-                    
-                    <h4>AI 面试评价报告</h4>
-                    <button class="btn btn-primary" id="generate-report-btn">🤖 生成 AI 面试评价报告</button>
-                    
-                    <div class="report-content" id="report-content">
-                        <!-- 报告内容将在这里显示 -->
-                    </div>
-                    
-                    <div class="report-download" id="report-download" style="display: none;">
-                        <button class="btn" id="download-report-md">📥 下载报告（Markdown）</button>
-                    </div>
-                </div>
-            </div>
-        </main>
-        
-        <!-- IDE代码编辑器面板 -->
-        <aside class="ide-panel" id="ide-panel">
-            <div class="ide-header">
-                <h3>📝 代码编辑器</h3>
-                <button class="ide-close-btn" id="ide-close-btn">✕</button>
-            </div>
-            <div class="ide-content">
-                <!-- 语言选择 -->
-                <div class="ide-toolbar">
-                    <label for="code-language">语言:</label>
-                    <select id="code-language">
-                        <option value="python" selected>Python</option>
-                        <option value="java">Java</option>
-                        <option value="cpp">C++</option>
-                        <option value="javascript">JavaScript</option>
-                    </select>
-                </div>
-                
-                <!-- 代码编辑器 -->
-                <div class="code-editor-wrapper">
-                    <textarea id="code-editor" placeholder="# 在这里编写你的代码...
 
-def solution():
-    pass"></textarea>
-                    <div class="line-numbers" id="line-numbers">1</div>
+                <!-- 输入栏 -->
+                <div class="input-dock">
+                    <button class="record-orb" id="record-btn" title="语音输入">
+                        <span class="orb-ring"></span>
+                        <span class="orb-ring orb-ring-2"></span>
+                        <i class="fas fa-microphone" id="record-icon-i"></i>
+                    </button>
+                    <div class="recording-badge" id="recording-indicator">
+                        <span class="rec-pulse"></span>
+                        <span>录音中...</span>
+                    </div>
+                    <form class="input-form" id="chat-form">
+                        <input type="text" id="chat-input" placeholder="输入你的回答..." autocomplete="off">
+                        <button type="submit" class="send-btn" title="发送">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
                 </div>
-                
-                <!-- 操作按钮 -->
-                <div class="ide-actions">
-                    <button class="btn btn-submit" id="submit-code-btn">📤 提交代码</button>
-                    <button class="btn btn-clear" id="clear-code-btn">🗑️ 清空</button>
+            </main>
+
+            <!-- ====== 右侧 IDE 面板 ====== -->
+            <aside class="ide-panel" id="ide-panel">
+                <div class="ide-header">
+                    <div class="ide-title">
+                        <i class="fas fa-code"></i> 代码编辑器
+                    </div>
+                    <button class="icon-btn icon-btn-ghost" id="ide-close-btn" title="关闭">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                
-                <!-- 提交历史 -->
-                <div class="code-history" id="code-history">
-                    <h4>📜 提交历史</h4>
-                    <div class="history-list" id="history-list">
-                        <p class="empty-hint">暂无提交记录</p>
+                <div class="ide-body">
+                    <div class="ide-toolbar">
+                        <label>语言:</label>
+                        <select id="code-language" class="cyber-select cyber-select-sm">
+                            <option value="python" selected>Python</option>
+                            <option value="java">Java</option>
+                            <option value="cpp">C++</option>
+                            <option value="javascript">JavaScript</option>
+                        </select>
+                    </div>
+                    <div class="code-editor-wrapper">
+                        <div class="line-numbers" id="line-numbers">1</div>
+                        <textarea id="code-editor" placeholder="# 在这里编写你的代码...&#10;&#10;def solution():&#10;    pass" spellcheck="false"></textarea>
+                    </div>
+                    <div class="ide-actions">
+                        <button class="cyber-btn cyber-btn-success" id="submit-code-btn">
+                            <i class="fas fa-paper-plane"></i> 提交
+                        </button>
+                        <button class="cyber-btn cyber-btn-ghost" id="clear-code-btn">
+                            <i class="fas fa-eraser"></i> 清空
+                        </button>
+                    </div>
+                    <div class="code-history" id="code-history">
+                        <h4><i class="fas fa-history"></i> 提交历史</h4>
+                        <div class="history-list" id="history-list">
+                            <p class="hint-text">暂无提交记录</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </aside>
+            </aside>
+
+            <!-- ====== RAG 抽屉 ====== -->
+            <aside class="side-drawer rag-drawer" id="rag-drawer">
+                <div class="drawer-header">
+                    <h3><i class="fas fa-database"></i> RAG 知识检索</h3>
+                    <button class="icon-btn icon-btn-ghost" id="rag-close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="drawer-body" id="rag-history">
+                    <div class="empty-state-mini">
+                        <i class="fas fa-search"></i>
+                        <p>暂无检索记录</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- ====== 报告抽屉 ====== -->
+            <aside class="side-drawer report-drawer" id="report-drawer">
+                <div class="drawer-header">
+                    <h3><i class="fas fa-chart-bar"></i> 面试报告</h3>
+                    <button class="icon-btn icon-btn-ghost" id="report-close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="drawer-body">
+                    <div class="report-stats" id="report-stats">
+                        <div class="stat-card">
+                            <span class="stat-value" id="msg-count">0</span>
+                            <span class="stat-label">消息数</span>
+                        </div>
+                    </div>
+                    <div class="report-actions-row">
+                        <button class="cyber-btn cyber-btn-ghost" id="download-json">
+                            <i class="fas fa-file-code"></i> JSON
+                        </button>
+                        <button class="cyber-btn cyber-btn-ghost" id="download-txt">
+                            <i class="fas fa-file-alt"></i> TXT
+                        </button>
+                    </div>
+                    <button class="cyber-btn cyber-btn-accent full-width" id="generate-report-btn" style="margin-top:16px;">
+                        <i class="fas fa-robot"></i> 生成 AI 评价报告
+                    </button>
+                    <div class="report-content" id="report-content"></div>
+                    <div class="report-download" id="report-download" style="display:none; margin-top:12px;">
+                        <button class="cyber-btn cyber-btn-ghost full-width" id="download-report-md">
+                            <i class="fas fa-download"></i> 下载 Markdown
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+        </div>
     </div>
-    
-    <!-- 加载提示 -->
+
+    <!-- 加载覆盖层 -->
     <div class="loading-overlay" id="loading-overlay">
-        <div class="loading-spinner"></div>
+        <div class="loading-orb">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring spinner-ring-2"></div>
+        </div>
         <p id="loading-text">正在处理...</p>
     </div>
-    
-    <!-- JavaScript 模块 -->
+
+    <!-- JavaScript -->
     <script src="/static/js/tts-stream.js"></script>
     <script src="/static/js/audio.js"></script>
     <script src="/static/js/chat.js"></script>
