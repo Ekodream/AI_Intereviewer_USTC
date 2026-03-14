@@ -472,8 +472,10 @@ class ChatModule {
                             if (data.type === 'text') {
                                 fullResponse = data.content;
                                 this.updateAssistantMessage(assistantMsgId, fullResponse);
-                                const phaseResult = this.detectNextPhase(fullResponse);
-                                if (phaseResult) this.handlePhaseChange(phaseResult.phase);
+                            } else if (data.type === 'phase') {
+                                if (Number.isInteger(data.phase)) {
+                                    this.handlePhaseChange(data.phase);
+                                }
                             } else if (data.type === 'audio') {
                                 if (settings.enable_tts && window.ttsPlayer) {
                                     window.ttsPlayer.addAudio(data.data, data.sentence);

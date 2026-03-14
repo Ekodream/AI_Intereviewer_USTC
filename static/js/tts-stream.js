@@ -11,6 +11,7 @@ class StreamingTTSPlayer {
         this.currentIndex = 0;
         this.totalCount = 0;
         this.audioElement = null;
+        this.ttsStarted = false;  // 标记 TTS 是否已经开始
 
         this.statusEl = document.getElementById('tts-status');
         this.progressBar = document.getElementById('tts-progress-bar');
@@ -36,6 +37,13 @@ class StreamingTTSPlayer {
         this.totalCount++;
         console.log(`🔊 添加音频 #${this.totalCount}: ${sentence.substring(0, 30)}...`);
 
+        // 第一个音频添加时，关闭麦克风和超时计时器
+        if (!this.ttsStarted && window.vadDetector) {
+            console.log('⏸️ TTS 开始，关闭麦克风和超时计时器');
+            window.vadDetector.pauseForTTSPlayback();
+            this.ttsStarted = true;
+        }
+
         if (!this.isPlaying && !this.isPaused) this.play();
         this.updateStatus();
     }
@@ -57,6 +65,13 @@ class StreamingTTSPlayer {
             if (this.currentIndex >= this.totalCount) {
                 this.isPlaying = false;
                 this.updateStatus('播放完成');
+                
+                // TTS 全部播放完成，重新打开麦克风
+                if (this.ttsStarted && window.vadDetector) {
+                    console.log('▶️ TTS 播放完成，重新打开麦克风');
+                    this.ttsStarted = false;
+                    window.vadDetector.resumeAfterTTS();
+                }
                 return;
             }
             setTimeout(() => this.playNext(), 100);
@@ -106,30 +121,29 @@ class StreamingTTSPlayer {
         }
         this.isPlaying = false;
         this.isPaused = false;
+        
+        // 清空队列
+        this.audioQueue = [];
         this.currentIndex = 0;
-        this.updateStatus('已停止');
+        this.totalCount = 0;
+        this.ttsStarted = false;
+        
+        this.updateStatus('点击播放按钮开始');
         this.updateProgress();
+    }
+
+    interrupt() {
+        console.log('⏹️ TTS 被用户打断');
+        this.stop();
     }
 
     reset() {
         this.stop();
-        this.audioQueue = [];
-        this.totalCount = 0;
-        this.currentIndex = 0;
-        this.updateStatus('等待中');
-        this.updateProgress();
     }
 
-    updateStatus(text = null) {
-        if (!this.statusEl) return;
-        if (text) {
-            this.statusEl.textContent = text;
-        } else if (this.isPlaying) {
-            this.statusEl.textContent = `${this.currentIndex + 1}/${this.totalCount} 句`;
-        } else if (this.audioQueue.length > 0) {
-            this.statusEl.textContent = `${this.audioQueue.length} 句待播放`;
-        } else {
-            this.statusEl.textContent = '等待中';
+    updateStatus(text) {
+        if (this.statusEl) {
+            this.statusEl.textContent = text || '';
         }
     }
 

@@ -154,6 +154,7 @@ default_prompt = """
 步骤5：反问环节
 - 询问候选人是否有问题要问面试官。
 - 对候选人的问题给出清晰回答。
+- 主动告诉候选人请求其反问，而不是等待候选人反问
 
 步骤6：面试结束
 - 简短总结候选人表现，礼貌结束面试。
@@ -162,6 +163,7 @@ default_prompt = """
 - 仅围绕当前环节发问，不要提前泄露后续环节内容。
 - 不要在候选人尚未回答当前问题时推进。
 - 信息不足时先补充提问，再决定是否推进。
+- 注意，在每一次对话中，你都必须发出指令，提出问题；你的回复不能是陈述句，必须提出命令化言语或者是问题，以方便候选人回答
 """
 
 # 风格补充：温和型
@@ -227,6 +229,51 @@ def extract_sentences(text: str) -> tuple[List[str], str]:
     
     remaining = parts[-1].strip() if len(parts) % 2 == 1 else ""
     return sentences, remaining
+
+
+def extract_next_phase(text: str) -> Optional[int]:
+    """
+    提取文本中的流程推进标记，例如 /next[3] 或 /next(3)
+    返回最后一次出现的阶段编号
+    """
+    patterns = [
+        r'[/\\]next\[\s*(\d+)\s*\]',
+        r'[/\\]next\(\s*(\d+)\s*\)',
+    ]
+    phases: List[int] = []
+    for pattern in patterns:
+        for match in re.finditer(pattern, text, flags=re.IGNORECASE):
+            try:
+                phases.append(int(match.group(1)))
+            except (ValueError, TypeError):
+                continue
+    if not phases:
+        return None
+    return phases[-1]
+
+
+def strip_next_markers(text: str) -> str:
+    """
+    移除流程推进标记，避免在前端文本和 TTS 中播报
+    """
+    cleaned = re.sub(r'[/\\]next\[\s*\d+\s*\]', '', text, flags=re.IGNORECASE)
+    cleaned = re.sub(r'[/\\]next\(\s*\d+\s*\)', '', cleaned, flags=re.IGNORECASE)
+    # 清理流式输出中可能出现的不完整标记（例如末尾的 /next[ 或 /next(）
+    cleaned = re.sub(r'[/\\]next\s*[\[(][^\])]*$', '', cleaned, flags=re.IGNORECASE)
+    # 同时移除流程推进提示语，避免在前端和 TTS 中展示
+    control_phrase = '我们进入面试的下一个环节'
+    cleaned = re.sub(r'我们进入面试的下一个环节[：:，,。!！?？\s]*', '', cleaned)
+    # 避免流式时先显示控制短语前缀、下一帧又被撤回（闪烁）
+    # 例如先出现“我们进入”，随后补全成完整控制短语后被清洗。
+    for i in range(len(control_phrase) - 1, 0, -1):
+        prefix = control_phrase[:i]
+        if cleaned.endswith(prefix):
+            cleaned = cleaned[:-i]
+            break
+    # 清理被移除标记后产生的多余空白
+    cleaned = re.sub(r'[ \t]+\n', '\n', cleaned)
+    cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
+    return cleaned
 
 
 async def generate_tts_audio(text: str) -> Optional[str]:
@@ -453,17 +500,27 @@ async def chat_stream(request: ChatRequest):
             
             # 流式 LLM 输出 + 实时 TTS
             full_response = ""
+            latest_phase: Optional[int] = None
             sentence_buffer = ""
             processed_length = 0
             
             for partial in llm_stream_chat(history, request.message, system_prompt):
-                full_response = partial
+                # 后台识别流程推进标记
+                phase = extract_next_phase(partial)
+                if phase is not None and phase != latest_phase:
+                    latest_phase = phase
+                    yield f"data: {json.dumps({'type': 'phase', 'phase': phase}, ensure_ascii=False)}\n\n"
+
+                # 对前端显示和 TTS 过滤流程标记
+                full_response = strip_next_markers(partial)
                 
                 # 发送文本更新
-                yield f"data: {json.dumps({'type': 'text', 'content': partial}, ensure_ascii=False)}\n\n"
+                yield f"data: {json.dumps({'type': 'text', 'content': full_response}, ensure_ascii=False)}\n\n"
                 
                 # 检测新句子并生成 TTS
                 if request.enable_tts:
+                    if processed_length > len(full_response):
+                        processed_length = len(full_response)
                     new_text = full_response[processed_length:]
                     sentence_buffer += new_text
                     processed_length = len(full_response)

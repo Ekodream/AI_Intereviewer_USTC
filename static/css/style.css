@@ -1114,6 +1114,64 @@ body::before {
     display: flex;
 }
 
+.vad-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-glass);
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.vad-status-badge.listening {
+    border-color: rgba(0, 212, 255, 0.4);
+    color: var(--neon-blue);
+}
+
+.vad-status-badge.speaking {
+    border-color: rgba(16, 185, 129, 0.5);
+    color: var(--success);
+}
+
+.vad-status-badge.processing {
+    border-color: rgba(245, 158, 11, 0.5);
+    color: var(--warning);
+}
+
+.vad-status-badge.tts-playing {
+    border-color: rgba(168, 85, 247, 0.5);
+    color: var(--neon-purple);
+}
+
+.vad-status-badge.error {
+    border-color: rgba(239, 68, 68, 0.5);
+    color: var(--error);
+}
+
+.record-orb.listening {
+    border-color: var(--neon-blue);
+    background: rgba(0, 212, 255, 0.16);
+    box-shadow: 0 0 16px rgba(0, 212, 255, 0.35);
+}
+
+.record-orb.speaking {
+    border-color: var(--success);
+    color: var(--success);
+    background: rgba(16, 185, 129, 0.16);
+    box-shadow: 0 0 18px rgba(16, 185, 129, 0.35);
+}
+
+.record-orb.processing {
+    border-color: var(--warning);
+    color: var(--warning);
+    background: rgba(245, 158, 11, 0.16);
+    box-shadow: 0 0 18px rgba(245, 158, 11, 0.35);
+}
+
 .rec-pulse {
     width: 8px;
     height: 8px;
