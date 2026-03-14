@@ -13,9 +13,9 @@ class VADDetector {
         this.animationFrameId = null;
 
         this.config = {
-            silenceThreshold: 0.05,
-            speechThreshold: 0.07,
-            silenceDuration: 1000,
+            silenceThreshold: 0.04,
+            speechThreshold: 0.04,
+            silenceDuration: 2000,
             minSpeechDuration: 1500,
             sampleRate: 16000
         };
@@ -170,8 +170,20 @@ class VADDetector {
         this.speechStartTime = null;
         this.silenceTimer = null;
         
+        console.log('🎯 检测到用户说话，打断 TTS...');
+        
+        // 1. 立即停止当前播放
         if (window.ttsPlayer) {
+            console.log('⏹️ 调用 ttsPlayer.interrupt()');
             window.ttsPlayer.interrupt();
+        } else {
+            console.warn('⚠️ window.ttsPlayer 未定义');
+        }
+        
+        // 2. 停止 AI 继续生成新的 TTS（关键！）
+        if (window.chat && window.chat.abortController) {
+            console.log('🚫 取消 AI 流式生成');
+            window.chat.abortController.abort();
         }
         
         this.updateStatus('speaking', '说话中...');
