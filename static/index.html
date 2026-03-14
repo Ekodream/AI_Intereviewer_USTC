@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
+    <!-- ONNX Runtime for Silero VAD -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/ort.min.js"></script>
 </head>
 <body>
     <div class="command-center">
@@ -243,14 +245,14 @@
 
                 <!-- 输入栏 -->
                 <div class="input-dock">
-                    <button class="record-orb" id="record-btn" title="语音输入">
+                    <button class="record-orb" id="record-btn" title="点击开始语音监听">
                         <span class="orb-ring"></span>
                         <span class="orb-ring orb-ring-2"></span>
                         <i class="fas fa-microphone" id="record-icon-i"></i>
                     </button>
-                    <div class="recording-badge" id="recording-indicator">
-                        <span class="rec-pulse"></span>
-                        <span>录音中...</span>
+                    <div class="vad-status-badge" id="vad-status-indicator">
+                        <span class="vad-status-dot"></span>
+                        <span class="vad-status-text">点击麦克风开始</span>
                     </div>
                     <form class="input-form" id="chat-form">
                         <input type="text" id="chat-input" placeholder="输入你的回答..." autocomplete="off">
@@ -411,6 +413,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/indent-fold.min.js"></script>
 
     <script src="/static/js/tts-stream.js"></script>
+    <script src="/static/js/vad.js"></script>
     <script src="/static/js/audio.js"></script>
     <script src="/static/js/chat.js?v=3"></script>
     <script src="/static/js/app.js?v=3"></script>
