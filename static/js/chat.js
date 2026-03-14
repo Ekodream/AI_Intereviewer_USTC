@@ -11,6 +11,8 @@ class ChatModule {
         this.currentPhase = 0;
         this.ideVisible = false;
         this.compactMode = false;  // 精简对话模式
+        this.codeEditor = null;    // CodeMirror 实例
+        this.isCodeRunning = false; // 代码执行状态
 
         this.chatForm = document.getElementById('chat-form');
         this.chatInput = document.getElementById('chat-input');
@@ -21,6 +23,7 @@ class ChatModule {
 
         this.bindEvents();
         this.loadHistory();
+        this.initCodeMirror();
     }
 
     /* ==================== Compact Mode ==================== */
@@ -110,63 +113,219 @@ class ChatModule {
         if (closeBtn) {
             closeBtn.addEventListener('click', () => this.hideIDEPanel());
         }
-
+    
+        // 运行按钮
+        const runBtn = document.getElementById('run-code-btn');
+        if (runBtn) {
+            runBtn.addEventListener('click', () => this.runCode());
+        }
+    
+        // 提交按钮
         const submitBtn = document.getElementById('submit-code-btn');
         if (submitBtn) {
             submitBtn.addEventListener('click', () => this.submitCode());
         }
-
+    
+        // 清空按钮
         const clearBtn = document.getElementById('clear-code-btn');
         if (clearBtn) {
-            clearBtn.addEventListener('click', () => {
-                const editor = document.getElementById('code-editor');
-                if (editor) {
-                    editor.value = '';
-                    this.updateLineNumbers();
-                }
-            });
+            clearBtn.addEventListener('click', () => this.clearCodeEditor());
         }
-
-        const codeEditor = document.getElementById('code-editor');
-        if (codeEditor) {
-            codeEditor.addEventListener('input', () => this.updateLineNumbers());
-            codeEditor.addEventListener('scroll', () => this.syncLineNumbersScroll());
+    
+        // 语言切换
+        const langSelect = document.getElementById('code-language');
+        if (langSelect) {
+            langSelect.addEventListener('change', () => this.changeLanguage(langSelect.value));
+        }
+    
+        // I/O 标签页切换
+        const ioTabs = document.querySelectorAll('.io-tab');
+        ioTabs.forEach(tab => {
+            tab.addEventListener('click', () => this.switchIOTab(tab.dataset.tab));
+        });
+    }
+    
+    /* ==================== CodeMirror 编辑器 ==================== */
+    initCodeMirror() {
+        const container = document.getElementById('code-editor-container');
+        if (!container || typeof CodeMirror === 'undefined') {
+            console.warn('CodeMirror 未加载或容器不存在');
+            return;
+        }
+    
+        this.codeEditor = CodeMirror(container, {
+            mode: 'python',
+            theme: 'material-darker',
+            lineNumbers: true,
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            indentUnit: 4,
+            tabSize: 4,
+            indentWithTabs: false,
+            lineWrapping: false,
+            foldGutter: true,
+            gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+            extraKeys: {
+                'Tab': 'indentMore',
+                'Shift-Tab': 'indentLess',
+                'Ctrl-Enter': () => this.runCode(),
+                'Cmd-Enter': () => this.runCode()
+            },
+            placeholder: '# 在这里编写你的代码...\n\ndef solution():\n    pass'
+        });
+    
+        // 设置默认代码
+        this.codeEditor.setValue('# 在这里编写你的代码\n\ndef solution():\n    pass\n');
+            
+        console.log('✅ CodeMirror 初始化完成');
+    }
+    
+    changeLanguage(lang) {
+        if (!this.codeEditor) return;
+            
+        const modeMap = {
+            'python': 'python',
+            'javascript': 'javascript',
+            'java': 'text/x-java',
+            'cpp': 'text/x-c++src'
+        };
+            
+        const defaultCode = {
+            'python': '# 在这里编写你的代码\n\ndef solution():\n    pass\n',
+            'javascript': '// 在这里编写你的代码\n\nfunction solution() {\n    \n}\n',
+            'java': '// 在这里编写你的代码\n\npublic class Main {\n    public static void main(String[] args) {\n        \n    }\n}\n',
+            'cpp': '// 在这里编写你的代码\n\n#include <iostream>\nusing namespace std;\n\nint main() {\n    \n    return 0;\n}\n'
+        };
+            
+        this.codeEditor.setOption('mode', modeMap[lang] || 'python');
+            
+        // 如果编辑器为空或是默认代码，切换到新语言的默认代码
+        const currentCode = this.codeEditor.getValue().trim();
+        const isDefault = Object.values(defaultCode).some(code => 
+            currentCode === code.trim() || currentCode === '' || currentCode.startsWith('# 在这里') || currentCode.startsWith('// 在这里')
+        );
+            
+        if (isDefault) {
+            this.codeEditor.setValue(defaultCode[lang] || defaultCode['python']);
         }
     }
-
-    updateLineNumbers() {
-        const editor = document.getElementById('code-editor');
-        const lineNumbers = document.getElementById('line-numbers');
-        if (editor && lineNumbers) {
-            const lines = editor.value.split('\n').length;
-            let numbersHtml = '';
-            for (let i = 1; i <= lines; i++) {
-                numbersHtml += i + '\n';
-            }
-            lineNumbers.textContent = numbersHtml;
+    
+    clearCodeEditor() {
+        if (this.codeEditor) {
+            const lang = document.getElementById('code-language')?.value || 'python';
+            const defaultCode = {
+                'python': '# 在这里编写你的代码\n\ndef solution():\n    pass\n',
+                'javascript': '// 在这里编写你的代码\n\nfunction solution() {\n    \n}\n',
+                'java': '// 在这里编写你的代码\n\npublic class Main {\n    public static void main(String[] args) {\n        \n    }\n}\n',
+                'cpp': '// 在这里编写你的代码\n\n#include <iostream>\nusing namespace std;\n\nint main() {\n    \n    return 0;\n}\n'
+            };
+            this.codeEditor.setValue(defaultCode[lang] || defaultCode['python']);
+        }
+        // 清空输出
+        const outputEl = document.getElementById('code-output');
+        if (outputEl) {
+            outputEl.textContent = '点击"运行"执行代码...';
+            outputEl.className = 'code-output';
         }
     }
-
-    syncLineNumbersScroll() {
-        const editor = document.getElementById('code-editor');
-        const lineNumbers = document.getElementById('line-numbers');
-        if (editor && lineNumbers) {
-            lineNumbers.scrollTop = editor.scrollTop;
-        }
+    
+    switchIOTab(tabName) {
+        // 更新标签激活状态
+        document.querySelectorAll('.io-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.tab === tabName);
+        });
+        // 更新面板显示
+        document.querySelectorAll('.io-panel').forEach(panel => {
+            panel.classList.toggle('active', panel.id === `${tabName}-panel`);
+        });
     }
-
-    submitCode() {
-        const editor = document.getElementById('code-editor');
-        const language = document.getElementById('code-language');
-        if (!editor || !editor.value.trim()) {
+    
+    /* ==================== 代码执行 ==================== */
+    async runCode() {
+        if (!this.codeEditor || this.isCodeRunning) return;
+            
+        const code = this.codeEditor.getValue();
+        const language = document.getElementById('code-language')?.value || 'python';
+        const stdin = document.getElementById('code-input')?.value || '';
+        const outputEl = document.getElementById('code-output');
+        const runBtn = document.getElementById('run-code-btn');
+            
+        if (!code.trim()) {
             alert('请先编写代码');
             return;
         }
-        const code = editor.value;
-        const lang = language ? language.value : 'python';
-        this.saveCodeSubmission(code, lang);
-
-        const message = `【我的代码】\n\`\`\`${lang}\n${code}\n\`\`\`\n\n请点评这段代码。`;
+            
+        // 切换到输出标签页
+        this.switchIOTab('output');
+            
+        // 显示运行状态
+        this.isCodeRunning = true;
+        if (outputEl) {
+            outputEl.textContent = '⚙️ 正在执行...';
+            outputEl.className = 'code-output running';
+        }
+        if (runBtn) {
+            runBtn.disabled = true;
+            runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 运行中';
+        }
+            
+        try {
+            const response = await fetch('/api/code/execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, language, stdin })
+            });
+            const result = await response.json();
+                
+            if (result.status === 'ok') {
+                let output = result.output || '(无输出)';
+                if (result.stderr && result.stderr.trim()) {
+                    output += '\n\n[stderr]\n' + result.stderr;
+                }
+                if (result.return_code !== 0) {
+                    output += `\n\n[返回码: ${result.return_code}]`;
+                }
+                if (outputEl) {
+                    outputEl.textContent = output;
+                    outputEl.className = result.return_code === 0 ? 'code-output success' : 'code-output error';
+                }
+            } else {
+                if (outputEl) {
+                    let errorMsg = '❌ 错误: ' + result.message;
+                    if (result.stderr) {
+                        errorMsg += '\n\n' + result.stderr;
+                    }
+                    outputEl.textContent = errorMsg;
+                    outputEl.className = 'code-output error';
+                }
+            }
+        } catch (error) {
+            if (outputEl) {
+                outputEl.textContent = '❌ 执行失败: ' + error.message;
+                outputEl.className = 'code-output error';
+            }
+        } finally {
+            this.isCodeRunning = false;
+            if (runBtn) {
+                runBtn.disabled = false;
+                runBtn.innerHTML = '<i class="fas fa-play"></i> 运行';
+            }
+        }
+    }
+    
+    submitCode() {
+        if (!this.codeEditor) return;
+            
+        const code = this.codeEditor.getValue();
+        const language = document.getElementById('code-language')?.value || 'python';
+            
+        if (!code.trim()) {
+            alert('请先编写代码');
+            return;
+        }
+            
+        this.saveCodeSubmission(code, language);
+        const message = `【我的代码】\n\`\`\`${language}\n${code}\n\`\`\`\n\n请点评这段代码。`;
         this.sendMessage(message);
     }
 
@@ -199,12 +358,13 @@ class ChatModule {
             item.addEventListener('click', () => {
                 const index = parseInt(item.dataset.index);
                 const submission = this.codeHistory.find(s => s.index === index);
-                if (submission) {
-                    const editor = document.getElementById('code-editor');
-                    const language = document.getElementById('code-language');
-                    if (editor) editor.value = submission.code;
-                    if (language) language.value = submission.language;
-                    this.updateLineNumbers();
+                if (submission && this.codeEditor) {
+                    this.codeEditor.setValue(submission.code);
+                    const langSelect = document.getElementById('code-language');
+                    if (langSelect) {
+                        langSelect.value = submission.language;
+                        this.changeLanguage(submission.language);
+                    }
                 }
             });
         });

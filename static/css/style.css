@@ -1236,6 +1236,7 @@ body::before {
 .ide-toolbar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     padding: 8px 10px;
     background: #161b22;
@@ -1245,6 +1246,165 @@ body::before {
     color: var(--text-secondary);
 }
 
+.ide-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ide-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* CodeMirror 容器 */
+.code-editor-container {
+    flex: 1;
+    min-height: 180px;
+    max-height: 280px;
+    border: 1px solid rgba(100, 116, 139, 0.15);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.code-editor-container .CodeMirror {
+    height: 100%;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.5;
+    background: #0d1117;
+}
+
+.code-editor-container .CodeMirror-gutters {
+    background: #161b22;
+    border-right: 1px solid rgba(100, 116, 139, 0.15);
+}
+
+.code-editor-container .CodeMirror-linenumber {
+    color: #484f58;
+}
+
+.code-editor-container .CodeMirror-foldgutter {
+    width: 12px;
+}
+
+.code-editor-container .CodeMirror-cursor {
+    border-left: 2px solid var(--neon-blue);
+}
+
+.code-editor-container .CodeMirror-selected {
+    background: rgba(0, 212, 255, 0.15) !important;
+}
+
+.code-editor-container .CodeMirror-matchingbracket {
+    color: var(--neon-cyan) !important;
+    border-bottom: 1px solid var(--neon-cyan);
+}
+
+/* I/O 区域 */
+.io-section {
+    margin-top: 10px;
+    background: #161b22;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.io-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(100, 116, 139, 0.15);
+}
+
+.io-tab {
+    flex: 1;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.io-tab:hover {
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.io-tab.active {
+    color: var(--neon-blue);
+    background: rgba(0, 212, 255, 0.08);
+    border-bottom: 2px solid var(--neon-blue);
+}
+
+.io-content {
+    position: relative;
+    min-height: 100px;
+    max-height: 120px;
+}
+
+.io-panel {
+    display: none;
+    height: 100%;
+}
+
+.io-panel.active {
+    display: block;
+}
+
+.code-output {
+    margin: 0;
+    padding: 10px 12px;
+    background: #0d1117;
+    color: #c9d1d9;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-y: auto;
+    height: 100%;
+    max-height: 120px;
+}
+
+.code-output.running {
+    color: var(--neon-cyan);
+}
+
+.code-output.success {
+    color: var(--success);
+}
+
+.code-output.error {
+    color: var(--error);
+}
+
+.code-input {
+    width: 100%;
+    height: 100%;
+    min-height: 100px;
+    max-height: 120px;
+    padding: 10px 12px;
+    background: #0d1117;
+    color: #c9d1d9;
+    border: none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+}
+
+.code-input::placeholder {
+    color: #484f58;
+}
+
+/* 旧的代码编辑器样式（保留兼容） */
 .code-editor-wrapper {
     flex: 1;
     display: flex;
@@ -1303,7 +1463,7 @@ body::before {
     padding: 10px;
     background: #161b22;
     border-radius: var(--radius-sm);
-    max-height: 120px;
+    max-height: 100px;
     overflow-y: auto;
 }
 

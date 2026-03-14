@@ -83,6 +83,13 @@ class SettingsModel(BaseModel):
     compact_mode: bool = False  # 精简对话模式
 
 
+class CodeExecuteRequest(BaseModel):
+    """代码执行请求模型"""
+    code: str
+    language: str  # python, javascript, java, cpp
+    stdin: str = ""
+
+
 # ==================== 全局状态 ====================
 # 使用内存存储会话状态（生产环境应使用 Redis 等）
 session_store: Dict[str, Any] = {
@@ -573,6 +580,201 @@ async def download_report(format: str):
         )
     else:
         raise HTTPException(status_code=400, detail="不支持的格式")
+
+
+# ==================== 代码执行 API ====================
+import subprocess
+import shutil
+
+
+async def execute_python(code: str, stdin: str, timeout: int = 10) -> dict:
+    """执行 Python 代码"""
+    temp_file = TEMP_DIR / f"code_{uuid.uuid4().hex}.py"
+    try:
+        temp_file.write_text(code, encoding='utf-8')
+        result = subprocess.run(
+            ['python', str(temp_file)],
+            input=stdin,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=str(TEMP_DIR)
+        )
+        return {
+            "status": "ok",
+            "output": result.stdout,
+            "stderr": result.stderr,
+            "return_code": result.returncode
+        }
+    except subprocess.TimeoutExpired:
+        return {"status": "error", "message": "执行超时（限制 10 秒）"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    finally:
+        temp_file.unlink(missing_ok=True)
+
+
+async def execute_javascript(code: str, stdin: str, timeout: int = 10) -> dict:
+    """执行 JavaScript 代码 (Node.js)"""
+    if not shutil.which('node'):
+        return {"status": "error", "message": "未找到 Node.js，请先安装"}
+    
+    temp_file = TEMP_DIR / f"code_{uuid.uuid4().hex}.js"
+    try:
+        temp_file.write_text(code, encoding='utf-8')
+        result = subprocess.run(
+            ['node', str(temp_file)],
+            input=stdin,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=str(TEMP_DIR)
+        )
+        return {
+            "status": "ok",
+            "output": result.stdout,
+            "stderr": result.stderr,
+            "return_code": result.returncode
+        }
+    except subprocess.TimeoutExpired:
+        return {"status": "error", "message": "执行超时（限制 10 秒）"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    finally:
+        temp_file.unlink(missing_ok=True)
+
+
+async def execute_java(code: str, stdin: str, timeout: int = 15) -> dict:
+    """执行 Java 代码"""
+    if not shutil.which('javac'):
+        return {"status": "error", "message": "未找到 javac，请先安装 JDK"}
+    
+    # 创建临时目录
+    temp_dir = TEMP_DIR / f"java_{uuid.uuid4().hex}"
+    temp_dir.mkdir(exist_ok=True)
+    
+    # 提取类名（简单匹配 public class XXX）
+    import re
+    class_match = re.search(r'public\s+class\s+(\w+)', code)
+    class_name = class_match.group(1) if class_match else 'Main'
+    
+    java_file = temp_dir / f"{class_name}.java"
+    try:
+        java_file.write_text(code, encoding='utf-8')
+        
+        # 编译
+        compile_result = subprocess.run(
+            ['javac', str(java_file)],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=str(temp_dir)
+        )
+        if compile_result.returncode != 0:
+            return {
+                "status": "error",
+                "message": "编译失败",
+                "output": compile_result.stdout,
+                "stderr": compile_result.stderr
+            }
+        
+        # 运行
+        result = subprocess.run(
+            ['java', class_name],
+            input=stdin,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=str(temp_dir)
+        )
+        return {
+            "status": "ok",
+            "output": result.stdout,
+            "stderr": result.stderr,
+            "return_code": result.returncode
+        }
+    except subprocess.TimeoutExpired:
+        return {"status": "error", "message": "执行超时（限制 15 秒）"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    finally:
+        # 清理临时目录
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+async def execute_cpp(code: str, stdin: str, timeout: int = 15) -> dict:
+    """执行 C++ 代码"""
+    if not shutil.which('g++'):
+        return {"status": "error", "message": "未找到 g++，请先安装"}
+    
+    temp_dir = TEMP_DIR / f"cpp_{uuid.uuid4().hex}"
+    temp_dir.mkdir(exist_ok=True)
+    
+    cpp_file = temp_dir / "main.cpp"
+    exe_file = temp_dir / "main.exe" if os.name == 'nt' else temp_dir / "main"
+    
+    try:
+        cpp_file.write_text(code, encoding='utf-8')
+        
+        # 编译
+        compile_result = subprocess.run(
+            ['g++', str(cpp_file), '-o', str(exe_file)],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=str(temp_dir)
+        )
+        if compile_result.returncode != 0:
+            return {
+                "status": "error",
+                "message": "编译失败",
+                "output": compile_result.stdout,
+                "stderr": compile_result.stderr
+            }
+        
+        # 运行
+        result = subprocess.run(
+            [str(exe_file)],
+            input=stdin,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=str(temp_dir)
+        )
+        return {
+            "status": "ok",
+            "output": result.stdout,
+            "stderr": result.stderr,
+            "return_code": result.returncode
+        }
+    except subprocess.TimeoutExpired:
+        return {"status": "error", "message": "执行超时（限制 15 秒）"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+@app.post("/api/code/execute")
+async def execute_code(request: CodeExecuteRequest):
+    """执行代码 API"""
+    code = request.code.strip()
+    language = request.language.lower()
+    stdin = request.stdin
+    
+    if not code:
+        return {"status": "error", "message": "代码不能为空"}
+    
+    if language == 'python':
+        return await execute_python(code, stdin)
+    elif language == 'javascript':
+        return await execute_javascript(code, stdin)
+    elif language == 'java':
+        return await execute_java(code, stdin)
+    elif language == 'cpp':
+        return await execute_cpp(code, stdin)
+    else:
+        return {"status": "error", "message": f"不支持的语言: {language}"}
 
 
 # ==================== 启动入口 ====================

@@ -44,9 +44,11 @@
 | **文字对话** | SSE 流式响应，实时逐字渲染 AI 回复 |
 | **流式 TTS** | Edge-TTS 句子级并行合成，边生成边播放，首句响应 < 2s |
 | **RAG 知识库** | ChromaDB 向量检索，5 大 CS 领域 120+ 专业题目 |
-| **代码编辑器** | 多语言 IDE 面板，进入代码阶段自动弹出，支持提交历史 |
+| **代码编辑器** | CodeMirror 5 IDE面板，支持语法高亮、括号匹配、代码折叠、本地执行 |
 | **AI 面试报告** | Qwen-max 深度推理模式，多维度加权评分，Markdown 导出 |
 | **简历解析** | PDF 上传 → AI 分析，面试官将针对性提问 |
+| **精简对话模式** | 可选模式，仅显示当前轮次问答，模拟真实面试界面 |
+| **多语言代码执行** | 本地沙箱执行 Python/JavaScript/Java/C++，超时控制与安全隔离 |
 | **面试官人格** | 温和型 / 正常型 / 压力型 / 完全自定义 Prompt |
 
 ### 知识库覆盖
@@ -145,6 +147,8 @@
 | **TTS** | Edge-TTS | 免费零成本、多声色可选 |
 | **ASR** | StepFun step-asr | 中文识别准确率高 |
 | **简历解析** | pdfplumber + LLM | PDF 提取 → AI 结构化分析 |
+| **代码编辑器** | CodeMirror 5 | Web IDE 编辑器，语法高亮、括号匹配、代码折叠 |
+| **代码执行** | subprocess + 沙箱隔离 | 本地安全执行 Python/JS/Java/C++，超时控制 |
 
 ### 前端技术
 
@@ -157,6 +161,7 @@
 | **Web Audio API** | 浏览器录音 |
 | **SSE (EventSource)** | 流式对话接收 |
 | **HTML5 Audio** | TTS 队列播放 |
+| **CodeMirror 5** (CDN) | 代码编辑器（语法高亮、智能缩进、代码折叠） |
 
 ### 关键优化
 
@@ -178,7 +183,7 @@
 
 ### 安装与运行
 
-```bash
+```
 # 1. 克隆项目
 git clone https://github.com/your-repo/ai_interviewer.git
 cd ai_interviewer
@@ -229,7 +234,7 @@ AI_Interviewer_USTC/
 │   │   └── style.css             # 深空 Glassmorphism 设计系统
 │   └── js/
 │       ├── app.js                # 应用初始化、设置、抽屉面板、报告
-│       ├── chat.js               # SSE 对话、阶段检测、IDE 联动
+│       ├── chat.js               # SSE 对话、阶段检测、IDE 联动、精简模式
 │       ├── audio.js              # Web Audio API 录音
 │       └── tts-stream.js         # 流式 TTS 队列播放器
 │
@@ -270,7 +275,7 @@ AI_Interviewer_USTC/
 
 ### 知识库扩展
 
-```bash
+``bash
 # 新增领域只需 3 步：
 # 1. 准备 JSONL 数据 → data/new_domain/qa_xxx.jsonl
 # 2. 运行向量化脚本 → python scripts/build_cs_vector_store.py

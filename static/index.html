@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="/static/css/style.css">
     <!-- Markdown 渲染: highlight.js 代码高亮主题 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <!-- CodeMirror 5 代码编辑器 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
 </head>
 <body>
     <div class="command-center">
@@ -251,27 +255,54 @@
                     </button>
                 </div>
                 <div class="ide-body">
+                    <!-- 工具栏 -->
                     <div class="ide-toolbar">
-                        <label>语言:</label>
-                        <select id="code-language" class="cyber-select cyber-select-sm">
-                            <option value="python" selected>Python</option>
-                            <option value="java">Java</option>
-                            <option value="cpp">C++</option>
-                            <option value="javascript">JavaScript</option>
-                        </select>
+                        <div class="ide-toolbar-left">
+                            <label>语言:</label>
+                            <select id="code-language" class="cyber-select cyber-select-sm">
+                                <option value="python" selected>Python</option>
+                                <option value="javascript">JavaScript</option>
+                                <option value="java">Java</option>
+                                <option value="cpp">C++</option>
+                            </select>
+                        </div>
+                        <div class="ide-toolbar-right">
+                            <button class="cyber-btn cyber-btn-accent cyber-btn-sm" id="run-code-btn" title="运行代码 (Ctrl+Enter)">
+                                <i class="fas fa-play"></i> 运行
+                            </button>
+                            <button class="cyber-btn cyber-btn-success cyber-btn-sm" id="submit-code-btn" title="提交给AI点评">
+                                <i class="fas fa-paper-plane"></i> 提交
+                            </button>
+                            <button class="cyber-btn cyber-btn-ghost cyber-btn-sm" id="clear-code-btn" title="清空代码">
+                                <i class="fas fa-eraser"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="code-editor-wrapper">
-                        <div class="line-numbers" id="line-numbers">1</div>
-                        <textarea id="code-editor" placeholder="# 在这里编写你的代码...&#10;&#10;def solution():&#10;    pass" spellcheck="false"></textarea>
+                    
+                    <!-- CodeMirror 代码编辑区 -->
+                    <div class="code-editor-container" id="code-editor-container"></div>
+                    
+                    <!-- I/O 区域 -->
+                    <div class="io-section">
+                        <div class="io-tabs">
+                            <button class="io-tab active" data-tab="output">
+                                <i class="fas fa-terminal"></i> 输出
+                            </button>
+                            <button class="io-tab" data-tab="input">
+                                <i class="fas fa-keyboard"></i> 输入
+                            </button>
+                        </div>
+                        <div class="io-content">
+                            <div id="output-panel" class="io-panel active">
+                                <pre id="code-output" class="code-output">点击"运行"执行代码...</pre>
+                            </div>
+                            <div id="input-panel" class="io-panel">
+                                <textarea id="code-input" class="code-input" placeholder="标准输入 (stdin)，每行一个输入..."></textarea>
+                            </div>
+                        </div>
                     </div>
-                    <div class="ide-actions">
-                        <button class="cyber-btn cyber-btn-success" id="submit-code-btn">
-                            <i class="fas fa-paper-plane"></i> 提交
-                        </button>
-                        <button class="cyber-btn cyber-btn-ghost" id="clear-code-btn">
-                            <i class="fas fa-eraser"></i> 清空
-                        </button>
-                    </div>
+                    
+                    <!-- 代码历史 -->
                     <div class="code-history" id="code-history">
                         <h4><i class="fas fa-history"></i> 提交历史</h4>
                         <div class="history-list" id="history-list">
@@ -349,6 +380,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="/static/js/markdown-renderer.js?v=3"></script>
+
+    <!-- CodeMirror 5 代码编辑器 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/brace-fold.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/indent-fold.min.js"></script>
 
     <script src="/static/js/tts-stream.js"></script>
     <script src="/static/js/audio.js"></script>
