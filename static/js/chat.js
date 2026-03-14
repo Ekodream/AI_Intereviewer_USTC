@@ -60,7 +60,7 @@ class ChatModule {
     }
 
     shouldShowIDE(phase) {
-        return phase === 6;
+        return phase === 4;
     }
 
     showIDEPanel() {

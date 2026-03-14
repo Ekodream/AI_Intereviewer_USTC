@@ -242,8 +242,8 @@ class App {
         const nodes = document.querySelectorAll('.phase-node');
         const lines = document.querySelectorAll('.phase-line');
 
-        // Map visible phases to node indices
-        const phaseMap = [0, 1, 3, 5, 6, 7, 8];
+        // Seven-step interview flow: 0..6
+        const phaseMap = [0, 1, 2, 3, 4, 5, 6];
 
         nodes.forEach((node, idx) => {
             const nodePhase = phaseMap[idx];
