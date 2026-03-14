@@ -13,6 +13,7 @@ class ChatModule {
         this.compactMode = false;  // 精简对话模式
         this.codeEditor = null;    // CodeMirror 实例
         this.isCodeRunning = false; // 代码执行状态
+        this.abortController = null; // 用于取消流式请求
 
         this.chatForm = document.getElementById('chat-form');
         this.chatInput = document.getElementById('chat-input');
@@ -104,10 +105,17 @@ class ChatModule {
 
     handlePhaseChange(phase) {
         this.currentPhase = phase;
+        console.log(`🚀 handlePhaseChange 被调用，phase = ${phase}`);
+        console.log(`📍 当前进度条节点:`);
+        document.querySelectorAll('.phase-node').forEach((node, idx) => {
+            console.log(`  节点${idx}: data-phase=${node.getAttribute('data-phase')}, class=${node.className}`);
+        });
+        
         if (this.shouldShowIDE(phase)) {
             this.showIDEPanel();
         }
         // Update timeline via app
+        console.log(`🔧 调用 updatePhaseTimeline(${phase})`);
         window.app?.updatePhaseTimeline(phase);
     }
 
@@ -434,6 +442,9 @@ class ChatModule {
         }
 
         this.isStreaming = true;
+        
+        // 创建 AbortController 用于取消请求
+        this.abortController = new AbortController();
 
         try {
             const response = await fetch('/api/chat/stream', {
@@ -447,7 +458,8 @@ class ChatModule {
                     enable_rag: settings.enable_rag !== false,
                     rag_domain: settings.rag_domain || 'cs',
                     rag_top_k: settings.rag_top_k || 6
-                })
+                }),
+                signal: this.abortController.signal
             });
 
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -498,9 +510,10 @@ class ChatModule {
 
         } catch (error) {
             console.error('发送消息失败:', error);
-            this.updateAssistantMessage(assistantMsgId, `发送失败: ${error.message}`);
+            this.updateAssistantMessage(assistantMsgId, `发送失败：${error.message}`);
         } finally {
             this.isStreaming = false;
+            this.abortController = null;  // 清理 AbortController
         }
     }
 
