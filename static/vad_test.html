@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAD 参数测试工具</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+            color: #00d4ff;
+        }
+        
+        .card {
+            background: rgba(20, 26, 48, 0.8);
+            border: 1px solid rgba(100, 116, 139, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* RMS 显示 */
+        .rms-display {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .rms-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 48px;
+            font-weight: 600;
+            color: #00d4ff;
+            min-width: 180px;
+            text-align: center;
+        }
+        
+        .rms-bar-container {
+            flex: 1;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .rms-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #f59e0b 50%, #ef4444 100%);
+            transition: width 0.05s;
+            width: 0%;
+        }
+        
+        .threshold-marker {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #fff;
+            opacity: 0.8;
+        }
+        
+        .threshold-marker.speech {
+            background: #10b981;
+        }
+        
+        .threshold-marker.silence {
+            background: #ef4444;
+        }
+        
+        /* 波形图 */
+        .waveform-container {
+            height: 120px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        #waveform {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 状态指示 */
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: 500;
+            background: rgba(100, 116, 139, 0.2);
+            border: 1px solid rgba(100, 116, 139, 0.3);
+        }
+        
+        .status-badge.idle {
+            background: rgba(100, 116, 139, 0.2);
+            color: #94a3b8;
+        }
+        
+        .status-badge.listening {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: rgba(0, 212, 255, 0.4);
+            color: #00d4ff;
+        }
+        
+        .status-badge.speaking {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.4);
+            color: #10b981;
+        }
+        
+        .status-badge.silence {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: #f59e0b;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        
+        .status-badge.listening .status-dot,
+        .status-badge.speaking .status-dot {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        /* 参数控制 */
+        .param-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .param-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .param-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        
+        .param-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: #00d4ff;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(100, 116, 139, 0.3);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00d4ff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        /* 按钮 */
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff 0%, #a855f7 100%);
+            color: #fff;
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(100, 116, 139, 0.2);
+            color: #e2e8f0;
+            border: 1px solid rgba(100, 116, 139, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(100, 116, 139, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #fff;
+        }
+        
+        /* 日志 */
+        .log-container {
+            height: 200px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            margin-bottom: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .log-entry.info {
+            color: #94a3b8;
+        }
+        
+        .log-entry.speech {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+        
+        .log-entry.silence {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+        
+        .log-entry.event {
+            background: rgba(0, 212, 255, 0.15);
+            color: #00d4ff;
+        }
+        
+        /* 推荐参数 */
+        .recommendations {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .preset-btn {
+            padding: 12px;
+            background: rgba(100, 116, 139, 0.15);
+            border: 1px solid rgba(100, 116, 139, 0.2);
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .preset-btn:hover {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: rgba(0, 212, 255, 0.3);
+        }
+        
+        .preset-btn .preset-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .preset-btn .preset-desc {
+            color: #94a3b8;
+            font-size: 11px;
+        }
+        
+        /* 统计 */
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            margin-top: 16px;
+        }
+        
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            font-weight: 600;
+            color: #00d4ff;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 VAD 参数测试工具</h1>
+        
+        <!-- RMS 显示 -->
+        <div class="card">
+            <div class="card-title">实时 RMS 值</div>
+            <div class="rms-display">
+                <div class="rms-value" id="rms-value">0.000</div>
+                <div class="rms-bar-container">
+                    <div class="rms-bar" id="rms-bar"></div>
+                    <div class="threshold-marker silence" id="silence-marker"></div>
+                    <div class="threshold-marker speech" id="speech-marker"></div>
+                </div>
+            </div>
+            
+            <!-- 波形图 -->
+            <div class="waveform-container">
+                <canvas id="waveform"></canvas>
+            </div>
+            
+            <!-- 状态 -->
+            <div class="status-row">
+                <div class="status-badge idle" id="status-badge">
+                    <span class="status-dot"></span>
+                    <span id="status-text">未启动</span>
+                </div>
+                <div style="flex: 1;"></div>
+                <div style="font-size: 12px; color: #94a3b8;">
+                    静音时间: <span id="silence-time" style="color: #f59e0b;">0ms</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 参数控制 -->
+        <div class="card">
+            <div class="card-title">参数调节</div>
+            <div class="param-grid">
+                <div class="param-item">
+                    <div class="param-label">
+                        <span>语音阈值</span>
+                        <span class="param-value" id="speech-threshold-value">0.030</span>
+                    </div>
+                    <input type="range" id="speech-threshold" min="0.01" max="0.10" step="0.005" value="0.03">
+                </div>
+                <div class="param-item">
+                    <div class="param-label">
+                        <span>静音阈值</span>
+                        <span class="param-value" id="silence-threshold-value">0.020</span>
+                    </div>
+                    <input type="range" id="silence-threshold" min="0.005" max="0.05" step="0.005" value="0.02">
+                </div>
+                <div class="param-item">
+                    <div class="param-label">
+                        <span>静音确认时间</span>
+                        <span class="param-value" id="silence-duration-value">1500ms</span>
+                    </div>
+                    <input type="range" id="silence-duration" min="500" max="3000" step="100" value="1500">
+                </div>
+                <div class="param-item">
+                    <div class="param-label">
+                        <span>最小语音时长</span>
+                        <span class="param-value" id="min-speech-duration-value">500ms</span>
+                    </div>
+                    <input type="range" id="min-speech-duration" min="200" max="1500" step="100" value="500">
+                </div>
+            </div>
+            
+            <!-- 预设 -->
+            <div class="recommendations">
+                <div class="preset-btn" onclick="applyPreset('quiet')">
+                    <div class="preset-name">安静环境</div>
+                    <div class="preset-desc">低阈值，高灵敏度</div>
+                </div>
+                <div class="preset-btn" onclick="applyPreset('normal')">
+                    <div class="preset-name">正常环境</div>
+                    <div class="preset-desc">平衡设置</div>
+                </div>
+                <div class="preset-btn" onclick="applyPreset('noisy')">
+                    <div class="preset-name">嘈杂环境</div>
+                    <div class="preset-desc">高阈值，抗噪音</div>
+                </div>
+            </div>
+            
+            <div class="btn-row">
+                <button class="btn btn-primary" id="start-btn" onclick="toggleVAD()">开始测试</button>
+                <button class="btn btn-secondary" onclick="exportConfig()">导出配置</button>
+                <button class="btn btn-secondary" onclick="clearLog()">清空日志</button>
+            </div>
+        </div>
+        
+        <!-- 统计 -->
+        <div class="card">
+            <div class="card-title">测试统计</div>
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-value" id="speech-count">0</div>
+                    <div class="stat-label">检测到语音次数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avg-rms">0.000</div>
+                    <div class="stat-label">平均 RMS</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="max-rms">0.000</div>
+                    <div class="stat-label">最大 RMS</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="min-rms">0.000</div>
+                    <div class="stat-label">最小 RMS</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 日志 -->
+        <div class="card">
+            <div class="card-title">事件日志</div>
+            <div class="log-container" id="log-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // VAD 测试器
+        class VADTester {
+            constructor() {
+                this.audioContext = null;
+                this.analyser = null;
+                this.mediaStream = null;
+                this.isRunning = false;
+                this.animationFrameId = null;
+                
+                this.config = {
+                    silenceThreshold: 0.02,
+                    speechThreshold: 0.03,
+                    silenceDuration: 1500,
+                    minSpeechDuration: 500
+                };
+                
+                this.state = 'idle';
+                this.silenceTimer = null;
+                this.speechStartTime = null;
+                this.silenceStartTime = null;
+                
+                this.rmsHistory = [];
+                this.maxHistoryLength = 100;
+                
+                this.stats = {
+                    speechCount: 0,
+                    rmsSum: 0,
+                    rmsCount: 0,
+                    maxRms: 0,
+                    minRms: 1
+                };
+                
+                this.waveformData = [];
+                this.waveformCanvas = document.getElementById('waveform');
+                this.waveformCtx = this.waveformCanvas.getContext('2d');
+                
+                this.initCanvas();
+                this.bindControls();
+            }
+            
+            initCanvas() {
+                const rect = this.waveformCanvas.parentElement.getBoundingClientRect();
+                this.waveformCanvas.width = rect.width;
+                this.waveformCanvas.height = rect.height;
+            }
+            
+            bindControls() {
+                document.getElementById('speech-threshold').addEventListener('input', (e) => {
+                    this.config.speechThreshold = parseFloat(e.target.value);
+                    document.getElementById('speech-threshold-value').textContent = this.config.speechThreshold.toFixed(3);
+                    this.updateThresholdMarkers();
+                });
+                
+                document.getElementById('silence-threshold').addEventListener('input', (e) => {
+                    this.config.silenceThreshold = parseFloat(e.target.value);
+                    document.getElementById('silence-threshold-value').textContent = this.config.silenceThreshold.toFixed(3);
+                    this.updateThresholdMarkers();
+                });
+                
+                document.getElementById('silence-duration').addEventListener('input', (e) => {
+                    this.config.silenceDuration = parseInt(e.target.value);
+                    document.getElementById('silence-duration-value').textContent = this.config.silenceDuration + 'ms';
+                });
+                
+                document.getElementById('min-speech-duration').addEventListener('input', (e) => {
+                    this.config.minSpeechDuration = parseInt(e.target.value);
+                    document.getElementById('min-speech-duration-value').textContent = this.config.minSpeechDuration + 'ms';
+                });
+                
+                this.updateThresholdMarkers();
+            }
+            
+            updateThresholdMarkers() {
+                const speechPos = (this.config.speechThreshold / 0.15) * 100;
+                const silencePos = (this.config.silenceThreshold / 0.15) * 100;
+                
+                document.getElementById('speech-marker').style.left = speechPos + '%';
+                document.getElementById('silence-marker').style.left = silencePos + '%';
+            }
+            
+            async start() {
+                try {
+                    this.mediaStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            sampleRate: 16000,
+                            channelCount: 1,
+                            echoCancellation: true,
+                            noiseSuppression: true
+                        }
+                    });
+                    
+                    this.audioContext = new AudioContext({ sampleRate: 16000 });
+                    const source = this.audioContext.createMediaStreamSource(this.mediaStream);
+                    this.analyser = this.audioContext.createAnalyser();
+                    this.analyser.fftSize = 512;
+                    this.analyser.smoothingTimeConstant = 0.3;
+                    source.connect(this.analyser);
+                    
+                    this.isRunning = true;
+                    this.updateStatus('listening', '监听中...');
+                    this.log('开始监听', 'event');
+                    
+                    this.detect();
+                    
+                } catch (error) {
+                    this.log('错误: ' + error.message, 'error');
+                    alert('无法访问麦克风: ' + error.message);
+                }
+            }
+            
+            stop() {
+                this.isRunning = false;
+                
+                if (this.animationFrameId) {
+                    cancelAnimationFrame(this.animationFrameId);
+                }
+                
+                if (this.mediaStream) {
+                    this.mediaStream.getTracks().forEach(track => track.stop());
+                }
+                
+                if (this.audioContext) {
+                    this.audioContext.close();
+                }
+                
+                this.updateStatus('idle', '已停止');
+                this.log('停止监听', 'event');
+            }
+            
+            detect() {
+                if (!this.isRunning) return;
+                
+                const dataArray = new Float32Array(this.analyser.fftSize);
+                this.analyser.getFloatTimeDomainData(dataArray);
+                
+                const rms = this.calculateRMS(dataArray);
+                this.updateRMSDisplay(rms);
+                this.updateWaveform(dataArray);
+                this.updateStats(rms);
+                
+                const now = Date.now();
+                
+                if (rms > this.config.speechThreshold) {
+                    if (this.state !== 'speaking') {
+                        if (!this.speechStartTime) {
+                            this.speechStartTime = now;
+                        } else if (now - this.speechStartTime >= this.config.minSpeechDuration) {
+                            this.setState('speaking');
+                            this.log(`检测到语音开始 (RMS: ${rms.toFixed(4)})`, 'speech');
+                        }
+                    } else {
+                        this.silenceStartTime = null;
+                        document.getElementById('silence-time').textContent = '0ms';
+                    }
+                } else if (rms < this.config.silenceThreshold && this.state === 'speaking') {
+                    if (!this.silenceStartTime) {
+                        this.silenceStartTime = now;
+                    }
+                    const silenceTime = now - this.silenceStartTime;
+                    document.getElementById('silence-time').textContent = silenceTime + 'ms';
+                    
+                    if (silenceTime >= this.config.silenceDuration) {
+                        this.setState('silence');
+                        this.log(`检测到语音结束 (静音 ${silenceTime}ms)`, 'silence');
+                        this.stats.speechCount++;
+                        document.getElementById('speech-count').textContent = this.stats.speechCount;
+                        
+                        setTimeout(() => {
+                            if (this.isRunning && this.state === 'silence') {
+                                this.setState('listening');
+                            }
+                        }, 500);
+                    }
+                }
+                
+                this.animationFrameId = requestAnimationFrame(() => this.detect());
+            }
+            
+            calculateRMS(dataArray) {
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    sum += dataArray[i] * dataArray[i];
+                }
+                return Math.sqrt(sum / dataArray.length);
+            }
+            
+            updateRMSDisplay(rms) {
+                document.getElementById('rms-value').textContent = rms.toFixed(4);
+                
+                const percentage = Math.min((rms / 0.15) * 100, 100);
+                document.getElementById('rms-bar').style.width = percentage + '%';
+                
+                this.rmsHistory.push(rms);
+                if (this.rmsHistory.length > this.maxHistoryLength) {
+                    this.rmsHistory.shift();
+                }
+            }
+            
+            updateWaveform(dataArray) {
+                const canvas = this.waveformCanvas;
+                const ctx = this.waveformCtx;
+                const width = canvas.width;
+                const height = canvas.height;
+                
+                ctx.fillStyle = 'rgba(10, 14, 26, 0.3)';
+                ctx.fillRect(0, 0, width, height);
+                
+                ctx.beginPath();
+                ctx.strokeStyle = '#00d4ff';
+                ctx.lineWidth = 1;
+                
+                const sliceWidth = width / dataArray.length;
+                let x = 0;
+                
+                for (let i = 0; i < dataArray.length; i++) {
+                    const v = dataArray[i];
+                    const y = (v + 1) / 2 * height;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                    x += sliceWidth;
+                }
+                
+                ctx.stroke();
+                
+                // 绘制阈值线
+                const speechY = height - (this.config.speechThreshold / 0.5) * height;
+                const silenceY = height - (this.config.silenceThreshold / 0.5) * height;
+                
+                ctx.strokeStyle = 'rgba(16, 185, 129, 0.5)';
+                ctx.beginPath();
+                ctx.moveTo(0, speechY);
+                ctx.lineTo(width, speechY);
+                ctx.stroke();
+                
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+                ctx.beginPath();
+                ctx.moveTo(0, silenceY);
+                ctx.lineTo(width, silenceY);
+                ctx.stroke();
+            }
+            
+            updateStats(rms) {
+                this.stats.rmsSum += rms;
+                this.stats.rmsCount++;
+                this.stats.maxRms = Math.max(this.stats.maxRms, rms);
+                this.stats.minRms = Math.min(this.stats.minRms, rms);
+                
+                const avg = this.stats.rmsSum / this.stats.rmsCount;
+                document.getElementById('avg-rms').textContent = avg.toFixed(4);
+                document.getElementById('max-rms').textContent = this.stats.maxRms.toFixed(4);
+                document.getElementById('min-rms').textContent = this.stats.minRms.toFixed(4);
+            }
+            
+            setState(state) {
+                this.state = state;
+                this.speechStartTime = null;
+                this.silenceStartTime = null;
+                
+                const badge = document.getElementById('status-badge');
+                badge.className = 'status-badge ' + state;
+                
+                const texts = {
+                    'idle': '未启动',
+                    'listening': '监听中...',
+                    'speaking': '说话中',
+                    'silence': '静音检测中'
+                };
+                document.getElementById('status-text').textContent = texts[state] || state;
+            }
+            
+            updateStatus(state, text) {
+                const badge = document.getElementById('status-badge');
+                badge.className = 'status-badge ' + state;
+                document.getElementById('status-text').textContent = text;
+            }
+            
+            log(message, type = 'info') {
+                const container = document.getElementById('log-container');
+                const entry = document.createElement('div');
+                entry.className = 'log-entry ' + type;
+                
+                const time = new Date().toLocaleTimeString();
+                entry.textContent = `[${time}] ${message}`;
+                
+                container.appendChild(entry);
+                container.scrollTop = container.scrollHeight;
+            }
+            
+            setConfig(config) {
+                this.config = { ...this.config, ...config };
+                
+                document.getElementById('speech-threshold').value = this.config.speechThreshold;
+                document.getElementById('silence-threshold').value = this.config.silenceThreshold;
+                document.getElementById('silence-duration').value = this.config.silenceDuration;
+                document.getElementById('min-speech-duration').value = this.config.minSpeechDuration;
+                
+                document.getElementById('speech-threshold-value').textContent = this.config.speechThreshold.toFixed(3);
+                document.getElementById('silence-threshold-value').textContent = this.config.silenceThreshold.toFixed(3);
+                document.getElementById('silence-duration-value').textContent = this.config.silenceDuration + 'ms';
+                document.getElementById('min-speech-duration-value').textContent = this.config.minSpeechDuration + 'ms';
+                
+                this.updateThresholdMarkers();
+            }
+            
+            getConfig() {
+                return { ...this.config };
+            }
+            
+            resetStats() {
+                this.stats = {
+                    speechCount: 0,
+                    rmsSum: 0,
+                    rmsCount: 0,
+                    maxRms: 0,
+                    minRms: 1
+                };
+                document.getElementById('speech-count').textContent = '0';
+                document.getElementById('avg-rms').textContent = '0.000';
+                document.getElementById('max-rms').textContent = '0.000';
+                document.getElementById('min-rms').textContent = '0.000';
+            }
+        }
+        
+        const tester = new VADTester();
+        
+        function toggleVAD() {
+            const btn = document.getElementById('start-btn');
+            if (tester.isRunning) {
+                tester.stop();
+                btn.textContent = '开始测试';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-primary');
+            } else {
+                tester.start();
+                btn.textContent = '停止测试';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-danger');
+            }
+        }
+        
+        function applyPreset(preset) {
+            const presets = {
+                quiet: {
+                    speechThreshold: 0.015,
+                    silenceThreshold: 0.010,
+                    silenceDuration: 1500,
+                    minSpeechDuration: 400
+                },
+                normal: {
+                    speechThreshold: 0.030,
+                    silenceThreshold: 0.020,
+                    silenceDuration: 1500,
+                    minSpeechDuration: 500
+                },
+                noisy: {
+                    speechThreshold: 0.050,
+                    silenceThreshold: 0.035,
+                    silenceDuration: 1200,
+                    minSpeechDuration: 600
+                }
+            };
+            
+            tester.setConfig(presets[preset]);
+            tester.log(`应用预设: ${preset}`, 'event');
+        }
+        
+        function exportConfig() {
+            const config = tester.getConfig();
+            const json = JSON.stringify(config, null, 2);
+            
+            console.log('VAD 配置:');
+            console.log(json);
+            
+            navigator.clipboard.writeText(json).then(() => {
+                alert('配置已复制到剪贴板:\n\n' + json);
+            }).catch(() => {
+                alert('配置:\n\n' + json);
+            });
+        }
+        
+        function clearLog() {
+            document.getElementById('log-container').innerHTML = '';
+            tester.resetStats();
+        }
+        
+        // 窗口大小变化时重新初始化 canvas
+        window.addEventListener('resize', () => {
+            tester.initCanvas();
+        });
+    </script>
+</body>
+</html>
