@@ -30,7 +30,7 @@ LLM_MODEL = "qwen-plus"
 LLM_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 # TTS 模型
-TTS_MODEL = "step-tts-mini"
+TTS_MODEL = "step-tts-vivid"
 TTS_VOICE = "cixingnansheng"  # 磁性男声
 
 # ASR 模型
