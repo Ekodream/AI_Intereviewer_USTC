@@ -21,10 +21,6 @@ pip-delete-this-directory.txt
 temp_audio/
 output/
 
-# 向量数据库（本地生成）
-vector_db/
-data/vector_store/
-
 # 日志
 logs/
 *.log

@@ -406,7 +406,7 @@ async def chat_stream(request: ChatRequest):
             system_prompt = request.system_prompt
             if not system_prompt:
                 settings = session_store["settings"]
-                prompt_choice = settings.get("prompt_choice", "技术面试官（默认）")
+                prompt_choice = settings.get("prompt_choice", "正常型面试官（默认）")
                 system_prompt = PRESET_PROMPTS.get(prompt_choice, "")
             
             # RAG 检索

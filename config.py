@@ -26,7 +26,7 @@ DASHSCOPE_API_KEY ="sk-af8e9af4aae340bd86178117f7f3f33c" #os.getenv("DASHSCOPE_A
 
 # ==================== 模型配置 ====================
 # LLM 模型
-LLM_MODEL = "qwen-turbo"
+LLM_MODEL = "qwen-plus"
 LLM_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 # TTS 模型
