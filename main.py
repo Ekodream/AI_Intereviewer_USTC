@@ -40,7 +40,7 @@ from modules.audio_processor import (
 )
 from modules.ai_report import ai_report_stream, _format_history_for_report
 from modules.resume_parser import parse_resume, format_resume_for_prompt
-from modules.advisor_search import search_advisor_info, format_advisor_info_for_prompt
+from modules.advisor_search import search_advisor_info, search_advisor_stream, format_advisor_info_for_prompt
 
 # 初始化目录
 init_directories()
@@ -507,6 +507,56 @@ async def search_advisor(school: str = Form(...), name: str = Form(...)):
             status_code=500,
             content={"status": "error", "message": f"搜索失败：{str(e)}"}
         )
+
+
+@app.post("/api/advisor/search/stream")
+async def search_advisor_stream_api(school: str = Form(...), name: str = Form(...)):
+    """流式搜索导师信息，两阶段 + 按优先级渐进返回"""
+    
+    async def generate():
+        try:
+            all_results = {}
+            
+            async for chunk in search_advisor_stream(school, name):
+                if chunk["priority"] == "error":
+                    yield f"data: {json.dumps({'error': chunk['results'][0]['error']})}\n\n"
+                    return
+                
+                elif chunk["priority"] == "verify":
+                    yield f"data: {json.dumps(chunk)}\n\n"
+                
+                elif chunk["priority"] == "verified":
+                    yield f"data: {json.dumps(chunk)}\n\n"
+                
+                elif chunk["priority"] in ["p1", "p2", "p3"]:
+                    for r in chunk["results"]:
+                        if r["success"]:
+                            all_results[r["key"]] = r["data"]
+                    
+                    yield f"data: {json.dumps(chunk)}\n\n"
+                
+                elif chunk["priority"] == "done":
+                    full_info = chunk["full_info"]
+                    
+                    session_store["advisor_searched"] = True
+                    session_store["advisor_info"] = full_info
+                    session_store["advisor_school"] = school
+                    session_store["advisor_name"] = name
+                    
+                    yield f"data: {json.dumps(chunk)}\n\n"
+                    
+        except Exception as e:
+            print(f"❌ [导师流式搜索] 异常：{str(e)}")
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+    
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
 
 
 @app.delete("/api/advisor")
