@@ -3023,3 +3023,178 @@ body.immersive-mode .command-bar-left .sidebar-toggle-btn {
         font-size: 16px;
     }
 }
+
+/* ==================== Advisor Search Styles ==================== */
+.advisor-info-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-top: 10px;
+    animation: advisorFadeIn 0.4s ease-out;
+}
+
+@keyframes advisorFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.advisor-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.advisor-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: var(--radius-sm);
+    font-size: 24px;
+    color: var(--neon-blue);
+    flex-shrink: 0;
+}
+
+.advisor-basic {
+    flex: 1;
+    min-width: 0;
+}
+
+.advisor-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+}
+
+.advisor-school {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.advisor-title {
+    font-size: 12px;
+    color: var(--neon-cyan);
+}
+
+.advisor-research {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+/* Cyber Input for advisor fields */
+.cyber-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.cyber-input::placeholder {
+    color: var(--text-muted);
+}
+
+.cyber-input:focus {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+}
+
+/* ==================== Advisor Modal Styles ==================== */
+.advisor-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 10, 20, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.advisor-modal-content {
+    width: 90%;
+    max-width: 500px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-panel);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.advisor-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.advisor-modal-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-bright);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.advisor-modal-header h3 i {
+    color: var(--neon-blue);
+}
+
+.advisor-modal-body {
+    padding: 24px;
+}
+
+.advisor-input-group {
+    margin-bottom: 16px;
+}
+
+.advisor-input-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
