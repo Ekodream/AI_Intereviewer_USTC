@@ -1317,7 +1317,7 @@ class App {
 
             if (response.ok && data.status === 'ok') {
                 if (progressFill) progressFill.style.width = '100%';
-                if (progressText) progressText.textContent = data.from_cache ? '✅ 从缓存加载导师信息' : '✅ 导师信息搜索成功！';
+                if (progressText) progressText.textContent = '✅ 导师信息搜索成功！';
                 
                 this.advisorSearched = true;
                 this.advisorSchool = school;
@@ -1325,7 +1325,7 @@ class App {
                 // 确保是字符串类型
                 this.advisorInfo = typeof data.info === 'string' ? data.info : JSON.stringify(data.info);
                 
-                setTimeout(() => this.updateAdvisorUI(), data.from_cache ? 500 : 1500);
+                setTimeout(() => this.updateAdvisorUI(), 1500);
             } else {
                 // 搜索失败，降级到通用模式
                 throw new Error(data.message || '未找到导师信息');
