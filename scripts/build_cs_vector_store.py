@@ -12,14 +12,25 @@ if str(ROOT) not in sys.path:
 
 from modules.rag_engine import build_vector_store
 
-DATA_DIR = ROOT / "data" / "cs"
+DATA_DIR_CANDIDATES = [
+    ROOT / "data" / "cs ai",
+    ROOT / "data" / "cs",
+]
 PERSIST_DIR = ROOT / "vector_db"
-DOMAIN = "cs"
+DOMAIN = "cs ai"
+
+
+def resolve_data_dir() -> Path:
+    for candidate in DATA_DIR_CANDIDATES:
+        if candidate.exists() and candidate.is_dir():
+            return candidate
+    return DATA_DIR_CANDIDATES[0]
 
 
 def load_docs() -> list[dict]:
+    data_dir = resolve_data_dir()
     docs = []
-    for path in glob.glob(str(DATA_DIR / "qa_*.jsonl")):
+    for path in glob.glob(str(data_dir / "qa_*.jsonl")):
         with open(path, "r", encoding="utf-8-sig") as f:
             for line in f:
                 line = line.strip()
@@ -47,7 +58,8 @@ def _on_rm_error(func, path, exc_info):
 def main():
     docs = load_docs()
     if not docs:
-        raise SystemExit("No docs found in data/cs")
+        checked = ", ".join(str(p) for p in DATA_DIR_CANDIDATES)
+        raise SystemExit(f"No docs found. Checked: {checked}")
     target_dir = PERSIST_DIR / DOMAIN
     if target_dir.exists():
         shutil.rmtree(target_dir, onerror=_on_rm_error)

@@ -1,0 +1,12 @@
+{"question":"实验结果突然退化时，第一步应该做什么？","answer":"先确认是否为环境或数据变更引起：检查代码提交、依赖版本、数据版本、随机种子和评测脚本。先排除系统性漂移再分析算法问题。","topic":"research-failure-analysis","difficulty":"easy","type":"playbook"}
+{"question":"如何区分\"偶然坏 run\"与\"方法失效\"？","answer":"通过重复实验和置信区间判断波动范围；若多次运行稳定退化，才可判定方法层面失效。单次结果不能作为强结论。","topic":"research-failure-analysis","difficulty":"medium","type":"theory"}
+{"question":"模型不收敛时的系统排查顺序是什么？","answer":"按\"数据完整性→损失定义→学习率与优化器→梯度与数值稳定→初始化与正则→训练管线\"逐层排查，并保留每步证据。","topic":"research-failure-analysis","difficulty":"hard","type":"playbook"}
+{"question":"为什么导师会追问失败实验而非只看最好结果？","answer":"失败实验能反映候选人的诊断能力和科研韧性。只会展示最优结果但缺少失败分析通常意味着研究过程不完整。","topic":"research-failure-analysis","difficulty":"easy","type":"knowledge"}
+{"question":"出现过拟合时有哪些可验证改进策略？","answer":"可尝试数据增强、正则化、早停、模型简化、交叉验证和更稳健指标。每个策略都应配套对照实验验证效果来源。","topic":"research-failure-analysis","difficulty":"medium","type":"design"}
+{"question":"线上效果差于离线时，如何快速缩小排查范围？","answer":"先做分桶对比与分布漂移分析，再核查特征实时性与数据质量，最后检查决策阈值与业务反馈闭环。","topic":"research-failure-analysis","difficulty":"hard","type":"playbook"}
+{"question":"当多个改动同时上线后效果下降，如何定位主因？","answer":"使用回滚分解或因子化实验逐个验证，避免一次性多变量导致归因不清。必要时建立最小可复现实验环境。","topic":"research-failure-analysis","difficulty":"medium","type":"knowledge"}
+{"question":"如何评价候选人的失败复盘质量？","answer":"看是否具备\"证据链、因果区分、行动计划、复现记录\"四要素。只有情绪化总结而无证据通常评分较低。","topic":"research-failure-analysis","difficulty":"hard","type":"rubric"}
+{"question":"资源受限下，失败实验优先修复顺序如何定？","answer":"优先处理高影响、低成本、可快速验证的问题，再处理高影响高成本问题。以边际信息增益最大化为原则。","topic":"research-failure-analysis","difficulty":"medium","type":"design"}
+{"question":"如何把失败经验沉淀为团队知识？","answer":"形成标准化复盘模板，记录触发条件、根因、验证步骤、修复方案和防再发措施，并建立可检索索引。","topic":"research-failure-analysis","difficulty":"easy","type":"playbook"}
+{"question":"如果候选人无法给出失败案例，导师应如何追问？","answer":"可转问\"最困难一次调试经历\"或\"你曾否推翻自己方案\"，观察其是否能描述真实问题与修正过程。","topic":"research-failure-analysis","difficulty":"medium","type":"followup-template"}
+{"question":"何时应停止在失败方向上继续投入？","answer":"当关键假设被反复证伪且替代路径收益更高时，应及时止损。科学止损需要证据而非直觉。","topic":"research-failure-analysis","difficulty":"hard","type":"theory"}

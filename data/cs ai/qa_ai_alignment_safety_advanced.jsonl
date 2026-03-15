@@ -1,0 +1,16 @@
+{"question":"为什么对齐不是一次性训练问题，而是持续治理问题？","answer":"模型上线后面对新分布、新攻击和新策略约束，风险面会动态变化。必须通过持续评测、策略更新和红队测试形成闭环治理。","topic":"ai-alignment-safety","difficulty":"medium","type":"knowledge"}
+{"question":"RLHF 与 DPO 在对齐目标上有何关键差异？","answer":"RLHF 通过奖励模型和策略优化间接学习偏好，DPO 直接在偏好对上优化策略比值。DPO 更简化训练链路，但对偏好数据质量同样敏感。","topic":"ai-alignment-safety","difficulty":"hard","type":"theory"}
+{"question":"如何判断一个安全策略在真实场景中是否过度拒答？","answer":"需同时跟踪有害请求拦截率与无害请求误拒率，并按领域和用户群分层评估。仅看拦截率会掩盖可用性灾难。","topic":"ai-alignment-safety","difficulty":"hard","type":"rubric"}
+{"question":"提示注入防护为什么不能只靠关键词过滤？","answer":"注入攻击可通过语义变体和上下文劫持绕过关键词规则。有效防护需结合上下文隔离、工具权限最小化、策略执行链审计。","topic":"ai-alignment-safety","difficulty":"hard","type":"knowledge"}
+{"question":"工具调用型代理最核心的安全边界是什么？","answer":"操作权限边界和可验证执行边界。代理应在最小权限沙箱内运行，敏感操作需显式确认与可追踪审计。","topic":"ai-alignment-safety","difficulty":"medium","type":"design"}
+{"question":"为什么模型越强并不天然意味着越安全？","answer":"能力增强会同时提升潜在误用能力和攻击面，若防护机制未同步升级，系统总体风险可能上升。安全能力必须与性能能力协同演进。","topic":"ai-alignment-safety","difficulty":"medium","type":"theory"}
+{"question":"如何设计可执行的红队测试集？","answer":"覆盖越权、隐私泄露、工具滥用、策略规避、幻觉高风险场景，并包含多轮对话与角色伪装样本。红队集应持续更新而非一次构建。","topic":"ai-alignment-safety","difficulty":"hard","type":"playbook"}
+{"question":"在隐私场景中，模型记忆风险如何评估？","answer":"通过成员推断、训练数据提取和敏感片段重现测试评估泄露风险，并结合差分隐私或去标识化策略降低暴露概率。","topic":"ai-alignment-safety","difficulty":"hard","type":"knowledge"}
+{"question":"安全对齐中为何需要层级化策略而非单一规则？","answer":"风险等级、业务场景和用户权限不同，单一规则要么过松要么过严。层级化策略可在安全与可用间实现细粒度平衡。","topic":"ai-alignment-safety","difficulty":"medium","type":"design"}
+{"question":"如何处理模型在边界案例上的不确定性输出？","answer":"引入不确定性触发机制，当证据不足或冲突时优先降级回答、请求澄清或转人工。把不确定性显式化比强行给答案更安全。","topic":"ai-alignment-safety","difficulty":"medium","type":"playbook"}
+{"question":"为什么安全评测必须包含多轮对话而非单轮问答？","answer":"许多攻击依赖上下文累积和角色迁移，单轮难暴露真实风险。多轮评测更接近生产环境下的策略绕过路径。","topic":"ai-alignment-safety","difficulty":"hard","type":"knowledge"}
+{"question":"如何定义生成系统的安全发布门槛？","answer":"至少包含关键风险场景通过率、误拒率上限、审计可追踪性和紧急下线能力。门槛应与业务风险等级绑定而非统一阈值。","topic":"ai-alignment-safety","difficulty":"hard","type":"rubric"}
+{"question":"在模型对齐中，偏好数据标注不一致会造成什么后果？","answer":"会使奖励信号噪声增大并引入策略震荡，导致模型行为不稳定。需通过标注指南、仲裁机制和一致性监控提升偏好数据质量。","topic":"ai-alignment-safety","difficulty":"medium","type":"playbook"}
+{"question":"如何防止安全策略被模型更新悄然破坏？","answer":"建立版本化安全回归测试和强制门禁，任何模型更新都必须通过同一套关键风险基准，并保留差异报告。","topic":"ai-alignment-safety","difficulty":"hard","type":"design"}
+{"question":"何时应该引入策略模型与基座模型解耦架构？","answer":"当业务需要频繁策略迭代或多地区合规差异明显时，解耦可降低更新成本并提升审计透明度。","topic":"ai-alignment-safety","difficulty":"medium","type":"knowledge"}
+{"question":"如何评估一次安全改动是否只是表面拦截而非真实降风险？","answer":"应做对抗迁移测试和长期绕过监测，观察攻击成功率是否结构性下降，而非仅在固定测试集上分数上升。","topic":"ai-alignment-safety","difficulty":"hard","type":"theory"}

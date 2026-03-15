@@ -3,7 +3,7 @@
 Interview Manager - 面试状态管理器
 
 专门维护面试过程中的核心状态：
-- current_stage: 当前面试阶段 (0-6)
+- current_stage: 当前面试阶段 (0-9)
 - resume_context: 解析后的简历信息
 - history: 当前环节的对话历史
 """
@@ -14,13 +14,16 @@ from typing import List, Dict, Any, Optional
 
 # 面试阶段定义
 STAGE_NAMES = {
-    0: "面试开始",
+    0: "开始",
     1: "自我介绍",
-    2: "项目经历",
-    3: "技术提问",
-    4: "代码编程",
-    5: "反问环节",
-    6: "面试结束",
+    2: "经历深挖",
+    3: "基础知识",
+    4: "代码",
+    5: "科研动机",
+    6: "科研潜力",
+    7: "综合追问",
+    8: "学生反问",
+    9: "结束",
 }
 
 
@@ -36,13 +39,13 @@ def detect_stage_transition(ai_response: str) -> Optional[int]:
         ai_response: AI 的回复文本
         
     Returns:
-        如果检测到切换指令，返回目标阶段编号 (0-6)；否则返回 None
+        如果检测到切换指令，返回目标阶段编号 (0-9)；否则返回 None
     """
     # 匹配 /next[(数字)] 格式
     match = re.search(r"/next\[\s*\(?\s*(\d+)\s*\)?\s*\]", ai_response)
     if match:
         target_stage = int(match.group(1))
-        if 0 <= target_stage <= 6:
+        if 0 <= target_stage <= 9:
             return target_stage
     return None
 
@@ -52,7 +55,7 @@ class InterviewManager:
     面试状态管理器
     
     负责维护：
-    1. current_stage: 当前面试阶段 (0-6)
+    1. current_stage: 当前面试阶段 (0-9)
     2. resume_context: 简历信息
     3. history: 当前环节的对话历史
     """
@@ -64,12 +67,12 @@ class InterviewManager:
 
     @property
     def current_stage(self) -> int:
-        """获取当前阶段 (0-6)"""
+        """获取当前阶段 (0-9)"""
         return self._current_stage
 
     def set_stage(self, stage: int) -> None:
         """设置当前阶段"""
-        if 0 <= stage <= 6:
+        if 0 <= stage <= 9:
             self._current_stage = stage
 
     def update_stage_from_response(self, ai_response: str) -> bool:

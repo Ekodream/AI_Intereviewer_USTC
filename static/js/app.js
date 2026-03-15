@@ -1,34 +1,39 @@
 /**
- * AI 面试官 — Cybernetic Command
+ * AI Lab-InterReviewer — Cybernetic Command
  * 主应用逻辑：初始化、设置管理、抽屉面板、报告生成
  */
 
 class App {
     constructor() {
         this.settings = {
-            prompt_choice: '正常型面试官（默认）',
+            prompt_choice: '正常型导师（默认）',
             system_prompt: '',
             enable_tts: true,
             enable_rag: true,
-            rag_domain: 'cs',
+            rag_domain: 'cs ai',
             rag_top_k: 6,
-            compact_mode: false  // 精简对话模式
+            compact_mode: false,  // 精简对话模式
+            advisor_mode: 'ai_default',
+            advisor_school: '',
+            advisor_lab: '',
+            advisor_name: ''
         };
 
         this.presets = {};
         this.reportContent = '';
         this.resumeUploaded = false;
         this.resumeFileName = '';
-        this.radarChart = null;  // 雷达图实例
-
-        // 导师信息
         this.advisorSearched = false;
         this.advisorSchool = '';
+        this.advisorLab = '';
         this.advisorName = '';
         this.advisorInfo = null;
-
-        // 模式管理
-        this.interviewMode = null;  // 'standard' | 'immersive'
+        this.advisorSearchInProgress = false;
+        this.advisorSearchProgress = 0;
+        this.advisorSearchProgressText = '';
+        this.advisorSearchError = '';
+        this.advisorSearchPayload = null;
+        this.interviewMode = 'standard';
 
         this.loadingOverlay = document.getElementById('loading-overlay');
         this.loadingText = document.getElementById('loading-text');
@@ -36,21 +41,29 @@ class App {
         this.init();
     }
 
+    normalizePromptChoice(choice) {
+        const aliases = {
+            '温和型': '温和型导师',
+            '正常型（默认）': '正常型导师（默认）',
+            '正常型导师': '正常型导师（默认）',
+            '压力型': '压力型导师',
+            '压力型导师': '压力型导师'
+        };
+        const legacyRole = '面试' + '官';
+        const normalizedInput = (choice || '').replaceAll(legacyRole, '导师');
+        const normalized = aliases[normalizedInput] || normalizedInput;
+        if (normalized && this.presets[normalized]) return normalized;
+        return '正常型导师（默认）';
+    }
+
     async init() {
         console.log('🚀 初始化 Cybernetic Command...');
 
-        // 检查是否有保存的模式选择
-        const savedMode = localStorage.getItem('interviewMode');
-        if (savedMode) {
-            // 有保存的模式，直接进入
-            this.hideModeSelector();
-            this.selectMode(savedMode, false);
-        } else {
-            // 没有保存的模式，显示模式选择器
-            this.showModeSelector();
-        }
+        // Always start from mode selection screen.
+        // User can pick standard/immersive each time after entering.
+        this.showModeSelector();
+        this.selectMode('standard', false);
 
-        // 绑定模式选择器事件
         this.bindModeSelectorEvents();
 
         this.bindSidebarEvents();
@@ -68,79 +81,64 @@ class App {
         await this.loadResumeStatus();
         await this.loadAdvisorStatus();
 
+        this.syncImmersiveVoiceState();
+        this.updateImmersiveMsgCount();
+
         console.log('✅ 初始化完成');
     }
 
     /* ==================== Mode Management ==================== */
     showModeSelector() {
         const selector = document.getElementById('mode-selector');
-        if (selector) {
-            selector.classList.remove('hidden');
-        }
+        if (selector) selector.classList.remove('hidden');
     }
 
     hideModeSelector() {
         const selector = document.getElementById('mode-selector');
-        if (selector) {
-            selector.classList.add('hidden');
-        }
+        if (selector) selector.classList.add('hidden');
     }
 
     bindModeSelectorEvents() {
-        const modeOptions = document.querySelectorAll('.mode-option');
-        modeOptions.forEach(option => {
+        document.querySelectorAll('.mode-option').forEach((option) => {
             option.addEventListener('click', () => {
                 const mode = option.getAttribute('data-mode');
-                if (mode) {
-                    // 添加选中动画
-                    option.classList.add('selecting');
-                    setTimeout(() => {
-                        this.selectMode(mode, true);
-                        this.hideModeSelector();
-                    }, 300);
-                }
+                if (!mode) return;
+
+                option.classList.add('selecting');
+                setTimeout(() => {
+                    this.selectMode(mode, true);
+                    this.hideModeSelector();
+                }, 250);
             });
         });
     }
 
     selectMode(mode, save = true) {
-        this.interviewMode = mode;
+        this.interviewMode = (mode === 'immersive') ? 'immersive' : 'standard';
+
         if (save) {
-            localStorage.setItem('interviewMode', mode);
+            localStorage.setItem('interviewMode', this.interviewMode);
         }
 
-        // 移除所有模式类
         document.body.classList.remove('standard-mode', 'immersive-mode');
-
-        if (mode === 'standard') {
-            this.switchToStandardMode();
-        } else if (mode === 'immersive') {
+        if (this.interviewMode === 'immersive') {
             this.switchToImmersiveMode();
+        } else {
+            this.switchToStandardMode();
         }
-
-        console.log(`🎯 已切换到${mode === 'immersive' ? '沉浸式' : '标准'}模式`);
     }
 
     switchToStandardMode() {
         document.body.classList.add('standard-mode');
-        
-        // 显示标准模式UI
-        const commandBody = document.querySelector('.command-body');
-        if (commandBody) commandBody.style.display = '';
 
-        // 隐藏沉浸式UI
         const immersiveStage = document.getElementById('immersive-stage');
         if (immersiveStage) immersiveStage.classList.remove('active');
 
         const settingsToggle = document.getElementById('immersive-settings-toggle');
         if (settingsToggle) settingsToggle.classList.remove('visible');
 
-        const settingsPanel = document.getElementById('immersive-settings-panel');
-        if (settingsPanel) {
-            settingsPanel.classList.remove('visible', 'show');
-        }
+        this.closeImmersiveSettings();
 
-        // 恢复TTS设置的可编辑性
         const enableTts = document.getElementById('enable-tts');
         if (enableTts) enableTts.disabled = false;
     }
@@ -148,14 +146,13 @@ class App {
     switchToImmersiveMode() {
         document.body.classList.add('immersive-mode');
 
-        // 显示沉浸式UI
         const immersiveStage = document.getElementById('immersive-stage');
         if (immersiveStage) immersiveStage.classList.add('active');
 
         const settingsToggle = document.getElementById('immersive-settings-toggle');
         if (settingsToggle) settingsToggle.classList.add('visible');
 
-        // 强制开启TTS
+        // Immersive mode enforces TTS on to keep pure voice flow.
         this.settings.enable_tts = true;
         const enableTts = document.getElementById('enable-tts');
         if (enableTts) {
@@ -163,46 +160,43 @@ class App {
             enableTts.disabled = true;
         }
 
-        // 同步沉浸式面板RAG设置
         const immersiveRag = document.getElementById('immersive-enable-rag');
-        if (immersiveRag) {
-            immersiveRag.checked = this.settings.enable_rag;
-        }
+        if (immersiveRag) immersiveRag.checked = this.settings.enable_rag;
 
-        // 更新沉浸式简历按钮状态
         this.updateImmersiveResumeBtn();
-
-        // 更新沉浸式消息计数
         this.updateImmersiveMsgCount();
-
+        this.updateImmersivePhase(window.chat?.currentPhase || 0);
+        this.syncImmersiveVoiceState();
         this.saveSettings();
     }
 
-    /* ==================== Immersive Mode Events ==================== */
+    isImmersiveMode() {
+        return this.interviewMode === 'immersive';
+    }
+
+    /* ==================== Immersive Mode ==================== */
     bindImmersiveEvents() {
-        // 设置面板开关
+        const immersiveRecordBtn = document.getElementById('immersive-record-btn');
+        if (immersiveRecordBtn) {
+            immersiveRecordBtn.addEventListener('click', () => {
+                document.getElementById('record-btn')?.click();
+            });
+        }
+
         const settingsToggle = document.getElementById('immersive-settings-toggle');
-        const settingsPanel = document.getElementById('immersive-settings-panel');
+        if (settingsToggle) {
+            settingsToggle.addEventListener('click', () => this.toggleImmersiveSettings());
+        }
+
         const settingsClose = document.getElementById('immersive-settings-close');
-
-        if (settingsToggle && settingsPanel) {
-            settingsToggle.addEventListener('click', () => {
-                this.toggleImmersiveSettings();
-            });
-        }
-
         if (settingsClose) {
-            settingsClose.addEventListener('click', () => {
-                this.closeImmersiveSettings();
-            });
+            settingsClose.addEventListener('click', () => this.closeImmersiveSettings());
         }
 
-        // RAG开关
         const immersiveRag = document.getElementById('immersive-enable-rag');
         if (immersiveRag) {
             immersiveRag.addEventListener('change', () => {
                 this.settings.enable_rag = immersiveRag.checked;
-                // 同步到标准模式的RAG开关
                 const enableRag = document.getElementById('enable-rag');
                 if (enableRag) enableRag.checked = immersiveRag.checked;
                 const ragSettings = document.getElementById('rag-settings');
@@ -211,60 +205,60 @@ class App {
             });
         }
 
-        // 简历上传按钮
         const immersiveResumeBtn = document.getElementById('immersive-resume-btn');
         if (immersiveResumeBtn) {
             immersiveResumeBtn.addEventListener('click', () => {
-                const resumeInput = document.getElementById('resume-input');
-                if (resumeInput) resumeInput.click();
+                document.getElementById('resume-input')?.click();
+                this.closeImmersiveSettings();
             });
         }
 
-        // IDE按钮
+        const immersiveAdvisorBtn = document.getElementById('immersive-advisor-btn');
+        if (immersiveAdvisorBtn) {
+            immersiveAdvisorBtn.addEventListener('click', () => {
+                this.showAdvisorModal();
+                this.closeImmersiveSettings();
+            });
+        }
+
         const immersiveIdeBtn = document.getElementById('immersive-ide-btn');
         if (immersiveIdeBtn) {
             immersiveIdeBtn.addEventListener('click', () => {
-                if (window.chat) window.chat.showIDEPanel();
+                window.chat?.showIDEPanel();
                 this.closeImmersiveSettings();
             });
         }
 
-        // 报告按钮
         const immersiveReportBtn = document.getElementById('immersive-report-btn');
         if (immersiveReportBtn) {
             immersiveReportBtn.addEventListener('click', () => {
-                const reportDrawer = document.getElementById('report-drawer');
-                if (reportDrawer) {
-                    this.closeAllDrawers();
-                    reportDrawer.classList.add('show');
-                    document.getElementById('toggle-report-btn')?.classList.add('active');
-                }
+                this.closeAllDrawers();
+                document.getElementById('report-drawer')?.classList.add('show');
+                document.getElementById('toggle-report-btn')?.classList.add('active');
                 this.closeImmersiveSettings();
             });
         }
 
-        // 新对话按钮
         const immersiveNewChatBtn = document.getElementById('immersive-new-chat-btn');
         if (immersiveNewChatBtn) {
             immersiveNewChatBtn.addEventListener('click', () => {
-                if (confirm('确定要开始新对话吗？当前对话历史将被清空。')) {
-                    window.chat?.clearHistory();
-                    this.reportContent = '';
-                    this.resetPhaseTimeline();
-                    this.updateImmersivePhase(0);
-                    this.updateImmersiveMsgCount();
-                    // 更新沉浸式状态
-                    const statusEl = document.getElementById('immersive-status');
-                    if (statusEl) statusEl.textContent = '点击麦克风开始面试';
-                }
+                if (!confirm('确定要开始新对话吗？当前对话历史将被清空。')) return;
+                window.chat?.clearHistory();
+                this.reportContent = '';
+                const reportContent = document.getElementById('report-content');
+                if (reportContent) reportContent.textContent = '';
+                document.getElementById('report-download')?.style.setProperty('display', 'none');
+                this.resetPhaseTimeline();
+                this.updateImmersivePhase(0);
+                this.updateImmersiveMsgCount();
+                this.updateImmersiveStatus('点击麦克风开始面试');
                 this.closeImmersiveSettings();
             });
         }
 
-        // 切换模式按钮
-        const switchModeBtn = document.getElementById('immersive-switch-mode-btn');
-        if (switchModeBtn) {
-            switchModeBtn.addEventListener('click', () => {
+        const immersiveSwitchModeBtn = document.getElementById('immersive-switch-mode-btn');
+        if (immersiveSwitchModeBtn) {
+            immersiveSwitchModeBtn.addEventListener('click', () => {
                 this.selectMode('standard', true);
                 this.closeImmersiveSettings();
             });
@@ -273,41 +267,41 @@ class App {
 
     toggleImmersiveSettings() {
         const settingsPanel = document.getElementById('immersive-settings-panel');
-        if (settingsPanel) {
-            if (settingsPanel.classList.contains('show')) {
-                this.closeImmersiveSettings();
-            } else {
-                settingsPanel.classList.add('visible');
-                // 延迟添加show类以触发动画
-                requestAnimationFrame(() => {
-                    settingsPanel.classList.add('show');
-                });
-            }
+        if (!settingsPanel) return;
+
+        if (settingsPanel.classList.contains('show')) {
+            this.closeImmersiveSettings();
+            return;
         }
+
+        settingsPanel.classList.add('visible');
+        requestAnimationFrame(() => {
+            settingsPanel.classList.add('show');
+        });
     }
 
     closeImmersiveSettings() {
         const settingsPanel = document.getElementById('immersive-settings-panel');
-        if (settingsPanel) {
-            settingsPanel.classList.remove('show');
-            setTimeout(() => {
-                if (!settingsPanel.classList.contains('show')) {
-                    settingsPanel.classList.remove('visible');
-                }
-            }, 350);
-        }
+        if (!settingsPanel) return;
+
+        settingsPanel.classList.remove('show');
+        setTimeout(() => {
+            if (!settingsPanel.classList.contains('show')) {
+                settingsPanel.classList.remove('visible');
+            }
+        }, 350);
     }
 
     updateImmersiveResumeBtn() {
         const btn = document.getElementById('immersive-resume-btn');
-        if (btn) {
-            if (this.resumeUploaded) {
-                btn.innerHTML = '<i class="fas fa-check"></i> 已上传';
-                btn.classList.add('cyber-btn-success');
-            } else {
-                btn.innerHTML = '<i class="fas fa-upload"></i> 上传';
-                btn.classList.remove('cyber-btn-success');
-            }
+        if (!btn) return;
+
+        if (this.resumeUploaded) {
+            btn.innerHTML = '<i class="fas fa-check"></i> 已上传';
+            btn.classList.add('cyber-btn-success');
+        } else {
+            btn.innerHTML = '<i class="fas fa-upload"></i> 上传';
+            btn.classList.remove('cyber-btn-success');
         }
     }
 
@@ -315,38 +309,79 @@ class App {
         const phaseEl = document.getElementById('immersive-phase');
         if (!phaseEl) return;
 
-        const phaseNames = ['面试开始', '自我介绍', '项目经历', '技术提问', '代码编程', '反问环节', '面试结束'];
+        const phaseNames = ['开始', '自我介绍', '经历深挖', '基础知识', '代码', '科研动机', '科研潜力', '综合追问', '学生反问', '结束'];
         phaseEl.textContent = phaseNames[phase] || '面试中';
     }
 
     updateImmersiveMsgCount() {
         const countEl = document.getElementById('immersive-msg-count');
-        if (countEl && window.chat) {
-            const rounds = Math.ceil(window.chat.history.length / 2);
-            countEl.textContent = `${rounds} 轮对话`;
-        }
+        if (!countEl || !window.chat) return;
+        const rounds = Math.ceil(window.chat.history.length / 2);
+        countEl.textContent = `${rounds} 轮对话`;
     }
 
-    // 沉浸式模式TTS指示器
-    showImmersiveTTSIndicator() {
-        const indicator = document.getElementById('immersive-tts-indicator');
-        if (indicator) indicator.classList.add('active');
-    }
-
-    hideImmersiveTTSIndicator() {
-        const indicator = document.getElementById('immersive-tts-indicator');
-        if (indicator) indicator.classList.remove('active');
-    }
-
-    // 更新沉浸式状态文字
     updateImmersiveStatus(status) {
         const statusEl = document.getElementById('immersive-status');
         if (statusEl) statusEl.textContent = status;
     }
 
-    // 检查是否在沉浸式模式
-    isImmersiveMode() {
-        return this.interviewMode === 'immersive';
+    showImmersiveTTSIndicator() {
+        document.getElementById('immersive-tts-indicator')?.classList.add('active');
+    }
+
+    hideImmersiveTTSIndicator() {
+        document.getElementById('immersive-tts-indicator')?.classList.remove('active');
+    }
+
+    syncImmersiveVoiceState() {
+        const mainRecordBtn = document.getElementById('record-btn');
+        const mainStatusText = document.querySelector('#vad-status-indicator .vad-status-text');
+        const immersiveBtn = document.getElementById('immersive-record-btn');
+        const immersiveIcon = document.getElementById('immersive-record-icon');
+        if (!mainRecordBtn || !immersiveBtn) return;
+
+        const applyState = () => {
+            immersiveBtn.className = 'immersive-mic-btn';
+
+            const states = ['listening', 'speaking', 'processing', 'tts-playing'];
+            let activeState = null;
+            for (const state of states) {
+                if (mainRecordBtn.classList.contains(state)) {
+                    activeState = state;
+                    immersiveBtn.classList.add(state);
+                    break;
+                }
+            }
+
+            if (immersiveIcon) {
+                if (activeState === 'processing') {
+                    immersiveIcon.className = 'fas fa-spinner fa-spin';
+                } else {
+                    immersiveIcon.className = 'fas fa-microphone';
+                }
+            }
+
+            if (activeState === 'tts-playing') {
+                this.showImmersiveTTSIndicator();
+                this.updateImmersiveStatus('AI 正在回复...');
+            } else {
+                this.hideImmersiveTTSIndicator();
+                const text = mainStatusText?.textContent?.trim();
+                if (text) this.updateImmersiveStatus(text);
+            }
+        };
+
+        applyState();
+
+        if (this._immersiveRecordObserver) this._immersiveRecordObserver.disconnect();
+        this._immersiveRecordObserver = new MutationObserver(applyState);
+        this._immersiveRecordObserver.observe(mainRecordBtn, { attributes: true, attributeFilter: ['class'] });
+
+        if (mainStatusText) {
+            if (this._immersiveStatusObserver) this._immersiveStatusObserver.disconnect();
+            this._immersiveStatusObserver = new MutationObserver(applyState);
+            this._immersiveStatusObserver.observe(mainStatusText, { characterData: true, subtree: true, childList: true });
+        }
     }
 
     /* ==================== Sidebar ==================== */
@@ -387,28 +422,19 @@ class App {
                     if (rc) rc.textContent = '';
                     const rd = document.getElementById('report-download');
                     if (rd) rd.style.display = 'none';
-                    // 重置雷达图
-                    const radarContainer = document.getElementById('radar-chart-container');
-                    if (radarContainer) radarContainer.style.display = 'none';
-                    if (this.radarChart) {
-                        this.radarChart.destroy();
-                        this.radarChart = null;
-                    }
                     // Reset phase timeline
                     this.resetPhaseTimeline();
                 }
             });
         }
 
-        // Switch to immersive mode button (in sidebar)
         const switchToImmersiveBtn = document.getElementById('switch-to-immersive-btn');
         if (switchToImmersiveBtn) {
             switchToImmersiveBtn.addEventListener('click', () => {
                 this.selectMode('immersive', true);
-                // 关闭侧边栏（移动端）
                 if (window.innerWidth <= 900 && sidebar) {
                     sidebar.classList.remove('show');
-                    if (sidebarToggle) sidebarToggle.classList.remove('active');
+                    sidebarToggle?.classList.remove('active');
                 }
             });
         }
@@ -510,6 +536,8 @@ class App {
             enableRag.addEventListener('change', () => {
                 this.settings.enable_rag = enableRag.checked;
                 if (ragSettings) ragSettings.style.display = enableRag.checked ? 'block' : 'none';
+                const immersiveRag = document.getElementById('immersive-enable-rag');
+                if (immersiveRag) immersiveRag.checked = enableRag.checked;
                 this.saveSettings();
             });
         }
@@ -544,6 +572,22 @@ class App {
                 }
             });
         }
+
+        const advisorMode = document.getElementById('advisor-mode');
+        if (advisorMode) {
+            advisorMode.addEventListener('change', async () => {
+                this.settings.advisor_mode = advisorMode.value;
+                const customFields = document.getElementById('advisor-custom-fields');
+                if (customFields) {
+                    customFields.style.display = advisorMode.value === 'custom' ? 'block' : 'none';
+                }
+                if (advisorMode.value === 'ai_default') {
+                    await this.deleteAdvisor(false);
+                }
+                this.saveSettings();
+                this.updateAdvisorUI();
+            });
+        }
     }
 
     /* ==================== Report ==================== */
@@ -567,8 +611,8 @@ class App {
         const nodes = document.querySelectorAll('.phase-node');
         const lines = document.querySelectorAll('.phase-line');
 
-        // Seven-step interview flow: 0..6
-        const phaseMap = [0, 1, 2, 3, 4, 5, 6];
+        // Ten-step interview flow: 0..9
+        const phaseMap = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
         nodes.forEach((node, idx) => {
             const nodePhase = phaseMap[idx];
@@ -608,6 +652,8 @@ class App {
                 line.style.boxShadow = 'none';
             }
         });
+
+        this.updateImmersivePhase(activeIdx);
     }
 
     resetPhaseTimeline() {
@@ -629,6 +675,7 @@ class App {
             const response = await fetch('/api/presets');
             const data = await response.json();
             this.presets = data.prompts || {};
+            this.settings.prompt_choice = this.normalizePromptChoice(this.settings.prompt_choice);
         } catch (error) {
             console.error('加载预设失败:', error);
         }
@@ -639,6 +686,7 @@ class App {
             const response = await fetch('/api/settings');
             const data = await response.json();
             this.settings = { ...this.settings, ...data };
+            this.settings.prompt_choice = this.normalizePromptChoice(this.settings.prompt_choice);
             this.updateSettingsUI();
         } catch (error) {
             console.error('加载设置失败:', error);
@@ -675,6 +723,8 @@ class App {
         if (ragDomain) ragDomain.value = this.settings.rag_domain;
         if (ragTopk) ragTopk.value = this.settings.rag_top_k;
         if (topkValue) topkValue.textContent = this.settings.rag_top_k;
+        const immersiveRag = document.getElementById('immersive-enable-rag');
+        if (immersiveRag) immersiveRag.checked = this.settings.enable_rag;
 
         // 精简模式
         const compactMode = document.getElementById('compact-mode');
@@ -683,6 +733,20 @@ class App {
         if (window.chat) {
             window.chat.setCompactMode(this.settings.compact_mode);
         }
+
+        const advisorMode = document.getElementById('advisor-mode');
+        const advisorCustomFields = document.getElementById('advisor-custom-fields');
+        const advisorSchoolInput = document.getElementById('advisor-school-input');
+        const advisorLabInput = document.getElementById('advisor-lab-input');
+        const advisorNameInput = document.getElementById('advisor-name-input');
+
+        if (advisorMode) advisorMode.value = this.settings.advisor_mode || 'ai_default';
+        if (advisorCustomFields) {
+            advisorCustomFields.style.display = (this.settings.advisor_mode === 'custom') ? 'block' : 'none';
+        }
+        if (advisorSchoolInput) advisorSchoolInput.value = this.settings.advisor_school || '';
+        if (advisorLabInput) advisorLabInput.value = this.settings.advisor_lab || '';
+        if (advisorNameInput) advisorNameInput.value = this.settings.advisor_name || '';
     }
 
     async loadRagDomains() {
@@ -695,7 +759,13 @@ class App {
                 ragDomain.innerHTML = domains.map(d =>
                     `<option value="${d}">${d}</option>`
                 ).join('');
-                ragDomain.value = this.settings.rag_domain;
+                if (domains.includes(this.settings.rag_domain)) {
+                    ragDomain.value = this.settings.rag_domain;
+                } else {
+                    this.settings.rag_domain = domains.includes('cs ai') ? 'cs ai' : domains[0];
+                    ragDomain.value = this.settings.rag_domain;
+                    this.saveSettings();
+                }
             }
         } catch (error) {
             console.error('加载 RAG 领域失败:', error);
@@ -770,18 +840,8 @@ class App {
                                 } else {
                                     reportContent.textContent = this.reportContent;
                                 }
-                                // 实时尝试提取并更新雷达图
-                                const scoreData = this.extractScoreData(this.reportContent);
-                                if (scoreData) {
-                                    this.createRadarChart(scoreData);
-                                }
                             } else if (data.type === 'done') {
                                 if (reportDownload) reportDownload.style.display = 'block';
-                                // 最终确保雷达图已生成
-                                const scoreData = this.extractScoreData(this.reportContent);
-                                if (scoreData) {
-                                    this.createRadarChart(scoreData);
-                                }
                             } else if (data.type === 'error') {
                                 reportContent.textContent = `生成失败: ${data.message}`;
                             }
@@ -811,205 +871,6 @@ class App {
         a.download = `interview_report_${new Date().toISOString().slice(0, 10)}.md`;
         a.click();
         URL.revokeObjectURL(url);
-    }
-
-    /* ==================== Radar Chart ==================== */
-    /**
-     * 从报告内容中提取 JSON 评分数据
-     */
-    extractScoreData(reportText) {
-        try {
-            // 匹配 ```json ... ``` 代码块
-            const jsonMatch = reportText.match(/```json\s*([\s\S]*?)```/);
-            if (jsonMatch && jsonMatch[1]) {
-                const jsonData = JSON.parse(jsonMatch[1].trim());
-                return jsonData;
-            }
-            return null;
-        } catch (e) {
-            console.error('解析评分 JSON 失败:', e);
-            return null;
-        }
-    }
-
-    /**
-     * 创建或更新雷达图
-     */
-    createRadarChart(scoreData) {
-        const container = document.getElementById('radar-chart-container');
-        const canvas = document.getElementById('score-radar-chart');
-        const summaryEl = document.getElementById('radar-score-summary');
-        
-        if (!scoreData || !scoreData.dimensions || !container || !canvas) {
-            if (container) container.style.display = 'none';
-            return;
-        }
-
-        const dims = scoreData.dimensions;
-        
-        // 评分维度配置（根据 ai_report.py 中的定义）
-        const dimensionConfig = [
-            { key: 'technical', label: '技术能力', maxScore: 30, color: '#00d4ff' },
-            { key: 'problem_solving', label: '问题解决', maxScore: 25, color: '#a855f7' },
-            { key: 'communication', label: '沟通表达', maxScore: 20, color: '#06b6d4' },
-            { key: 'learning_depth', label: '学习潜力', maxScore: 15, color: '#10b981' },
-            { key: 'professionalism', label: '综合素养', maxScore: 10, color: '#f59e0b' }
-        ];
-
-        // 计算百分比分数（归一化到0-100）
-        const normalizedScores = dimensionConfig.map(d => {
-            const score = dims[d.key] || 0;
-            return Math.round((score / d.maxScore) * 100);
-        });
-
-        const labels = dimensionConfig.map(d => d.label);
-
-        // 销毁旧图表
-        if (this.radarChart) {
-            this.radarChart.destroy();
-        }
-
-        // 显示容器
-        container.style.display = 'block';
-
-        // 创建新图表
-        const ctx = canvas.getContext('2d');
-        this.radarChart = new Chart(ctx, {
-            type: 'radar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '能力评分',
-                    data: normalizedScores,
-                    backgroundColor: 'rgba(0, 212, 255, 0.15)',
-                    borderColor: '#00d4ff',
-                    borderWidth: 2,
-                    pointBackgroundColor: dimensionConfig.map(d => d.color),
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6,
-                    pointHoverRadius: 8,
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: dimensionConfig.map(d => d.color),
-                    pointHoverBorderWidth: 3,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        enabled: true,
-                        backgroundColor: 'rgba(14, 18, 32, 0.95)',
-                        titleColor: '#f1f5f9',
-                        bodyColor: '#cbd5e1',
-                        borderColor: 'rgba(0, 212, 255, 0.3)',
-                        borderWidth: 1,
-                        cornerRadius: 8,
-                        padding: 12,
-                        displayColors: false,
-                        titleFont: { size: 14, weight: '600' },
-                        bodyFont: { size: 13 },
-                        callbacks: {
-                            title: (items) => items[0].label,
-                            label: (context) => {
-                                const idx = context.dataIndex;
-                                const config = dimensionConfig[idx];
-                                const actualScore = dims[config.key] || 0;
-                                return [
-                                    `得分: ${actualScore} / ${config.maxScore}`,
-                                    `占比: ${normalizedScores[idx]}%`
-                                ];
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        max: 100,
-                        min: 0,
-                        ticks: {
-                            stepSize: 20,
-                            color: '#64748b',
-                            backdropColor: 'transparent',
-                            font: { size: 10 }
-                        },
-                        grid: {
-                            color: 'rgba(100, 116, 139, 0.2)',
-                            circular: true
-                        },
-                        angleLines: {
-                            color: 'rgba(100, 116, 139, 0.2)'
-                        },
-                        pointLabels: {
-                            color: '#cbd5e1',
-                            font: { size: 12, weight: '500' },
-                            padding: 8
-                        }
-                    }
-                },
-                animation: {
-                    duration: 1000,
-                    easing: 'easeOutQuart'
-                }
-            }
-        });
-
-        // 更新评分摘要
-        this.updateScoreSummary(scoreData, dimensionConfig, dims, summaryEl);
-    }
-
-    /**
-     * 更新评分摘要区域
-     */
-    updateScoreSummary(scoreData, dimensionConfig, dims, summaryEl) {
-        if (!summaryEl) return;
-
-        const overall = scoreData.overall || 0;
-        const grade = scoreData.grade || '-';
-
-        // 计算评级颜色
-        let gradeColor = '#64748b';
-        if (grade === 'A') gradeColor = '#10b981';
-        else if (grade === 'B') gradeColor = '#06b6d4';
-        else if (grade === 'C') gradeColor = '#f59e0b';
-        else if (grade === 'D') gradeColor = '#f97316';
-        else if (grade === 'E') gradeColor = '#ef4444';
-
-        // 生成分数条形图
-        const barsHtml = dimensionConfig.map(d => {
-            const score = dims[d.key] || 0;
-            const percent = Math.round((score / d.maxScore) * 100);
-            return `
-                <div class="radar-score-bar">
-                    <div class="radar-score-bar-label">
-                        <span class="radar-score-bar-name">${d.label}</span>
-                        <span class="radar-score-bar-value">${score}/${d.maxScore}</span>
-                    </div>
-                    <div class="radar-score-bar-track">
-                        <div class="radar-score-bar-fill" style="width: ${percent}%; background: ${d.color};"></div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        summaryEl.innerHTML = `
-            <div class="radar-overall-score">
-                <div class="radar-overall-number">${overall}</div>
-                <div class="radar-overall-label">总分</div>
-            </div>
-            <div class="radar-grade-badge" style="background: ${gradeColor};">
-                ${grade}
-            </div>
-            <div class="radar-score-bars">
-                ${barsHtml}
-            </div>
-        `;
     }
 
     /* ==================== Resume ==================== */
@@ -1105,70 +966,58 @@ class App {
         const progressArea = document.getElementById('resume-progress');
         const fileNameEl = document.getElementById('resume-file-name');
         const statusEl = document.getElementById('resume-status');
-    
+
         if (progressArea) progressArea.style.display = 'none';
-    
+
         if (this.resumeUploaded) {
             if (uploadArea) uploadArea.style.display = 'none';
             if (uploadedArea) uploadedArea.style.display = 'flex';
             if (fileNameEl) fileNameEl.textContent = this.resumeFileName;
-            if (statusEl) statusEl.innerHTML = '<p class="hint-text" style="color: var(--success);">\u2705 简历已上传，面试将个性化进行</p>';
+            if (statusEl) statusEl.innerHTML = '<p class="hint-text" style="color: var(--success);">✅ 简历已上传，面试将个性化进行</p>';
         } else {
             if (uploadArea) uploadArea.style.display = 'block';
             if (uploadedArea) uploadedArea.style.display = 'none';
             if (statusEl) statusEl.innerHTML = '<p class="hint-text">上传 PDF 简历，AI 将更了解你</p>';
         }
-    
-        // 同步更新沉浸式模式的简历按钮
+
         this.updateImmersiveResumeBtn();
     }
 
     /* ==================== Advisor Search ==================== */
     bindAdvisorEvents() {
-        const advisorSchoolInput = document.getElementById('advisor-school-input');
-        const advisorNameInput = document.getElementById('advisor-name-input');
         const advisorSearchBtn = document.getElementById('advisor-search-btn');
         const advisorDeleteBtn = document.getElementById('advisor-delete-btn');
+        const advisorNameInput = document.getElementById('advisor-name-input');
+        const modal = document.getElementById('advisor-modal');
+        const modalCloseBtn = document.getElementById('advisor-modal-close');
+        const modalSearchBtn = document.getElementById('modal-advisor-search-btn');
+        const modalNameInput = document.getElementById('modal-advisor-name');
 
         if (advisorSearchBtn) {
-            advisorSearchBtn.addEventListener('click', () => this.searchAdvisor());
+            advisorSearchBtn.addEventListener('click', () => this.searchAdvisor('sidebar'));
         }
-
         if (advisorDeleteBtn) {
-            advisorDeleteBtn.addEventListener('click', () => this.deleteAdvisor());
+            advisorDeleteBtn.addEventListener('click', () => this.deleteAdvisor(true));
         }
-
-        // 支持回车键搜索
         if (advisorNameInput) {
             advisorNameInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.searchAdvisor();
-                }
+                if (e.key === 'Enter') this.searchAdvisor('sidebar');
             });
         }
 
-        // 沉浸模式导师搜索按钮
-        const immersiveAdvisorBtn = document.getElementById('immersive-advisor-btn');
-        if (immersiveAdvisorBtn) {
-            immersiveAdvisorBtn.addEventListener('click', () => this.showAdvisorModal());
-        }
-
-        // 模态框关闭按钮
-        const modalCloseBtn = document.getElementById('advisor-modal-close');
         if (modalCloseBtn) {
             modalCloseBtn.addEventListener('click', () => this.hideAdvisorModal());
         }
-
-        // 模态框搜索按钮
-        const modalSearchBtn = document.getElementById('modal-advisor-search-btn');
         if (modalSearchBtn) {
-            modalSearchBtn.addEventListener('click', () => this.searchAdvisorFromModal());
+            modalSearchBtn.addEventListener('click', () => this.searchAdvisor('modal'));
         }
-
-        // 点击模态框背景关闭
-        const advisorModal = document.getElementById('advisor-modal');
-        if (advisorModal) {
-            advisorModal.addEventListener('click', (e) => {
+        if (modalNameInput) {
+            modalNameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.searchAdvisor('modal');
+            });
+        }
+        if (modal) {
+            modal.addEventListener('click', (e) => {
                 if (e.target.id === 'advisor-modal') {
                     this.hideAdvisorModal();
                 }
@@ -1176,16 +1025,81 @@ class App {
         }
     }
 
+    async loadAdvisorStatus() {
+        try {
+            const response = await fetch('/api/advisor/status');
+            const data = await response.json();
+
+            this.settings.advisor_mode = data.mode || this.settings.advisor_mode || 'ai_default';
+            this.settings.advisor_school = data.school || '';
+            this.settings.advisor_lab = data.lab || '';
+            this.settings.advisor_name = data.name || '';
+
+            this.advisorSearched = !!data.searched;
+            this.advisorSchool = data.school || '';
+            this.advisorLab = data.lab || '';
+            this.advisorName = data.name || '';
+            this.advisorInfo = data.info || null;
+            this.setAdvisorInputs({
+                school: this.advisorSchool,
+                lab: this.advisorLab,
+                name: this.advisorName
+            });
+
+            this.updateSettingsUI();
+            this.updateAdvisorUI();
+        } catch (error) {
+            console.error('加载导师状态失败:', error);
+        }
+    }
+
+    getAdvisorInputValues(source = 'sidebar') {
+        const useModal = source === 'modal';
+        const schoolInput = document.getElementById(useModal ? 'modal-advisor-school' : 'advisor-school-input');
+        const labInput = document.getElementById(useModal ? 'modal-advisor-lab' : 'advisor-lab-input');
+        const nameInput = document.getElementById(useModal ? 'modal-advisor-name' : 'advisor-name-input');
+
+        return {
+            school: schoolInput?.value.trim() || '',
+            lab: labInput?.value.trim() || '',
+            name: nameInput?.value.trim() || ''
+        };
+    }
+
+    setAdvisorInputs(values = {}) {
+        const school = values.school || '';
+        const lab = values.lab || '';
+        const name = values.name || '';
+
+        const sidebarSchool = document.getElementById('advisor-school-input');
+        const sidebarLab = document.getElementById('advisor-lab-input');
+        const sidebarName = document.getElementById('advisor-name-input');
+        const modalSchool = document.getElementById('modal-advisor-school');
+        const modalLab = document.getElementById('modal-advisor-lab');
+        const modalName = document.getElementById('modal-advisor-name');
+
+        if (sidebarSchool) sidebarSchool.value = school;
+        if (sidebarLab) sidebarLab.value = lab;
+        if (sidebarName) sidebarName.value = name;
+        if (modalSchool) modalSchool.value = school;
+        if (modalLab) modalLab.value = lab;
+        if (modalName) modalName.value = name;
+    }
+
     showAdvisorModal() {
         const modal = document.getElementById('advisor-modal');
-        if (modal) {
-            modal.style.display = 'flex';
-            // 预填充已保存的学校和导师
-            const schoolInput = document.getElementById('modal-advisor-school');
-            const nameInput = document.getElementById('modal-advisor-name');
-            if (schoolInput && this.advisorSchool) schoolInput.value = this.advisorSchool;
-            if (nameInput && this.advisorName) nameInput.value = this.advisorName;
-        }
+        if (!modal) return;
+
+        this.settings.advisor_mode = 'custom';
+        this.updateSettingsUI();
+
+        const school = this.advisorSearchPayload?.school || this.advisorSchool || this.settings.advisor_school || '';
+        const lab = this.advisorSearchPayload?.lab || this.advisorLab || this.settings.advisor_lab || '';
+        const name = this.advisorSearchPayload?.name || this.advisorName || this.settings.advisor_name || '';
+        this.setAdvisorInputs({ school, lab, name });
+
+        modal.style.display = 'flex';
+        this.renderAdvisorSearchState();
     }
 
     hideAdvisorModal() {
@@ -1193,261 +1107,158 @@ class App {
         if (modal) modal.style.display = 'none';
     }
 
-    async searchAdvisorFromModal() {
-        const schoolInput = document.getElementById('modal-advisor-school');
-        const nameInput = document.getElementById('modal-advisor-name');
-        const progressArea = document.getElementById('modal-advisor-progress');
-        const progressFill = document.getElementById('modal-advisor-progress-fill');
-        const progressText = document.getElementById('modal-advisor-progress-text');
-        const resultArea = document.getElementById('modal-advisor-result');
-        const resultText = document.getElementById('modal-advisor-info-text');
+    renderAdvisorSearchState() {
+        const sidebarProgressArea = document.getElementById('advisor-progress');
+        const sidebarProgressFill = document.getElementById('advisor-progress-fill');
+        const sidebarProgressText = document.getElementById('advisor-progress-text');
+        const sidebarErrorArea = document.getElementById('advisor-error');
+        const sidebarErrorText = document.getElementById('advisor-error-text');
 
-        const school = schoolInput?.value.trim() || '';
-        const name = nameInput?.value.trim() || '';
+        const modalProgressArea = document.getElementById('modal-advisor-progress');
+        const modalProgressFill = document.getElementById('modal-advisor-progress-fill');
+        const modalProgressText = document.getElementById('modal-advisor-progress-text');
+        const modalErrorArea = document.getElementById('modal-advisor-error');
+        const modalErrorText = document.getElementById('modal-advisor-error-text');
+        const modalResultArea = document.getElementById('modal-advisor-result');
+        const modalResultText = document.getElementById('modal-advisor-result-text');
+        const sidebarSearchBtn = document.getElementById('advisor-search-btn');
+        const modalSearchBtn = document.getElementById('modal-advisor-search-btn');
 
-        if (!school || !name) {
-            alert('请填写学校名称和导师姓名');
+        const progressWidth = `${Math.max(0, Math.min(100, this.advisorSearchProgress || 0))}%`;
+
+        if (this.advisorSearchInProgress) {
+            if (sidebarProgressArea) sidebarProgressArea.style.display = 'block';
+            if (sidebarProgressFill) sidebarProgressFill.style.width = progressWidth;
+            if (sidebarProgressText) sidebarProgressText.textContent = this.advisorSearchProgressText || '正在检索导师信息...';
+            if (sidebarErrorArea) sidebarErrorArea.style.display = 'none';
+
+            if (modalProgressArea) modalProgressArea.style.display = 'block';
+            if (modalProgressFill) modalProgressFill.style.width = progressWidth;
+            if (modalProgressText) modalProgressText.textContent = this.advisorSearchProgressText || '正在检索导师信息...';
+            if (modalErrorArea) modalErrorArea.style.display = 'none';
+        } else {
+            if (sidebarProgressArea) sidebarProgressArea.style.display = 'none';
+            if (modalProgressArea) modalProgressArea.style.display = 'none';
+        }
+
+        if (sidebarSearchBtn) sidebarSearchBtn.disabled = this.advisorSearchInProgress;
+        if (modalSearchBtn) modalSearchBtn.disabled = this.advisorSearchInProgress;
+
+        if (this.advisorSearchError) {
+            if (sidebarErrorArea) sidebarErrorArea.style.display = 'block';
+            if (sidebarErrorText) sidebarErrorText.textContent = this.advisorSearchError;
+            if (modalErrorArea) modalErrorArea.style.display = 'block';
+            if (modalErrorText) modalErrorText.textContent = this.advisorSearchError;
+        } else {
+            if (sidebarErrorArea) sidebarErrorArea.style.display = 'none';
+            if (modalErrorArea) modalErrorArea.style.display = 'none';
+        }
+
+        if (this.advisorSearched && this.advisorInfo) {
+            if (modalResultArea) modalResultArea.style.display = 'block';
+            if (modalResultText) modalResultText.value = this.advisorInfo;
+        } else {
+            if (modalResultArea) modalResultArea.style.display = 'none';
+            if (modalResultText) modalResultText.value = '';
+        }
+    }
+
+    async searchAdvisor(source = 'sidebar') {
+        const { school, lab, name } = this.getAdvisorInputValues(source);
+        const customFields = document.getElementById('advisor-custom-fields');
+
+        if (this.advisorSearchInProgress) {
             return;
         }
 
-        // 显示进度
-        if (progressArea) progressArea.style.display = 'block';
-        if (resultArea) resultArea.style.display = 'none';
-        if (progressFill) progressFill.style.width = '20%';
-        if (progressText) progressText.textContent = '正在搜索...';
+        if (!school || !lab || !name) {
+            this.advisorSearchError = '请完整填写大学、实验室、导师姓名';
+            this.renderAdvisorSearchState();
+            return;
+        }
+
+        this.setAdvisorInputs({ school, lab, name });
+        this.advisorSearchPayload = { school, lab, name };
+        this.advisorSearchError = '';
+        this.advisorSearchInProgress = true;
+        this.advisorSearchProgress = 20;
+        this.advisorSearchProgressText = '正在联网检索导师信息...';
+        if (customFields) customFields.style.display = 'none';
+        this.renderAdvisorSearchState();
 
         try {
             const formData = new FormData();
             formData.append('school', school);
+            formData.append('lab', lab);
             formData.append('name', name);
 
-            if (progressFill) progressFill.width = '50%';
-            if (progressText) progressText.textContent = 'AI 正在联网搜索...';
+            this.advisorSearchProgress = 50;
+            this.advisorSearchProgressText = 'AI 正在分析导师信息...';
+            this.renderAdvisorSearchState();
 
             const response = await fetch('/api/advisor/search', {
                 method: 'POST',
                 body: formData
             });
-
             const data = await response.json();
 
-            if (response.ok && data.status === 'ok') {
-                if (progressFill) progressFill.style.width = '100%';
-                if (progressText) progressText.textContent = '✅ 搜索成功！';
-                
-                this.advisorSearched = true;
-                this.advisorSchool = school;
-                this.advisorName = name;
-                this.advisorInfo = typeof data.info === 'string' ? data.info : JSON.stringify(data.info);
-                
-                // 显示结果
-                if (resultArea) resultArea.style.display = 'block';
-                if (resultText) resultText.textContent = this.advisorInfo;
-                
-                // 更新主界面
-                this.updateAdvisorUI();
-                
-                // 2秒后关闭模态框
-                setTimeout(() => this.hideAdvisorModal(), 2000);
-            } else {
+            if (!response.ok || data.status !== 'ok') {
                 throw new Error(data.message || '搜索失败');
             }
-        } catch (error) {
-            console.error('导师搜索失败:', error);
-            if (progressText) progressText.textContent = `❌ 搜索失败：${error.message}`;
-        }
-    }
 
-    async loadAdvisorStatus() {
-        try {
-            const response = await fetch('/api/advisor/status');
-            const data = await response.json();
-            this.advisorSearched = data.searched;
-            this.advisorSchool = data.school || '';
-            this.advisorName = data.name || '';
-            this.advisorInfo = data.info;
+            this.advisorSearchProgress = 100;
+            this.advisorSearchProgressText = '✅ 导师信息检索完成';
+
+            this.settings.advisor_mode = 'custom';
+            this.settings.advisor_school = school;
+            this.settings.advisor_lab = lab;
+            this.settings.advisor_name = name;
+
+            this.advisorSearched = true;
+            this.advisorSchool = school;
+            this.advisorLab = lab;
+            this.advisorName = name;
+            this.advisorInfo = (typeof data.info === 'string') ? data.info : JSON.stringify(data.info);
+
+            await this.saveSettings();
             this.updateAdvisorUI();
+            this.renderAdvisorSearchState();
         } catch (error) {
-            console.error('加载导师状态失败:', error);
+            console.error('导师检索失败:', error);
+            this.advisorSearchError = `检索失败: ${error.message}`;
+            if (customFields) customFields.style.display = 'block';
+            this.renderAdvisorSearchState();
+        } finally {
+            this.advisorSearchInProgress = false;
+            this.renderAdvisorSearchState();
         }
     }
 
-    async searchAdvisor() {
-        const schoolInput = document.getElementById('advisor-school-input');
-        const nameInput = document.getElementById('advisor-name-input');
-        const inputArea = document.getElementById('advisor-input-area');
-        const progressArea = document.getElementById('advisor-progress');
-        const progressFill = document.getElementById('advisor-progress-fill');
-        const progressText = document.getElementById('advisor-progress-text');
-        const errorArea = document.getElementById('advisor-error');
-        const errorText = document.getElementById('advisor-error-text');
-        const resultArea = document.getElementById('advisor-result');
-        const resultText = document.getElementById('advisor-info-text');
-
-        const school = schoolInput?.value.trim() || '';
-        const name = nameInput?.value.trim() || '';
-
-        if (!school || !name) {
-            if (errorArea) errorArea.style.display = 'block';
-            if (errorText) errorText.textContent = '请填写学校名称和导师姓名';
-            return;
-        }
-
-        if (errorArea) errorArea.style.display = 'none';
-
-        if (inputArea) inputArea.style.display = 'none';
-        if (progressArea) progressArea.style.display = 'block';
-        if (progressFill) progressFill.style.width = '10%';
-        if (progressText) progressText.textContent = '正在搜索导师信息...';
-
-        const aspectNames = {
-            'research_direction': '研究方向',
-            'recruitment_preference': '招生偏好',
-            'academic_style': '学术风格',
-            'training_method': '培养方式',
-            'students_background': '在读学生',
-            'recent_papers': '近期论文',
-            'representative_projects': '代表项目'
-        };
-
-        let collectedInfo = {};
-
-        try {
-            const formData = new FormData();
-            formData.append('school', school);
-            formData.append('name', name);
-
-            const response = await fetch('/api/advisor/search/stream', {
-                method: 'POST',
-                body: formData
-            });
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n');
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-
-                            if (data.error) {
-                                throw new Error(data.error);
-                            }
-
-                            if (data.priority === 'verify') {
-                                if (progressFill) progressFill.style.width = '5%';
-                                if (progressText) progressText.textContent = '正在验证导师信息...';
-                            }
-
-                            else if (data.priority === 'verified') {
-                                if (progressFill) progressFill.style.width = '10%';
-                                if (progressText) progressText.textContent = '✅ 导师已确认，开始搜索详细信息...';
-                            }
-
-                            else if (data.priority === 'p1') {
-                                if (progressFill) progressFill.style.width = '30%';
-                                if (progressText) progressText.textContent = '✅ 核心信息已获取，继续搜索...';
-                                
-                                for (const r of data.results) {
-                                    if (r.success) {
-                                        collectedInfo[r.key] = r.data;
-                                    }
-                                }
-                                this.updateAdvisorProgress(collectedInfo, aspectNames);
-                            }
-
-                            else if (data.priority === 'p2') {
-                                if (progressFill) progressFill.style.width = '60%';
-                                if (progressText) progressText.textContent = '✅ 重要信息已获取，补充细节...';
-                                
-                                for (const r of data.results) {
-                                    if (r.success) {
-                                        collectedInfo[r.key] = r.data;
-                                    }
-                                }
-                                this.updateAdvisorProgress(collectedInfo, aspectNames);
-                            }
-
-                            else if (data.priority === 'p3') {
-                                if (progressFill) progressFill.style.width = '90%';
-                                if (progressText) progressText.textContent = '✅ 搜索即将完成...';
-                                
-                                for (const r of data.results) {
-                                    if (r.success) {
-                                        collectedInfo[r.key] = r.data;
-                                    }
-                                }
-                                this.updateAdvisorProgress(collectedInfo, aspectNames);
-                            }
-
-                            else if (data.priority === 'done') {
-                                if (progressFill) progressFill.style.width = '100%';
-                                if (progressText) progressText.textContent = '✅ 导师信息搜索成功！';
-                                
-                                this.advisorSearched = true;
-                                this.advisorSchool = school;
-                                this.advisorName = name;
-                                this.advisorInfo = data.full_info;
-                                
-                                setTimeout(() => this.updateAdvisorUI(), 1000);
-                            }
-
-                        } catch (parseError) {
-                            console.error('解析 SSE 数据失败:', parseError);
-                        }
-                    }
-                }
-            }
-
-        } catch (error) {
-            console.error('导师搜索失败:', error);
-            if (progressText) progressText.textContent = `❌ 搜索失败：${error.message}`;
-            
-            if (errorArea) errorArea.style.display = 'block';
-            if (errorText) errorText.textContent = `搜索失败：${error.message}，将使用通用面试流程`;
-            
-            setTimeout(() => {
-                if (inputArea) inputArea.style.display = 'block';
-                if (progressArea) progressArea.style.display = 'none';
-            }, 3000);
-        }
-    }
-
-    updateAdvisorProgress(collectedInfo, aspectNames) {
-        const resultArea = document.getElementById('advisor-result');
-        const resultText = document.getElementById('advisor-info-text');
-        
-        if (!resultArea || !resultText) return;
-        
-        resultArea.style.display = 'block';
-        
-        let html = '';
-        for (const [key, name] of Object.entries(aspectNames)) {
-            if (collectedInfo[key]) {
-                html += `<div style="margin-bottom: 8px;"><strong>${name}</strong><br><span style="color: #00ffcc;">${collectedInfo[key]}</span></div>`;
-            }
-        }
-        
-        resultText.innerHTML = html;
-    }
-
-    async deleteAdvisor() {
-        if (!confirm('确定要清除已搜索的导师信息吗？')) return;
+    async deleteAdvisor(showConfirm = true) {
+        if (showConfirm && !confirm('确定要清除导师信息并恢复为默认 AI 导师吗？')) return;
         try {
             const response = await fetch('/api/advisor', { method: 'DELETE' });
             const data = await response.json();
             if (data.status === 'ok') {
+                this.settings.advisor_mode = 'ai_default';
+                this.settings.advisor_school = '';
+                this.settings.advisor_lab = '';
+                this.settings.advisor_name = '';
+
                 this.advisorSearched = false;
                 this.advisorSchool = '';
+                this.advisorLab = '';
                 this.advisorName = '';
                 this.advisorInfo = null;
+                this.advisorSearchError = '';
+                this.advisorSearchProgress = 0;
+                this.advisorSearchProgressText = '';
+                this.advisorSearchPayload = null;
+
+                this.setAdvisorInputs({ school: '', lab: '', name: '' });
+
+                await this.saveSettings();
+                this.updateSettingsUI();
                 this.updateAdvisorUI();
             }
         } catch (error) {
@@ -1457,42 +1268,42 @@ class App {
 
     updateAdvisorUI() {
         const statusEl = document.getElementById('advisor-status');
-        const inputArea = document.getElementById('advisor-input-area');
+        const customFields = document.getElementById('advisor-custom-fields');
         const searchedArea = document.getElementById('advisor-searched');
-        const progressArea = document.getElementById('advisor-progress');
-        const errorArea = document.getElementById('advisor-error');
+        const advisorMode = document.getElementById('advisor-mode');
 
-        // 隐藏所有状态
-        if (progressArea) progressArea.style.display = 'none';
-        if (errorArea) errorArea.style.display = 'none';
+        if (advisorMode) advisorMode.value = this.settings.advisor_mode || 'ai_default';
+
+        if (this.settings.advisor_mode === 'ai_default') {
+            if (statusEl) statusEl.innerHTML = '<p class="hint-text" style="color: var(--neon-cyan);">当前使用默认 AI 导师</p>';
+            if (customFields) customFields.style.display = 'none';
+            if (searchedArea) searchedArea.style.display = 'none';
+            this.renderAdvisorSearchState();
+            return;
+        }
 
         if (this.advisorSearched && this.advisorInfo) {
-            // 显示搜索到的导师信息
-            if (statusEl) statusEl.innerHTML = '<p class="hint-text" style="color: var(--success);">\u2705 导师信息已加载，面试将针对性提问</p>';
-            if (inputArea) inputArea.style.display = 'none';
+            if (statusEl) statusEl.innerHTML = '<p class="hint-text" style="color: var(--success);">✅ 已加载自定义导师信息，将作为提示词注入</p>';
+            if (customFields) customFields.style.display = 'none';
             if (searchedArea) searchedArea.style.display = 'block';
 
-            // 显示学校名称
+            const displayName = document.getElementById('advisor-display-name');
             const displaySchool = document.getElementById('advisor-display-school');
+            const displayLab = document.getElementById('advisor-display-lab');
+            const resultTextbox = document.getElementById('advisor-result-textbox');
+
+            if (displayName) displayName.textContent = this.advisorName;
             if (displaySchool) displaySchool.textContent = this.advisorSchool;
-
-            // 显示导师信息文本
-            const displayResearch = document.getElementById('advisor-display-research');
-            if (displayResearch) {
-                displayResearch.textContent = this.advisorInfo;
-            }
-        } else {
-            // 未搜索状态
-            if (statusEl) statusEl.innerHTML = '<p class="hint-text">输入学校和导师姓名，AI 将针对性提问</p>';
-            if (inputArea) inputArea.style.display = 'block';
-            if (searchedArea) searchedArea.style.display = 'none';
-
-            // 清空输入框
-            const schoolInput = document.getElementById('advisor-school-input');
-            const nameInput = document.getElementById('advisor-name-input');
-            if (schoolInput) schoolInput.value = '';
-            if (nameInput) nameInput.value = '';
+            if (displayLab) displayLab.textContent = this.advisorLab;
+            if (resultTextbox) resultTextbox.value = this.advisorInfo;
+            this.renderAdvisorSearchState();
+            return;
         }
+
+        if (statusEl) statusEl.innerHTML = '<p class="hint-text">请填写并检索导师信息，完成后将注入给 LLM</p>';
+        if (customFields) customFields.style.display = 'block';
+        if (searchedArea) searchedArea.style.display = 'none';
+        this.renderAdvisorSearchState();
     }
 
     /* ==================== Utilities ==================== */

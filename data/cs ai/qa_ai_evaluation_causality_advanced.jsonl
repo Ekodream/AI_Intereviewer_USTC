@@ -1,0 +1,16 @@
+{"question":"离线指标提升为何经常无法转化为线上收益？","answer":"常见原因是目标错配、样本选择偏差、反馈延迟与策略干预引发的分布改变。要建立离线到线上映射，需引入反事实评估、分层 A/B 和延迟收益归因。","topic":"ai-evaluation-causality","difficulty":"hard","type":"theory"}
+{"question":"什么是干预导致的数据偏移，为什么会影响模型评估？","answer":"当线上策略改变用户暴露与反馈路径时，观测数据不再代表自然分布。直接用新日志离线评估会产生选择偏差，必须做倾向校正或实验设计补偿。","topic":"ai-evaluation-causality","difficulty":"hard","type":"knowledge"}
+{"question":"在推荐系统中，如何用 IPS 进行离线反事实评估？","answer":"核心是按行为被展示概率的倒数加权，估计目标策略下期望收益。实践要控制权重方差，通常配合截断或 self-normalized IPS 避免高方差失真。","topic":"ai-evaluation-causality","difficulty":"hard","type":"design"}
+{"question":"何时应该使用 doubly robust 估计而不是单纯 IPS？","answer":"当 propensities 估计噪声较大且可用 outcome model 时，doubly robust 在任一模型正确时仍一致，通常兼顾偏差与方差更稳。","topic":"ai-evaluation-causality","difficulty":"hard","type":"theory"}
+{"question":"模型校准为什么在高风险应用中比 Top-1 准确率更重要？","answer":"高风险决策依赖概率可信度而非仅分类正确。未校准模型会系统性过度自信，导致阈值决策、资源分配和风险控制失真。","topic":"ai-evaluation-causality","difficulty":"medium","type":"knowledge"}
+{"question":"如何系统评估模型在长尾与少数群体上的性能？","answer":"需要分群报告、尾部分位指标、最坏组风险和公平性差异指标。仅报告整体平均会掩盖关键失败模式。","topic":"ai-evaluation-causality","difficulty":"hard","type":"rubric"}
+{"question":"为什么 PR-AUC 在类别极不平衡时比 ROC-AUC 更有解释力？","answer":"ROC 对负类数量不敏感，极不平衡时可能高估性能；PR 直接反映精确率与召回率权衡，更贴近稀有事件检测的业务代价。","topic":"ai-evaluation-causality","difficulty":"medium","type":"theory"}
+{"question":"在多目标系统里，单一主指标优化会带来什么风险？","answer":"会诱发代理目标投机，导致次要约束恶化，如时延、稳定性、公平性下降。应采用主目标加约束或 Pareto 多目标优化框架。","topic":"ai-evaluation-causality","difficulty":"hard","type":"knowledge"}
+{"question":"A/B 实验显著但业务方仍质疑，最常见统计陷阱是什么？","answer":"多重比较未校正、提前窥探导致显著性膨胀、样本污染、分层不均和季节性混杂。需预注册指标与停止规则，并做稳健性复核。","topic":"ai-evaluation-causality","difficulty":"hard","type":"playbook"}
+{"question":"如何设计延迟反馈场景下的真实收益评估？","answer":"采用短期代理指标与长期目标联合建模，建立时间窗口归因和生存分析框架，同时保留 holdout 观测长期效果漂移。","topic":"ai-evaluation-causality","difficulty":"hard","type":"design"}
+{"question":"为什么交叉验证在时间序列任务中会高估性能？","answer":"随机划分破坏时间因果顺序，未来信息泄漏到训练集。应使用时间滚动验证或 blocked split 保持现实预测约束。","topic":"ai-evaluation-causality","difficulty":"medium","type":"knowledge"}
+{"question":"如何判断一次线上提升是否具有可迁移性而非局部偶然？","answer":"需跨流量分层、跨地区、跨设备和跨时间窗口复现实验，并检查异质性效应。若仅在单层显著，推广结论应保守。","topic":"ai-evaluation-causality","difficulty":"hard","type":"rubric"}
+{"question":"在生成式任务中，自动指标与人工评测冲突时应如何决策？","answer":"先做指标有效性分析，确认自动指标是否与人工偏好相关，再建立混合评测协议。关键发布决策应以任务相关的人评标准为主。","topic":"ai-evaluation-causality","difficulty":"hard","type":"design"}
+{"question":"如何构建可执行的模型回归评测门禁？","answer":"定义必须通过的核心指标阈值、最坏分组保护阈值和资源预算上限，并将评测脚本化接入 CI，防止隐性性能回退进入生产。","topic":"ai-evaluation-causality","difficulty":"medium","type":"playbook"}
+{"question":"为什么在因果推断中仅做协变量匹配仍可能有偏？","answer":"若存在未观测混杂或模型错设，匹配无法消除系统偏差。需结合敏感性分析、工具变量或实验设计增强识别可信度。","topic":"ai-evaluation-causality","difficulty":"hard","type":"theory"}
+{"question":"如何评估模型升级是否改变了用户行为生态本身？","answer":"监测策略干预后的行为闭环指标，如创作者响应、用户探索深度、内容多样性和反馈延迟结构。模型可能优化短期点击却劣化长期生态。","topic":"ai-evaluation-causality","difficulty":"hard","type":"knowledge"}

@@ -25,11 +25,11 @@ REPORT_SYSTEM_PROMPT = """你是一位资深技术面试评审专家。你的任
 4) 保持客观克制，避免空泛赞美或打击式措辞。
 
 ## 评分维度（总分100）
-1. 技术能力（30）
-2. 问题解决能力（25）
-3. 沟通表达能力（20）
-4. 学习潜力与思维深度（15）
-5. 综合素养（10）
+1. 专业知识（30）
+2. 科研潜力（30）
+3. 综合素质（20）
+4. 临场表现（10）
+5. 反问质量（10）
 
 ## 输出格式（严格按此顺序）
 
@@ -41,23 +41,23 @@ REPORT_SYSTEM_PROMPT = """你是一位资深技术面试评审专家。你的任
 - 一句话结论: 不超过30字
 
 ## 二、分维度评分与证据
-### 1) 技术能力（X/30）
+### 1) 专业知识（X/30）
 - 证据:
 - 风险:
 
-### 2) 问题解决能力（X/25）
+### 2) 科研潜力（X/30）
 - 证据:
 - 风险:
 
-### 3) 沟通表达能力（X/20）
+### 3) 综合素质（X/20）
 - 证据:
 - 风险:
 
-### 4) 学习潜力与思维深度（X/15）
+### 4) 临场表现（X/10）
 - 证据:
 - 风险:
 
-### 5) 综合素养（X/10）
+### 5) 反问质量（X/10）
 - 证据:
 - 风险:
 
@@ -88,11 +88,11 @@ REPORT_SYSTEM_PROMPT = """你是一位资深技术面试评审专家。你的任
   "overall": 0,
   "grade": "",
   "dimensions": {
-     "technical": 0,
-     "problem_solving": 0,
-     "communication": 0,
-     "learning_depth": 0,
-     "professionalism": 0
+         "professional_knowledge": 0,
+         "research_potential": 0,
+         "comprehensive_quality": 0,
+         "on_the_spot_performance": 0,
+         "question_quality": 0
   },
   "risk_flags": [""],
   "next_focus": ["", "", ""]
@@ -129,7 +129,7 @@ def _format_history_for_report(history: List[Dict[str, str]]) -> str:
             lines.append(f"【第 {turn} 轮】")
             lines.append(f"候选人：{content}")
         elif role == "assistant":
-            lines.append(f"面试官：{content}")
+            lines.append(f"导师：{content}")
         lines.append("")  # 空行分隔
 
     return "\n".join(lines)
@@ -146,7 +146,7 @@ def ai_report(
     参数:
         history:  完整的面试对话历史列表
                   格式: [{"role": "user"|"assistant", "content": "..."}, ...]
-                  其中 role="user" 是被面试者的回答，role="assistant" 是面试官的提问/追问。
+                  其中 role="user" 是被面试者的回答，role="assistant" 是导师的提问/追问。
         model:    使用的模型名称，默认 "qwen-max"（思考模式下实际会走 qwen-max 的深度推理）
         enable_thinking: 是否开启思考模式（深度推理），默认开启
 
@@ -180,7 +180,7 @@ def ai_report(
     # 构造用户消息：把整段面试对话交给评价模型
     user_message = (
         f"以下是一段完整的技术面试对话记录，共 {user_turns} 轮候选人回答、"
-        f"{assistant_turns} 轮面试官提问。\n"
+        f"{assistant_turns} 轮导师提问。\n"
         f"请根据对话内容对被面试者的表现进行全面评价。\n\n"
         f"--- 面试对话记录 ---\n\n"
         f"{formatted_history}\n"
@@ -253,7 +253,7 @@ def ai_report_stream(
 
     user_message = (
         f"以下是一段完整的技术面试对话记录，共 {user_turns} 轮候选人回答、"
-        f"{assistant_turns} 轮面试官提问。\n"
+        f"{assistant_turns} 轮导师提问。\n"
         f"请根据对话内容对被面试者的表现进行全面评价。\n\n"
         f"--- 面试对话记录 ---\n\n"
         f"{formatted_history}\n"

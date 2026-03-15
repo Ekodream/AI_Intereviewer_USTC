@@ -21,7 +21,7 @@ except ImportError:
 from openai import OpenAI
 
 # 简化的分析 Prompt（减少 token 数，加快速度）
-RESUME_ANALYSIS_PROMPT = """你是一位技术面试官，请快速分析这份简历并提取关键信息。
+RESUME_ANALYSIS_PROMPT = """你是一位技术面试导师，请快速分析这份简历并提取关键信息。
 
 请严格以 JSON 格式返回（不要任何额外文字）：
 {
@@ -102,7 +102,7 @@ def analyze_resume_with_llm(resume_text: str) -> Dict[str, Any]:
     messages = [
         {
             "role": "system",
-            "content": "你是一位资深技术面试官，擅长简历分析和人才评估。请严格以 JSON 格式返回分析结果。"
+            "content": "你是一位资深技术面试导师，擅长简历分析和人才评估。请严格以 JSON 格式返回分析结果。"
         },
         {
             "role": "user",

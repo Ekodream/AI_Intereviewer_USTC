@@ -22,7 +22,7 @@ def llm_stream_chat(history, user_input, system_prompt=None):
     """
     history: 对话历史列表 [{"role":"user"|"assistant","content":"..."}]
     user_input: 新的用户输入字符串
-    system_prompt: 可选，系统角色提示词（如面试官人设）
+    system_prompt: 可选，系统角色提示词（如导师人设）
     """
     # 1. 准备发送给模型的消息
     messages = list(history) if history else []

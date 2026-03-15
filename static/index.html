@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 面试官 — Cybernetic Command</title>
+    <title>AI Lab-InterReviewer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
@@ -22,7 +22,7 @@
                 <div class="mode-selector-icon">
                     <i class="fas fa-satellite-dish"></i>
                 </div>
-                <h1>AI 面试官</h1>
+                <h1>AI Lab-InterReviewer</h1>
                 <p>选择你的面试模式</p>
             </div>
             <div class="mode-selector-options">
@@ -31,12 +31,12 @@
                         <i class="fas fa-desktop"></i>
                     </div>
                     <h3>标准模式</h3>
-                    <p>完整的图形界面，支持文字和语音交互，查看完整对话历史</p>
+                    <p>完整图形界面，支持文字与语音交互，并查看对话与进度。</p>
                     <div class="mode-option-features">
                         <span><i class="fas fa-check"></i> 文字聊天</span>
                         <span><i class="fas fa-check"></i> 语音交互</span>
-                        <span><i class="fas fa-check"></i> 对话历史</span>
                         <span><i class="fas fa-check"></i> 代码编辑器</span>
+                        <span><i class="fas fa-check"></i> 报告分析</span>
                     </div>
                 </div>
                 <div class="mode-option mode-option-recommended" data-mode="immersive">
@@ -47,16 +47,16 @@
                         <i class="fas fa-microphone-alt"></i>
                     </div>
                     <h3>沉浸式面试模式</h3>
-                    <p>还原真实面试场景，通过纯语音交互锻炼你的临场表达能力和反应速度</p>
+                    <p>还原真实面试场景，以语音为主进行练习，聚焦临场表达与反应。</p>
                     <div class="mode-option-features">
-                        <span><i class="fas fa-check"></i> 真实面试体验</span>
-                        <span><i class="fas fa-check"></i> 锻炼口语表达</span>
-                        <span><i class="fas fa-check"></i> 零干扰专注</span>
-                        <span><i class="fas fa-check"></i> AI语音陪练</span>
+                        <span><i class="fas fa-check"></i> 沉浸体验</span>
+                        <span><i class="fas fa-check"></i> 语音主导</span>
+                        <span><i class="fas fa-check"></i> 更少干扰</span>
+                        <span><i class="fas fa-check"></i> AI 语音陪练</span>
                     </div>
                     <div class="mode-option-highlight">
                         <i class="fas fa-lightbulb"></i>
-                        <span>模拟真实面试环境，适合正式面试前的最佳练习方式</span>
+                        <span>适合正式面试前模拟训练，重点强化口语表达和节奏控制。</span>
                     </div>
                 </div>
             </div>
@@ -75,7 +75,7 @@
                         <i class="fas fa-satellite-dish"></i>
                     </div>
                     <div class="brand-text">
-                        <h1>AI Interview</h1>
+                        <h1>AI Lab-InterReviewer</h1>
                         <span class="brand-sub">Cybernetic Command</span>
                     </div>
                 </div>
@@ -83,7 +83,7 @@
             <div class="command-bar-center">
                 <!-- 面试阶段进度条 -->
                 <div class="phase-timeline" id="phase-indicator">
-                    <div class="phase-node active" data-phase="0" title="面试开始">
+                    <div class="phase-node active" data-phase="0" title="开始">
                         <div class="node-dot"></div>
                         <span class="node-label">开始</span>
                     </div>
@@ -93,27 +93,42 @@
                         <span class="node-label">介绍</span>
                     </div>
                     <div class="phase-line"></div>
-                    <div class="phase-node" data-phase="2" title="项目经历">
+                    <div class="phase-node" data-phase="2" title="经历深挖">
                         <div class="node-dot"></div>
-                        <span class="node-label">项目</span>
+                        <span class="node-label">经历</span>
                     </div>
                     <div class="phase-line"></div>
-                    <div class="phase-node" data-phase="3" title="技术提问">
+                    <div class="phase-node" data-phase="3" title="基础知识">
                         <div class="node-dot"></div>
-                        <span class="node-label">技术</span>
+                        <span class="node-label">基础</span>
                     </div>
                     <div class="phase-line"></div>
-                    <div class="phase-node" data-phase="4" title="代码编程">
+                    <div class="phase-node" data-phase="4" title="代码">
                         <div class="node-dot"></div>
                         <span class="node-label">代码</span>
                     </div>
                     <div class="phase-line"></div>
-                    <div class="phase-node" data-phase="5" title="反问环节">
+                    <div class="phase-node" data-phase="5" title="科研动机">
+                        <div class="node-dot"></div>
+                        <span class="node-label">动机</span>
+                    </div>
+                    <div class="phase-line"></div>
+                    <div class="phase-node" data-phase="6" title="科研潜力">
+                        <div class="node-dot"></div>
+                        <span class="node-label">潜力</span>
+                    </div>
+                    <div class="phase-line"></div>
+                    <div class="phase-node" data-phase="7" title="综合追问">
+                        <div class="node-dot"></div>
+                        <span class="node-label">综合</span>
+                    </div>
+                    <div class="phase-line"></div>
+                    <div class="phase-node" data-phase="8" title="学生反问">
                         <div class="node-dot"></div>
                         <span class="node-label">反问</span>
                     </div>
                     <div class="phase-line"></div>
-                    <div class="phase-node" data-phase="6" title="面试结束">
+                    <div class="phase-node" data-phase="9" title="结束">
                         <div class="node-dot"></div>
                         <span class="node-label">结束</span>
                     </div>
@@ -142,12 +157,12 @@
             <aside class="control-panel" id="sidebar">
                 <div class="panel-section">
                     <div class="panel-section-title">
-                        <i class="fas fa-user-tie"></i> 面试官人格
+                        <i class="fas fa-user-tie"></i> 导师风格
                     </div>
                     <select id="prompt-select" class="cyber-select">
-                        <option value="温和型面试官">温和型面试官</option>
-                        <option value="正常型面试官（默认）" selected>正常型面试官</option>
-                        <option value="压力型面试官">压力型面试官</option>
+                        <option value="温和型导师">温和型导师</option>
+                        <option value="正常型导师（默认）" selected>正常型导师</option>
+                        <option value="压力型导师">压力型导师</option>
                         <option value="自定义">自定义</option>
                     </select>
                     <div class="collapsible-trigger" id="prompt-toggle">
@@ -200,10 +215,60 @@
                     <div class="rag-settings" id="rag-settings">
                         <label class="field-label">检索领域</label>
                         <select id="rag-domain" class="cyber-select">
-                            <option value="cs">cs</option>
+                            <option value="cs ai">cs ai</option>
                         </select>
                         <label class="field-label">Top-K: <span id="topk-value">6</span></label>
                         <input type="range" id="rag-topk" min="1" max="15" value="6" class="cyber-range">
+                    </div>
+                </div>
+
+                <div class="panel-divider"></div>
+
+                <div class="panel-section">
+                    <div class="panel-section-title">
+                        <i class="fas fa-user-graduate"></i> 导师信息
+                    </div>
+                    <div id="advisor-status">
+                        <p class="hint-text">默认使用 AI 导师，也可切换为自定义导师并联网检索</p>
+                    </div>
+
+                    <label class="field-label" style="margin-top:8px;">导师选择</label>
+                    <select id="advisor-mode" class="cyber-select" style="margin-bottom:10px;">
+                        <option value="ai_default" selected>默认 AI 导师</option>
+                        <option value="custom">自定义导师</option>
+                    </select>
+
+                    <div id="advisor-custom-fields" style="display:none;">
+                        <input type="text" id="advisor-school-input" placeholder="导师所在大学（如：中国科学技术大学）" class="cyber-input" style="margin-bottom:8px;">
+                        <input type="text" id="advisor-lab-input" placeholder="实验室名称（如：数据科学实验室）" class="cyber-input" style="margin-bottom:8px;">
+                        <input type="text" id="advisor-name-input" placeholder="导师姓名（如：陈恩红）" class="cyber-input" style="margin-bottom:8px;">
+                        <button class="cyber-btn cyber-btn-accent full-width" id="advisor-search-btn">
+                            <i class="fas fa-search"></i> 联网检索导师信息
+                        </button>
+                    </div>
+
+                    <div id="advisor-searched" style="display:none;">
+                        <div class="advisor-result-box" style="margin-top:10px;">
+                            <div class="advisor-meta-line"><strong id="advisor-display-name"></strong></div>
+                            <div class="advisor-meta-line" id="advisor-display-school"></div>
+                            <div class="advisor-meta-line" id="advisor-display-lab"></div>
+                            <label class="field-label" style="margin-top:10px;">导师检索结果</label>
+                            <textarea id="advisor-result-textbox" class="advisor-result-textbox" rows="8" readonly placeholder="检索完成后将在这里展示导师信息..."></textarea>
+                        </div>
+                        <button class="cyber-btn cyber-btn-danger cyber-btn-sm full-width" id="advisor-delete-btn" style="margin-top:10px;">
+                            <i class="fas fa-trash-alt"></i> 清除导师信息
+                        </button>
+                    </div>
+
+                    <div id="advisor-progress" style="display:none;">
+                        <div class="progress-track">
+                            <div class="progress-glow" id="advisor-progress-fill"></div>
+                        </div>
+                        <p class="hint-text" id="advisor-progress-text">正在搜索导师信息...</p>
+                    </div>
+
+                    <div id="advisor-error" style="display:none;">
+                        <p class="hint-text" style="color: #fc8181;" id="advisor-error-text"></p>
                     </div>
                 </div>
 
@@ -243,52 +308,6 @@
 
                 <div class="panel-section">
                     <div class="panel-section-title">
-                        <i class="fas fa-user-graduate"></i> 导师信息
-                    </div>
-                    <div id="advisor-status">
-                        <p class="hint-text">输入学校和导师姓名，AI 将针对性提问</p>
-                    </div>
-                    <div id="advisor-input-area">
-                        <input type="text" id="advisor-school-input" placeholder="学校名称（如：中国科学技术大学）" class="cyber-input" style="margin-bottom: 8px;">
-                        <input type="text" id="advisor-name-input" placeholder="导师姓名（如：陈恩红）" class="cyber-input" style="margin-bottom: 8px;">
-                        <button class="cyber-btn cyber-btn-accent full-width" id="advisor-search-btn">
-                            <i class="fas fa-search"></i> 搜索导师信息
-                        </button>
-                    </div>
-                    <div id="advisor-searched" style="display: none;">
-                        <div class="advisor-info-card">
-                            <div class="advisor-header" style="margin-bottom: 12px;">
-                                <i class="fas fa-user-tie advisor-icon"></i>
-                                <div class="advisor-basic" style="flex: 1;">
-                                    <div style="font-size: 15px; font-weight: 600; color: var(--text-bright); margin-bottom: 4px;">
-                                        导师信息已加载
-                                    </div>
-                                    <div style="font-size: 13px; color: var(--text-secondary);">
-                                        <span id="advisor-display-school"></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="advisor-research" id="advisor-display-research" style="font-size: 13px; line-height: 1.6; color: var(--text-secondary); padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 6px; white-space: pre-wrap; word-wrap: break-word;"></div>
-                        </div>
-                        <button class="cyber-btn cyber-btn-danger cyber-btn-sm full-width" id="advisor-delete-btn" style="margin-top: 10px;">
-                            <i class="fas fa-trash-alt"></i> 清除导师信息
-                        </button>
-                    </div>
-                    <div id="advisor-progress" style="display: none;">
-                        <div class="progress-track">
-                            <div class="progress-glow" id="advisor-progress-fill"></div>
-                        </div>
-                        <p class="hint-text" id="advisor-progress-text">正在搜索导师信息...</p>
-                    </div>
-                    <div id="advisor-error" style="display: none;">
-                        <p class="hint-text" style="color: #fc8181;" id="advisor-error-text"></p>
-                    </div>
-                </div>
-
-                <div class="panel-divider"></div>
-
-                <div class="panel-section">
-                    <div class="panel-section-title">
                         <i class="fas fa-code"></i> 代码编辑器
                     </div>
                     <label class="cyber-toggle">
@@ -308,7 +327,7 @@
                     <button class="cyber-btn cyber-btn-immersive full-width" id="switch-to-immersive-btn">
                         <i class="fas fa-microphone-alt"></i> 沉浸式面试模式
                     </button>
-                    <p class="hint-text" style="margin-top:6px;">切换到纯语音交互的沉浸式体验</p>
+                    <p class="hint-text" style="margin-top:6px;">切换到纯语音优先的沉浸式体验</p>
                 </div>
 
                 <div class="panel-footer">
@@ -381,24 +400,6 @@
                     </button>
                 </div>
                 <div class="ide-body">
-                    <!-- 题目显示区域 -->
-                    <div class="ide-problem-section" id="ide-problem-section">
-                        <div class="ide-problem-header">
-                            <div class="ide-problem-title">
-                                <i class="fas fa-file-alt"></i> 题目要求
-                            </div>
-                            <button class="icon-btn icon-btn-ghost icon-btn-sm" id="ide-problem-toggle" title="展开/收起">
-                                <i class="fas fa-chevron-up"></i>
-                            </button>
-                        </div>
-                        <div class="ide-problem-content" id="ide-problem-content">
-                            <div class="ide-problem-placeholder">
-                                <i class="fas fa-hourglass-half"></i>
-                                <span>等待面试官出题...</span>
-                            </div>
-                        </div>
-                    </div>
-                    
                     <!-- 工具栏 -->
                     <div class="ide-toolbar">
                         <div class="ide-toolbar-left">
@@ -498,17 +499,6 @@
                     <button class="cyber-btn cyber-btn-accent full-width" id="generate-report-btn" style="margin-top:16px;">
                         <i class="fas fa-robot"></i> 生成 AI 评价报告
                     </button>
-                    <!-- 雷达图区域 -->
-                    <div class="radar-chart-container" id="radar-chart-container" style="display:none;">
-                        <div class="radar-chart-header">
-                            <i class="fas fa-chart-pie"></i>
-                            <span>能力雷达图</span>
-                        </div>
-                        <div class="radar-chart-wrapper">
-                            <canvas id="score-radar-chart"></canvas>
-                        </div>
-                        <div class="radar-score-summary" id="radar-score-summary"></div>
-                    </div>
                     <div class="report-content" id="report-content"></div>
                     <div class="report-download" id="report-download" style="display:none; margin-top:12px;">
                         <button class="cyber-btn cyber-btn-ghost full-width" id="download-report-md">
@@ -529,6 +519,7 @@
                 </div>
                 <div class="immersive-phase" id="immersive-phase">面试准备中</div>
             </div>
+
             <div class="immersive-center">
                 <div class="immersive-mic-area">
                     <button class="immersive-mic-btn" id="immersive-record-btn" title="点击开始录音">
@@ -539,6 +530,7 @@
                     </button>
                     <div class="immersive-status" id="immersive-status">点击麦克风开始面试</div>
                 </div>
+
                 <div class="immersive-tts-indicator" id="immersive-tts-indicator">
                     <div class="immersive-tts-wave">
                         <span></span><span></span><span></span><span></span><span></span>
@@ -546,6 +538,7 @@
                     <span class="immersive-tts-text">AI 正在回复...</span>
                 </div>
             </div>
+
             <div class="immersive-footer">
                 <div class="immersive-stats">
                     <span id="immersive-msg-count">0 轮对话</span>
@@ -561,8 +554,8 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+
             <div class="immersive-settings-body">
-                <!-- TTS 开关（锁定） -->
                 <div class="immersive-setting-item">
                     <label class="cyber-toggle immersive-tts-toggle">
                         <input type="checkbox" id="immersive-enable-tts" checked disabled>
@@ -571,8 +564,7 @@
                     </label>
                     <span class="immersive-lock-badge"><i class="fas fa-lock"></i> 已锁定</span>
                 </div>
-                
-                <!-- RAG 开关 -->
+
                 <div class="immersive-setting-item">
                     <label class="cyber-toggle">
                         <input type="checkbox" id="immersive-enable-rag" checked>
@@ -583,7 +575,6 @@
 
                 <div class="immersive-settings-divider"></div>
 
-                <!-- 简历上传 -->
                 <div class="immersive-setting-item">
                     <div class="immersive-setting-label">
                         <i class="fas fa-file-alt"></i> 简历
@@ -593,17 +584,15 @@
                     </button>
                 </div>
 
-                <!-- 导师搜索 -->
                 <div class="immersive-setting-item">
                     <div class="immersive-setting-label">
                         <i class="fas fa-user-graduate"></i> 导师信息
                     </div>
                     <button class="cyber-btn cyber-btn-sm" id="immersive-advisor-btn">
-                        <i class="fas fa-search"></i> 搜索
+                        <i class="fas fa-search"></i> 设置
                     </button>
                 </div>
 
-                <!-- 代码编辑器 -->
                 <div class="immersive-setting-item">
                     <div class="immersive-setting-label">
                         <i class="fas fa-code"></i> 代码编辑器
@@ -613,7 +602,6 @@
                     </button>
                 </div>
 
-                <!-- 面试报告 -->
                 <div class="immersive-setting-item">
                     <div class="immersive-setting-label">
                         <i class="fas fa-chart-bar"></i> 面试报告
@@ -625,23 +613,19 @@
 
                 <div class="immersive-settings-divider"></div>
 
-                <!-- 新对话 -->
                 <button class="cyber-btn cyber-btn-accent full-width" id="immersive-new-chat-btn">
                     <i class="fas fa-redo-alt"></i> 开始新对话
                 </button>
 
-                <!-- 切换到标准模式 -->
-                <button class="cyber-btn cyber-btn-ghost full-width" id="immersive-switch-mode-btn" style="margin-top: 12px;">
+                <button class="cyber-btn cyber-btn-ghost full-width" id="immersive-switch-mode-btn" style="margin-top:12px;">
                     <i class="fas fa-exchange-alt"></i> 切换到标准模式
                 </button>
             </div>
         </aside>
 
-        <!-- 沉浸式设置按钮 -->
         <button class="immersive-settings-toggle" id="immersive-settings-toggle">
             <i class="fas fa-cog"></i>
         </button>
-
     </div>
 
     <!-- 加载覆盖层 -->
@@ -653,48 +637,53 @@
         <p id="loading-text">正在处理...</p>
     </div>
 
-    <!-- 导师搜索模态框 -->
+    <!-- 沉浸式导师搜索悬浮框 -->
     <div class="advisor-modal" id="advisor-modal" style="display: none;">
         <div class="advisor-modal-content">
             <div class="advisor-modal-header">
-                <h3><i class="fas fa-user-graduate"></i> 搜索导师信息</h3>
+                <h3><i class="fas fa-user-graduate"></i> 导师信息检索</h3>
                 <button class="icon-btn icon-btn-ghost" id="advisor-modal-close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="advisor-modal-body">
                 <div class="advisor-input-group">
-                    <label>学校名称</label>
+                    <label for="modal-advisor-school">导师所在大学</label>
                     <input type="text" id="modal-advisor-school" placeholder="例如：中国科学技术大学" class="cyber-input">
                 </div>
                 <div class="advisor-input-group">
-                    <label>导师姓名</label>
+                    <label for="modal-advisor-lab">实验室名称</label>
+                    <input type="text" id="modal-advisor-lab" placeholder="例如：数据科学实验室" class="cyber-input">
+                </div>
+                <div class="advisor-input-group">
+                    <label for="modal-advisor-name">导师姓名</label>
                     <input type="text" id="modal-advisor-name" placeholder="例如：陈恩红" class="cyber-input">
                 </div>
+
                 <button class="cyber-btn cyber-btn-accent full-width" id="modal-advisor-search-btn">
-                    <i class="fas fa-search"></i> 开始搜索
+                    <i class="fas fa-search"></i> 联网检索导师信息
                 </button>
-                <div id="modal-advisor-progress" style="display: none; margin-top: 16px;">
+
+                <div id="modal-advisor-progress" style="display:none; margin-top: 14px;">
                     <div class="progress-track">
                         <div class="progress-glow" id="modal-advisor-progress-fill"></div>
                     </div>
-                    <p class="hint-text" id="modal-advisor-progress-text">正在搜索...</p>
+                    <p class="hint-text" id="modal-advisor-progress-text">正在搜索导师信息...</p>
                 </div>
-                <div id="modal-advisor-result" style="display: none; margin-top: 16px;">
-                    <div class="advisor-info-card">
-                        <div style="font-size: 14px; font-weight: 600; color: var(--text-bright); margin-bottom: 8px;">
-                            ✅ 搜索成功
-                        </div>
-                        <div id="modal-advisor-info-text" style="font-size: 13px; line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap;"></div>
-                    </div>
+
+                <div id="modal-advisor-error" style="display:none; margin-top: 10px;">
+                    <p class="hint-text" id="modal-advisor-error-text" style="color: #fc8181;"></p>
+                </div>
+
+                <div id="modal-advisor-result" style="display:none; margin-top: 12px;">
+                    <label class="field-label" for="modal-advisor-result-text">导师检索结果</label>
+                    <textarea id="modal-advisor-result-text" class="advisor-result-textbox" rows="10" readonly placeholder="检索完成后将在这里展示导师信息..."></textarea>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- JavaScript -->
-    <!-- Chart.js 雷达图 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <!-- Markdown 渲染依赖 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -714,8 +703,7 @@
 
     <script src="/static/js/tts-stream.js"></script>
     <script src="/static/js/vad.js"></script>
-    <script src="/static/js/audio.js?v=3"></script>
-    <script src="/static/js/chat.js?v=3"></script>
-    <script src="/static/js/app.js?v=3"></script>
+    <script src="/static/js/chat.js?v=4"></script>
+    <script src="/static/js/app.js?v=6"></script>
 </body>
 </html>

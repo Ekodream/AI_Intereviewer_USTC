@@ -1,0 +1,16 @@
+{"question":"为什么同样训练损失下，小批量训练常比大批量训练泛化更好？","answer":"小批量梯度噪声可把参数推离尖锐极小值并形成隐式正则，最终更容易落在平坦区域。若必须大批量训练，需要通过学习率缩放、梯度噪声注入、长预热和后期退火补偿泛化损失。","topic":"ai-optimization-generalization","difficulty":"hard","type":"theory"}
+{"question":"如何判断一次训练不稳定来自优化器而不是数据噪声？","answer":"先固定数据顺序与随机种子，再比较不同优化器在相同学习率网格下的损失曲线形态。若震荡频率与梯度范数异常随优化器显著变化，通常是优化动力学问题而非数据噪声主导。","topic":"ai-optimization-generalization","difficulty":"hard","type":"playbook"}
+{"question":"二阶信息在深度网络优化中最现实的使用方式是什么？","answer":"不是完整 Hessian，而是近似曲率信息，如 K-FAC、Shampoo、低秩牛顿步或 Hessian-vector product。目标是在可承受显存和通信成本下改善收敛速度与条件数。","topic":"ai-optimization-generalization","difficulty":"hard","type":"knowledge"}
+{"question":"为什么 Adam 在部分任务上收敛快但最终测试性能不如 SGD？","answer":"Adam 的自适应缩放会改变参数空间中的有效步长分布，早期优化效率高但可能偏向不同极小值族。实践上常用 Adam 预训练后切换 SGD 微调，或使用 AdamW 加强正则与退火策略。","topic":"ai-optimization-generalization","difficulty":"medium","type":"theory"}
+{"question":"如何用 sharpness-aware 思路解释 SAM 类方法提升泛化的机制？","answer":"SAM 通过在参数邻域内最坏方向上最小化损失，显式抑制尖锐解。它近似优化局部鲁棒目标，使模型对参数微扰不敏感，从而提升分布内外的稳定性。","topic":"ai-optimization-generalization","difficulty":"hard","type":"theory"}
+{"question":"训练后期出现验证集性能回退，最优先检查哪些信号？","answer":"优先检查学习率退火是否过慢、权重衰减是否不足、BN 统计是否漂移、数据增强是否过强，以及 EMA 模型是否优于原始权重。这些信号可快速定位回退是欠正则还是训练漂移。","topic":"ai-optimization-generalization","difficulty":"medium","type":"playbook"}
+{"question":"如何科学比较两种训练配方而不被偶然随机性误导？","answer":"至少多随机种子重复，报告均值和方差，并在相同训练预算与调参预算下比较。若收益接近噪声区间，需要显著性检验或更大样本实验再下结论。","topic":"ai-optimization-generalization","difficulty":"medium","type":"rubric"}
+{"question":"大模型训练中的梯度裁剪何时会掩盖真正问题？","answer":"若长期依赖强裁剪才稳定，可能掩盖学习率过高、初始化不当或异常 batch。裁剪应作为安全阀而非主优化手段，需结合梯度分布统计做根因修复。","topic":"ai-optimization-generalization","difficulty":"hard","type":"knowledge"}
+{"question":"为什么 label smoothing 可能降低 calibration 误差却损害少数类召回？","answer":"它会压平目标分布，降低过度自信，但也可能削弱困难样本的判别边界。对长尾任务应结合类权重或 focal 策略，否则少数类决策边界可能被过度平滑。","topic":"ai-optimization-generalization","difficulty":"hard","type":"theory"}
+{"question":"混合精度训练中 loss scaling 的核心作用是什么？","answer":"核心是避免半精度下梯度下溢导致有效信号消失。动态 loss scaling 能在不牺牲吞吐的情况下维持数值稳定，并减少 NaN 爆炸风险。","topic":"ai-optimization-generalization","difficulty":"medium","type":"knowledge"}
+{"question":"为何学习率 warmup 在 Transformer 训练中几乎是必需配置？","answer":"早期参数和归一化统计尚未稳定，直接大步长会放大梯度噪声并触发不稳定。warmup 通过逐步放大学习率使优化进入可控区间。","topic":"ai-optimization-generalization","difficulty":"medium","type":"knowledge"}
+{"question":"如何判断模型是容量不足还是优化不足？","answer":"若训练集也高误差，多为容量或特征表达不足；若训练误差低但验证差，多为泛化或数据偏移问题。还可通过扩大模型与延长训练的增益斜率来区分瓶颈来源。","topic":"ai-optimization-generalization","difficulty":"hard","type":"design"}
+{"question":"在参数高效微调中，LoRA 秩如何影响稳定性与上限？","answer":"秩太低会限制表达能力，秩太高会增加过拟合和优化不稳风险。应按任务复杂度和数据规模做秩扫描，并结合正则与早停选择 Pareto 点。","topic":"ai-optimization-generalization","difficulty":"hard","type":"design"}
+{"question":"如何评估一个优化改动是否真正通用而非数据集特化？","answer":"需跨数据集、跨模型规模、跨随机种子验证，并保持统一预算。若收益仅在单一设置显著，结论应降级为场景特化技巧。","topic":"ai-optimization-generalization","difficulty":"hard","type":"rubric"}
+{"question":"为什么梯度累积不总能等价替代真实大 batch？","answer":"梯度累积不改变每步前向统计行为，尤其在 BN、dropout、数据顺序相关机制下与真实大 batch 有偏差。等价近似成立需满足更严格的统计与实现条件。","topic":"ai-optimization-generalization","difficulty":"hard","type":"theory"}
+{"question":"训练稳定性评估除了最终分数还应记录哪些关键曲线？","answer":"至少记录学习率、梯度范数、参数范数、激活分布、损失分位数、OOM 与 NaN 事件。过程信号比单点分数更能暴露优化风险。","topic":"ai-optimization-generalization","difficulty":"medium","type":"playbook"}

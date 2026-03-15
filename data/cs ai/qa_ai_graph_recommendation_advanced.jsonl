@@ -1,0 +1,16 @@
+{"question":"为什么推荐系统中的曝光偏差会扭曲监督信号？","answer":"用户只会对被展示内容反馈，未曝光样本缺失导致观测标签偏移。直接训练会把历史策略偏差当成真实偏好。","topic":"ai-graph-recommendation","difficulty":"hard","type":"knowledge"}
+{"question":"图神经网络在异配图上性能下降的核心原因是什么？","answer":"同质聚合假设失效，邻居信息可能是噪声而非补充信号。需要异配感知聚合、关系建模或结构重连来缓解。","topic":"ai-graph-recommendation","difficulty":"hard","type":"theory"}
+{"question":"大规模图训练为何常受限于采样策略而非模型结构？","answer":"邻居采样决定了计算预算与信息覆盖，采样偏差会直接影响表示质量。错误采样会让复杂模型也学不到关键结构。","topic":"ai-graph-recommendation","difficulty":"hard","type":"design"}
+{"question":"推荐系统中多目标优化最常见冲突是什么？","answer":"短期点击与长期留存、平台收益与内容生态、多样性与相关性之间存在天然张力。需要约束优化或分阶段重排平衡目标。","topic":"ai-graph-recommendation","difficulty":"medium","type":"knowledge"}
+{"question":"为何仅优化 CTR 容易引发内容同质化？","answer":"CTR 倾向强化即时兴趣和头部内容，探索不足会压缩内容多样性。长期看会损害用户满意度和供给生态健康。","topic":"ai-graph-recommendation","difficulty":"medium","type":"theory"}
+{"question":"如何在推荐中评估探索策略的真实收益？","answer":"需分离探索带来的短期损失与长期信息增益，跟踪冷启动覆盖率、策略学习速度和长期留存变化。","topic":"ai-graph-recommendation","difficulty":"hard","type":"design"}
+{"question":"知识图谱增强推荐的高价值场景是什么？","answer":"在冷启动、可解释推荐和跨域迁移中价值显著。图谱关系提供结构先验，可补足纯行为数据不足。","topic":"ai-graph-recommendation","difficulty":"medium","type":"knowledge"}
+{"question":"图表示学习中的过平滑与过挤压有何区别？","answer":"过平滑是节点表示趋同难以区分，过挤压是远距离信息被固定维度瓶颈压缩。两者都损害深层 GNN，但机制不同、缓解策略也不同。","topic":"ai-graph-recommendation","difficulty":"hard","type":"theory"}
+{"question":"在工业推荐中，召回塔和排序塔的协同要点是什么？","answer":"召回负责高覆盖低延迟，排序负责精细决策。协同关键在于目标一致性、特征对齐和候选分布稳定，避免上游偏差放大下游误判。","topic":"ai-graph-recommendation","difficulty":"medium","type":"design"}
+{"question":"为什么推荐系统的离线 NDCG 高并不保证线上留存提升？","answer":"NDCG 通常只刻画短期相关性，难覆盖用户疲劳、多样性和生态反馈。线上留存受长期行为闭环影响，需要联合指标和实验验证。","topic":"ai-graph-recommendation","difficulty":"hard","type":"knowledge"}
+{"question":"如何构建可解释推荐而不显著牺牲效果？","answer":"可在重排阶段加入解释约束或利用因子分解与图路径证据生成解释，同时维持主模型预测能力。解释模块应可验证而非模板化话术。","topic":"ai-graph-recommendation","difficulty":"hard","type":"design"}
+{"question":"图学习中的负采样策略为什么影响最终泛化？","answer":"负样本分布决定决策边界学习方向。过于容易的负样本会造成虚高训练指标，难负样本比例不足会削弱区分能力。","topic":"ai-graph-recommendation","difficulty":"hard","type":"theory"}
+{"question":"推荐模型发布时应设置哪些生态护栏指标？","answer":"至少包含内容多样性、作者覆盖率、新内容曝光比例、用户投诉率和长期留存。护栏指标用于防止局部最优伤害平台生态。","topic":"ai-graph-recommendation","difficulty":"medium","type":"rubric"}
+{"question":"冷启动用户缺少行为数据时，最稳健的建模策略是什么？","answer":"结合人口统计先验、上下文特征、内容理解模型与探索策略进行混合决策，并快速更新用户短期兴趣表示。","topic":"ai-graph-recommendation","difficulty":"medium","type":"playbook"}
+{"question":"图推荐系统如何应对实时性与一致性的冲突？","answer":"采用分层特征更新，关键特征实时、次要特征批量；并通过版本戳和双写校验保证在线服务与离线训练的特征一致性。","topic":"ai-graph-recommendation","difficulty":"hard","type":"design"}
+{"question":"如何判断图模型升级是结构收益还是数据收益？","answer":"在同一数据切片和采样策略下做模型对比，并反向在同一模型下替换数据策略。双向对照可分离结构改进与数据改进贡献。","topic":"ai-graph-recommendation","difficulty":"hard","type":"rubric"}

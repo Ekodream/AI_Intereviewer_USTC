@@ -1,7 +1,7 @@
 /* =====================================================
-   AI 面试官 — Cybernetic Command Theme
-   Design: Glassmorphism Dashboard on Deep Space
-   ===================================================== */
+    AI 导师系统 — Cybernetic Command Theme
+    Design: Glassmorphism Dashboard on Deep Space
+    ===================================================== */
 
 /* ==================== CSS Variables ==================== */
 :root {
@@ -3094,6 +3094,47 @@ body.immersive-mode .command-bar-left .sidebar-toggle-btn {
     line-height: 1.5;
     padding-top: 8px;
     border-top: 1px solid var(--border-subtle);
+}
+
+.advisor-result-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    animation: advisorFadeIn 0.4s ease-out;
+}
+
+.advisor-meta-line {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    word-break: break-word;
+}
+
+.advisor-meta-line strong {
+    font-size: 14px;
+    color: var(--text-bright);
+}
+
+.advisor-result-textbox {
+    width: 100%;
+    margin-top: 6px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 1.55;
+    resize: vertical;
+    min-height: 130px;
+}
+
+.advisor-result-textbox:focus {
+    outline: none;
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
 }
 
 /* Cyber Input for advisor fields */

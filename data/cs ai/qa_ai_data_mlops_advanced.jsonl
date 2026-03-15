@@ -1,0 +1,16 @@
+{"question":"为什么数据版本化在研究到生产迁移中是刚需？","answer":"没有数据版本，实验结果不可追溯，回归定位与合规审计都会失效。数据版本应与代码、特征定义、标注策略和模型版本形成可追踪联动。","topic":"ai-data-mlops","difficulty":"medium","type":"knowledge"}
+{"question":"如何构建训练数据的质量闸门而不是事后补救？","answer":"在入库前设置完整性、一致性、时效性、标签噪声和异常分布检测，超阈值自动阻断。把质量门禁前置可显著降低脏数据导致的训练失败。","topic":"ai-data-mlops","difficulty":"hard","type":"playbook"}
+{"question":"特征泄漏最常见的隐蔽来源有哪些？","answer":"未来窗口聚合、后验标签衍生特征、跨表 join 时间不对齐、线上不可用特征混入离线训练。泄漏会制造虚高离线分数并在线上崩塌。","topic":"ai-data-mlops","difficulty":"hard","type":"knowledge"}
+{"question":"如何在流式场景实现训练-服务一致性？","answer":"统一特征定义和时间语义，采用离线回放校验在线特征，并对关键特征做双写比对。任何离线线上特征偏差都应触发告警。","topic":"ai-data-mlops","difficulty":"hard","type":"design"}
+{"question":"什么是概念漂移与数据漂移，监控策略有何不同？","answer":"数据漂移是输入分布变了，概念漂移是输入到标签映射变了。前者可先用无监督统计检测，后者需要标签反馈或代理监督信号才能可靠识别。","topic":"ai-data-mlops","difficulty":"medium","type":"theory"}
+{"question":"在线学习系统为何容易出现反馈回路放大偏差？","answer":"模型决定曝光，曝光决定新数据，导致样本分布被模型自身塑造。若无探索机制和偏差校正，系统会不断强化既有偏见。","topic":"ai-data-mlops","difficulty":"hard","type":"knowledge"}
+{"question":"如何设计可落地的模型回滚策略？","answer":"需预留稳定基线模型、灰度开关、流量分层回退和状态兼容方案，并定义回滚触发阈值和责任人。回滚必须在分钟级可执行。","topic":"ai-data-mlops","difficulty":"medium","type":"playbook"}
+{"question":"为何特征仓库需要显式声明 point-in-time 语义？","answer":"没有时间点语义会在训练构造中引入未来信息泄漏。特征仓库应保证任意样本只能访问该时刻可得信息。","topic":"ai-data-mlops","difficulty":"hard","type":"knowledge"}
+{"question":"模型部署后首周重点监控哪些指标？","answer":"请求分布漂移、关键分组性能、延迟分位数、错误码、特征缺失率、输出置信度分布和业务护栏指标。首周监控决定能否及早止损。","topic":"ai-data-mlops","difficulty":"medium","type":"playbook"}
+{"question":"如何建立数据标注一致性评估体系？","answer":"除总体一致率外，还应按标签难度和场景分层计算一致性，结合 adjudication 复审闭环。高价值样本可采用双盲多标注提高可靠性。","topic":"ai-data-mlops","difficulty":"hard","type":"design"}
+{"question":"当训练集不断扩大但性能停滞，应先优化什么？","answer":"先做数据价值分析而非盲目扩量，识别冗余样本、噪声样本和信息密度低样本。定向补充困难样本和边界样本通常收益更高。","topic":"ai-data-mlops","difficulty":"hard","type":"knowledge"}
+{"question":"如何在预算有限下做高效标注？","answer":"采用主动学习优先标注高不确定或高影响样本，结合弱监督与程序化标注，再通过人工校验关键子集提升整体性价比。","topic":"ai-data-mlops","difficulty":"medium","type":"design"}
+{"question":"模型卡与数据卡在合规和协作中分别解决什么问题？","answer":"模型卡描述能力边界、风险与评测结论；数据卡描述来源、采样、标注与偏差。两者共同支撑可追责与跨团队可理解性。","topic":"ai-data-mlops","difficulty":"medium","type":"knowledge"}
+{"question":"为什么仅看整体线上指标无法保障可靠发布？","answer":"整体平均会掩盖长尾退化和关键人群损害。发布决策应包含分组护栏、最坏分位约束和异常回退机制。","topic":"ai-data-mlops","difficulty":"hard","type":"rubric"}
+{"question":"如何设计跨环境可复现实验流水线？","answer":"容器化依赖、固定数据快照、参数配置模板化、实验追踪平台统一记录，并提供一键重跑脚本。复现失败应有自动诊断报告。","topic":"ai-data-mlops","difficulty":"medium","type":"playbook"}
+{"question":"在多团队协作下，谁应拥有特征定义的最终权威？","answer":"应由跨团队特征治理机制统一管理，包含语义 owner、变更评审和兼容策略。避免各团队私有定义导致线上行为分裂。","topic":"ai-data-mlops","difficulty":"hard","type":"design"}

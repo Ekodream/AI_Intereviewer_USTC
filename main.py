@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-AI 面试官 - FastAPI 后端
+AI Lab-InterReviewer - FastAPI 后端
 支持真正的流式 TTS：LLM 生成一句就立即 TTS 并播放
 """
 import asyncio
@@ -40,13 +40,13 @@ from modules.audio_processor import (
 )
 from modules.ai_report import ai_report_stream, _format_history_for_report
 from modules.resume_parser import parse_resume, format_resume_for_prompt
-from modules.advisor_search import search_advisor_info, search_advisor_stream, format_advisor_info_for_prompt
+from modules.advisor_search import search_advisor_info, format_advisor_info_for_prompt
 
 # 初始化目录
 init_directories()
 
 # ==================== FastAPI 应用 ====================
-app = FastAPI(title="AI 面试官", version="2.0.0")
+app = FastAPI(title="AI Lab-InterReviewer", version="2.0.0")
 
 # CORS 配置
 app.add_middleware(
@@ -70,18 +70,22 @@ class ChatRequest(BaseModel):
     system_prompt: str = ""
     enable_tts: bool = True
     enable_rag: bool = True
-    rag_domain: str = "cs"
+    rag_domain: str = "cs ai"
     rag_top_k: int = 6
 
 
 class SettingsModel(BaseModel):
-    prompt_choice: str = "正常型面试官（默认）"
+    prompt_choice: str = "正常型导师（默认）"
     system_prompt: str = ""
     enable_tts: bool = True
     enable_rag: bool = True
-    rag_domain: str = "cs"
+    rag_domain: str = "cs ai"
     rag_top_k: int = 6
     compact_mode: bool = False  # 精简对话模式
+    advisor_mode: str = "ai_default"  # ai_default | custom
+    advisor_school: str = ""
+    advisor_lab: str = ""
+    advisor_name: str = ""
 
 
 class CodeExecuteRequest(BaseModel):
@@ -103,112 +107,158 @@ session_store: Dict[str, Any] = {
     "advisor_searched": False,
     "advisor_info": None,
     "advisor_school": "",
+    "advisor_lab": "",
     "advisor_name": "",
+    "advisor_mode": "ai_default",
 }
 
-# 预设系统提示词 - 基础流程
+# 预设系统提示词 - 10 阶段流程（保留三种面试风格）
 default_prompt = """
-你是一位技术面试官。请严格按照以下 7 个环节完成一轮面试，并在每一步只做当前环节的事。
+你是一位 AI Lab 面试导师。请严格按照以下 10 个环节完成一轮面试，并在每一步只做当前环节的事。
 
 【总体要求】
-1) 全程问答式推进，一次只提一个核心问题。
+1) 全程问答式推进，一次只提一个核心问题，不要提太多问题，1-2个即可，确保提问精简。
 2) 每次回复简洁、清晰、可执行，不要使用表情符号。
-3) 重点考察：理解能力、技术深度、分析能力、实现细节、边界条件、工程可行性。
-4) 候选人回答不清晰时，先追问澄清，不要提前进入下一环节。
+3) 重点考察：理论基础、工程实践、科研动机、论文理解、临场思考与沟通表达。
+4) 候选人回答不清晰时，先追问澄清，不要提前进入下一阶段。
 
-【7 个环节与编号（一一对应）】
-- 0 = 面试开始
+【10 个环节与编号（一一对应）】
+- 0 = 开始
 - 1 = 自我介绍
-- 2 = 项目经历
-- 3 = 技术提问
-- 4 = 代码编程
-- 5 = 反问环节
-- 6 = 面试结束
+- 2 = 经历深挖
+- 3 = 基础知识
+- 4 = 代码
+- 5 = 科研动机
+- 6 = 科研潜力
+- 7 = 综合追问
+- 8 = 学生反问
+- 9 = 结束
 
 【环节推进要求（必须严格执行）】
-1) 必须按 0→1→2→3→4→5→6 顺序推进，禁止跳号。
-2) 每次回复前先判断当前环节是否完成；候选人每说一句话不代表环节完成。
-3) 只有在“当前环节明确完成且不是最后环节”时，才输出推进指令。
+1) 必须按 0→1→2→3→4→5→6→7→8→9 顺序推进，禁止跳号。
+2) 每次回复前先判断当前阶段是否完成；候选人每说一句话不代表阶段完成。
+3) 只有在“当前阶段明确完成且不是最后阶段”时，才输出推进指令。
 4) 推进指令必须放在回复末尾，且逐字一致：
 我们进入面试的下一个环节 /next[(下一个环节的编号)]
 5) 每次回复最多输出一个 /next[...]。
-6) 当前环节未完成时，严禁输出 /next[...]。
-7) 到环节 6 时直接结束，不再输出 /next[...]。
+6) 当前阶段未完成时，严禁输出 /next[...]。
+7) 到阶段 9 时直接结束，不再输出 /next[...]。
 
-【面试流程（7 步）】
-步骤0：面试开始
-- 简短开场，说明面试将按“自我介绍→项目经历→技术提问→代码编程→反问环节→结束”进行。
+【面试流程（10 步）】
+步骤0：开始
+- 简短开场，说明面试将按“自我介绍→经历深挖→基础知识→代码→科研动机→科研潜力→综合追问→学生反问→结束”进行。
 - 开场结束后，引导候选人进入自我介绍。
 
 步骤1：自我介绍
-- 邀请候选人做 1-2 分钟自我介绍。
-- 若候选人信息不足，追问方向、经验与技能要点。
+- 邀请候选人进行结构化自我介绍。
+- 若候选人信息不足，追问方向、课程基础、项目与技能要点。
+- 此部分结束后进入下一部分。
 
-步骤2：项目经历
-- 请候选人介绍一个代表性项目，并追问项目目标、职责、关键决策与结果。
-- 若有简历信息，优先围绕简历中的项目进行提问。
+步骤2：经历深挖
+- 请候选人介绍一个代表性经历，并追问目标、职责、关键决策与结果。
+- 若有简历信息，优先围绕简历中的项目或研究经历提问。
+- 此部分结束后进入下一部分。
 
-步骤3：技术提问
-- 根据候选人方向提出技术问题（可覆盖基础与工程实践）。
+步骤3：基础知识
+- 根据候选人方向提出基础问题（数学、模型理解、工程基础均可覆盖）。
 - 关注推理过程、正确性、复杂度与边界意识。
+- 此部分结束后进入下一部分。
 
-步骤4：代码编程
-- 给出一道与候选人方向相关的代码题或实现题。
-- 关注思路、实现、鲁棒性、边界条件与测试验证。
+步骤4：代码
+- 给出一道与候选人方向相关的中等难度代码题，明确输入输出与约束，不要求完善所有细节，可以要求完成一个函数或是代码补全。
+- 要求候选人先说明思路，再给出可运行实现；可追问复杂度、边界用例与鲁棒性。
+- 鼓励候选人在 IDE 中现场编写并解释关键代码。
+- 此部分结束后进入下一部分。
 
-步骤5：反问环节
-- 询问候选人是否有问题要问面试官。
-- 对候选人的问题给出清晰回答。
-- 主动告诉候选人请求其反问，而不是等待候选人反问
+步骤5：科研动机
+- 评估候选人选择方向的原因、持续投入意愿、问题意识与学习路径。
+- 此部分结束后进入下一部分。
 
-步骤6：面试结束
+步骤6：科研潜力
+- 引导候选人讨论一篇论文或一个研究问题，考察批判性分析与可延展思考。
+- 此部分结束后进入下一部分。
+
+步骤7：综合追问
+- 给出开放式场景题，要求候选人兼顾理论与工程给出可执行方案。
+- 此部分结束后进入下一部分。
+
+步骤8：学生反问
+- 主动邀请候选人反问，不要被动等待。
+- 对候选人的问题给出清晰、具体、可操作的回答。
+- 此部分结束后进入下一部分。
+
+步骤9：结束
 - 简短总结候选人表现，礼貌结束面试。
 
 【执行约束】
-- 仅围绕当前环节发问，不要提前泄露后续环节内容。
+- 仅围绕当前阶段发问，不要提前泄露后续阶段内容。
 - 不要在候选人尚未回答当前问题时推进。
 - 信息不足时先补充提问，再决定是否推进。
-- 注意，在每一次对话中，你都必须发出指令，提出问题；你的回复不能是陈述句，必须提出命令化言语或者是问题，以方便候选人回答
+- 注意，在每一次对话中，你都必须发出指令，提出问题；你的回复不能是纯陈述句，必须包含问题或命令化引导，以方便候选人回答。
+- 每次结束后，必须问出问题或给出指令，不允许回复陈述句！
 """
 
 # 风格补充：温和型
 gentle_style_prompt = """
 【风格补充：温和型】
-- 语气温柔、理解候选人，鼓励式交流。
-- 问题难度以简单到中等为主，循序渐进。
-- 每轮追问较少（0-1次），优先给提示再追问。
-- 允许候选人逐步修正答案，重点看基础是否扎实。
+- 导师风格温和、耐心、鼓励表达，重点帮助候选人呈现研究兴趣与成长轨迹。
+- 提问从易到中等，先澄清背景和动机，再逐步引导到方法、实验与反思。
+- 每轮追问较少（0-1次），可先给方向性提示，再邀请候选人补充细节。
+- 允许候选人逐步修正回答，重点考察学习能力、科研素养与可塑性。
 """
 
 # 风格补充：正常型
 normal_style_prompt = """
 【风格补充：正常型】
-- 语气专业、客观、中性。
-- 问题难度中等并逐步提升。
-- 每轮适度追问（1-2次），要求解释思路与复杂度。
-- 兼顾正确性、鲁棒性与工程可读性。
+- 导师风格专业、客观、中性，兼顾学术判断与培养视角。
+- 问题难度中等并逐步提升，覆盖课程基础、项目经历与科研方法意识。
+- 每轮适度追问（1-2次），要求说明问题定义、技术路线、实验设计与结论可靠性。
+- 重点评估理论基础、研究潜力、执行能力与沟通清晰度。
 """
 
 # 风格补充：压力型
 pressure_style_prompt = """
 【风格补充：压力型】
-- 面试风格对齐大厂高压技术面：语气克制但强硬、节奏快、标准高，持续要求候选人给出可验证结论。
-- 题目难度默认 Medium-Hard 到 Hard，优先考察：边界条件、反例构造、最坏情况、可扩展性与工程权衡。
-- 每轮固定"主问题 + 深挖追问"模式：连续追问 3-6 次；候选人若答非所问、跳步、模糊表述，立即要求回到问题并重答。
-- 严禁只给结论不讲依据：必须说明推理链、关键不变量/正确性理由，并在必要时给出简短证明思路。
-- 必须追问复杂度：时间复杂度、空间复杂度、瓶颈来源、可行优化；若未达到预期复杂度，继续要求替代解法与 trade-off。
-- 代码审查必须覆盖鲁棒性：空输入、重复元素、极端规模、越界/溢出、退化场景；至少要求给出 3 个针对性测试用例并解释预期输出。
-- 允许在候选人卡住时给极少量方向提示，但不给完整答案；提示后必须立即回收主导权并继续高压追问。
-- 输出要求短促直接：每次回复 2-4 句，优先指出漏洞、风险与下一步必须回答的问题。
+- 导师风格严格、节奏快、标准高，重点检验候选人在科研讨论中的抗压表达与严谨性。
+- 题目难度默认中高到高，优先考察：研究问题拆解、假设合理性、方法边界、实验可复现性与失败分析。
+- 每轮采用"主问题 + 深挖追问"模式：连续追问 2-4 次；若回答模糊、跳步或缺证据，立即要求回到核心问题并重述。
+- 严禁只给结论：必须给出推理链、关键依据、对照实验或可验证证据来源。
+- 必须追问方法可信度：评价指标选择、数据划分、偏差来源、统计显著性与泛化风险；必要时要求提出替代方案与权衡。
+- 分析需覆盖学术规范：数据与实验伦理、引用与复现规范、工作量评估与里程碑可执行性。
+- 允许在候选人卡住时给极少量方向提示，但不给完整答案；提示后继续推进高标准追问。
+- 输出要求短促直接：每次回复 2-4 句，优先指出薄弱点并给出必须补充的关键问题。
 """
 
 # 预设系统提示词
 PRESET_PROMPTS = {
-    "温和型面试官": default_prompt + "\n\n" + gentle_style_prompt,
-    "正常型面试官（默认）": default_prompt + "\n\n" + normal_style_prompt,
-    "压力型面试官": default_prompt + "\n\n" + pressure_style_prompt,
+    "温和型导师": default_prompt + "\n\n" + gentle_style_prompt,
+    "正常型导师（默认）": default_prompt + "\n\n" + normal_style_prompt,
+    "压力型导师": default_prompt + "\n\n" + pressure_style_prompt,
     "自定义": "",
 }
+
+PROMPT_CHOICE_ALIASES = {
+    "温和型": "温和型导师",
+    "正常型（默认）": "正常型导师（默认）",
+    "正常型导师": "正常型导师（默认）",
+    "压力型": "压力型导师",
+}
+
+
+def normalize_prompt_choice(choice: Optional[str]) -> str:
+    """将历史 prompt 选项兼容映射为统一的导师命名。"""
+    legacy_role = "面试" + "官"
+    normalized = (choice or "").strip().replace(legacy_role, "导师")
+    normalized = PROMPT_CHOICE_ALIASES.get(normalized, normalized)
+    if normalized in PRESET_PROMPTS:
+        return normalized
+    return "正常型导师（默认）"
+
+DEFAULT_AI_ADVISOR_PROMPT = """
+【导师信息】
+当前使用默认 AI 导师模式。
+请按既定面试流程与评分标准推进，不依赖具体真人导师画像。
+"""
 
 
 # ==================== 工具函数 ====================
@@ -266,15 +316,20 @@ def strip_next_markers(text: str) -> str:
     # 清理流式输出中可能出现的不完整标记（例如末尾的 /next[ 或 /next(）
     cleaned = re.sub(r'[/\\]next\s*[\[(][^\])]*$', '', cleaned, flags=re.IGNORECASE)
     # 同时移除流程推进提示语，避免在前端和 TTS 中展示
-    control_phrase = '我们进入面试的下一个环节'
-    cleaned = re.sub(r'我们进入面试的下一个环节[：:，,。!！?？\s]*', '', cleaned)
+    control_phrases = [
+        '我们进入面试的下一个环节',
+        '我们进行下一部分',
+    ]
+    for phrase in control_phrases:
+        cleaned = re.sub(re.escape(phrase) + r'[：:，,。!！?？\s]*', '', cleaned)
     # 避免流式时先显示控制短语前缀、下一帧又被撤回（闪烁）
     # 例如先出现“我们进入”，随后补全成完整控制短语后被清洗。
-    for i in range(len(control_phrase) - 1, 0, -1):
-        prefix = control_phrase[:i]
-        if cleaned.endswith(prefix):
-            cleaned = cleaned[:-i]
-            break
+    for phrase in control_phrases:
+        for i in range(len(phrase) - 1, 0, -1):
+            prefix = phrase[:i]
+            if cleaned.endswith(prefix):
+                cleaned = cleaned[:-i]
+                break
     # 清理被移除标记后产生的多余空白
     cleaned = re.sub(r'[ \t]+\n', '\n', cleaned)
     cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
@@ -320,7 +375,7 @@ async def root():
             str(index_file),
             headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
         )
-    return {"message": "AI 面试官 API", "version": "2.0.0"}
+    return {"message": "AI Lab-InterReviewer API", "version": "2.0.0"}
 
 
 @app.get("/api/presets")
@@ -341,7 +396,13 @@ async def get_settings():
 @app.post("/api/settings")
 async def update_settings(settings: SettingsModel):
     """更新设置"""
+    settings.prompt_choice = normalize_prompt_choice(settings.prompt_choice)
     session_store["settings"] = settings.model_dump()
+    # 同步导师设置，便于后端在聊天时直接读取
+    session_store["advisor_mode"] = settings.advisor_mode
+    session_store["advisor_school"] = settings.advisor_school
+    session_store["advisor_lab"] = settings.advisor_lab
+    session_store["advisor_name"] = settings.advisor_name
     return {"status": "ok", "settings": session_store["settings"]}
 
 
@@ -455,118 +516,77 @@ async def delete_resume():
 async def get_advisor_status():
     """获取导师搜索状态"""
     return {
+        "mode": session_store.get("advisor_mode", "ai_default"),
         "searched": session_store["advisor_searched"],
         "school": session_store["advisor_school"],
+        "lab": session_store["advisor_lab"],
         "name": session_store["advisor_name"],
-        "info": session_store["advisor_info"]
+        "info": session_store["advisor_info"],
     }
 
 
 @app.post("/api/advisor/search")
-async def search_advisor(school: str = Form(...), name: str = Form(...)):
-    """搜索导师信息"""
+async def search_advisor(school: str = Form(...), lab: str = Form(...), name: str = Form(...)):
+    """联网搜索导师信息"""
     try:
-        print(f"🔍 [导师搜索] 开始搜索：{school} - {name}")
-        
-        # 调用搜索模块
-        result = search_advisor_info(school, name)
-        
+        print(f"🔍 [导师搜索] 开始搜索: {school} | {lab} | {name}")
+
+        result = search_advisor_info(school=school, lab=lab, advisor_name=name)
         if result["success"]:
-            print(f"✅ [导师搜索] 搜索成功")
-            
-            # 存储到 session
+            session_store["advisor_mode"] = "custom"
             session_store["advisor_searched"] = True
             session_store["advisor_info"] = result["data"]
             session_store["advisor_school"] = school
+            session_store["advisor_lab"] = lab
             session_store["advisor_name"] = name
-            
+
+            settings = session_store.get("settings", {})
+            settings.update({
+                "advisor_mode": "custom",
+                "advisor_school": school,
+                "advisor_lab": lab,
+                "advisor_name": name,
+            })
+            session_store["settings"] = settings
+
             return {
                 "status": "ok",
                 "message": "导师信息搜索成功",
-                "info": result["data"]
+                "info": result["data"],
             }
-        else:
-            print(f"❌ [导师搜索] 搜索失败：{result['error']}")
-            
-            # 搜索失败时，设置为通用模式
-            session_store["advisor_searched"] = False
-            session_store["advisor_info"] = None
-            
-            return JSONResponse(
-                status_code=404,
-                content={
-                    "status": "error",
-                    "message": f"未找到导师信息：{result['error']}",
-                    "fallback": True
-                }
-            )
-    
+
+        session_store["advisor_searched"] = False
+        session_store["advisor_info"] = None
+        return JSONResponse(
+            status_code=404,
+            content={"status": "error", "message": result.get("error", "未找到导师信息")},
+        )
     except Exception as e:
-        print(f"❌ [导师搜索] 异常：{str(e)}")
         return JSONResponse(
             status_code=500,
-            content={"status": "error", "message": f"搜索失败：{str(e)}"}
+            content={"status": "error", "message": f"搜索失败: {str(e)}"},
         )
-
-
-@app.post("/api/advisor/search/stream")
-async def search_advisor_stream_api(school: str = Form(...), name: str = Form(...)):
-    """流式搜索导师信息，两阶段 + 按优先级渐进返回"""
-    
-    async def generate():
-        try:
-            all_results = {}
-            
-            async for chunk in search_advisor_stream(school, name):
-                if chunk["priority"] == "error":
-                    yield f"data: {json.dumps({'error': chunk['results'][0]['error']})}\n\n"
-                    return
-                
-                elif chunk["priority"] == "verify":
-                    yield f"data: {json.dumps(chunk)}\n\n"
-                
-                elif chunk["priority"] == "verified":
-                    yield f"data: {json.dumps(chunk)}\n\n"
-                
-                elif chunk["priority"] in ["p1", "p2", "p3"]:
-                    for r in chunk["results"]:
-                        if r["success"]:
-                            all_results[r["key"]] = r["data"]
-                    
-                    yield f"data: {json.dumps(chunk)}\n\n"
-                
-                elif chunk["priority"] == "done":
-                    full_info = chunk["full_info"]
-                    
-                    session_store["advisor_searched"] = True
-                    session_store["advisor_info"] = full_info
-                    session_store["advisor_school"] = school
-                    session_store["advisor_name"] = name
-                    
-                    yield f"data: {json.dumps(chunk)}\n\n"
-                    
-        except Exception as e:
-            print(f"❌ [导师流式搜索] 异常：{str(e)}")
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
-    
-    return StreamingResponse(
-        generate(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        }
-    )
 
 
 @app.delete("/api/advisor")
 async def delete_advisor():
-    """删除已搜索的导师信息"""
+    """清除已搜索导师信息，并回退到默认 AI 导师"""
+    session_store["advisor_mode"] = "ai_default"
     session_store["advisor_searched"] = False
     session_store["advisor_info"] = None
     session_store["advisor_school"] = ""
+    session_store["advisor_lab"] = ""
     session_store["advisor_name"] = ""
-    return {"status": "ok", "message": "导师信息已清除"}
+
+    settings = session_store.get("settings", {})
+    settings.update({
+        "advisor_mode": "ai_default",
+        "advisor_school": "",
+        "advisor_lab": "",
+        "advisor_name": "",
+    })
+    session_store["settings"] = settings
+    return {"status": "ok", "message": "导师信息已清除，已切换为默认 AI 导师"}
 
 
 @app.post("/api/chat/stream")
@@ -581,7 +601,7 @@ async def chat_stream(request: ChatRequest):
             system_prompt = request.system_prompt
             if not system_prompt:
                 settings = session_store["settings"]
-                prompt_choice = settings.get("prompt_choice", "正常型面试官（默认）")
+                prompt_choice = normalize_prompt_choice(settings.get("prompt_choice"))
                 system_prompt = PRESET_PROMPTS.get(prompt_choice, "")
             
             # RAG 检索
@@ -608,28 +628,35 @@ async def chat_stream(request: ChatRequest):
                     print(f"RAG 检索失败: {e}")
             
             # 注入简历信息
-            print(f"🔍 [聊天] 检查简历状态：uploaded={session_store['resume_uploaded']}, analysis={session_store['resume_analysis'] is not None}")
+            print(f"🔍 [聊天] 检查简历状态: uploaded={session_store['resume_uploaded']}, analysis={session_store['resume_analysis'] is not None}")
             if session_store["resume_uploaded"] and session_store["resume_analysis"]:
                 resume_info = format_resume_for_prompt(session_store["resume_analysis"])
                 system_prompt += (
                     "\n\n【候选人简历信息】\n" + resume_info
                     + "\n\n请根据候选人的背景，调整面试难度和问题方向，个性化面试。"
                 )
-                print(f"✅ [聊天] 已注入简历信息，长度：{len(resume_info)} 字符")
+                print(f"✅ [聊天] 已注入简历信息，长度: {len(resume_info)} 字符")
             else:
                 print(f"⚠️ [聊天] 未检测到简历，跳过注入")
-            
-            # 注入导师信息
-            print(f"🔍 [聊天] 检查导师信息状态：searched={session_store['advisor_searched']}, info={session_store['advisor_info'] is not None}")
-            if session_store["advisor_searched"] and session_store["advisor_info"]:
-                advisor_info_text = format_advisor_info_for_prompt(session_store["advisor_info"])
-                system_prompt += (
-                    "\n\n【面试导师信息】\n" + advisor_info_text
-                    + "\n\n请根据导师的研究方向和学术背景，提出针对性的专业问题，考察候选人与该导师研究方向的匹配度。"
+
+            # 注入导师信息（默认 AI 导师；自定义模式且搜索成功后注入联网结果）
+            advisor_mode = session_store.get("advisor_mode", "ai_default")
+            advisor_ready = session_store.get("advisor_searched", False) and bool(session_store.get("advisor_info"))
+            if advisor_mode == "custom" and advisor_ready:
+                advisor_info = format_advisor_info_for_prompt(
+                    advisor_text=session_store.get("advisor_info", ""),
+                    school=session_store.get("advisor_school", ""),
+                    lab=session_store.get("advisor_lab", ""),
+                    advisor_name=session_store.get("advisor_name", ""),
                 )
-                print(f"✅ [聊天] 已注入导师信息，长度：{len(advisor_info_text)} 字符")
+                system_prompt += (
+                    "\n\n" + advisor_info
+                    + "\n\n请根据上述导师信息，在不破坏既定面试流程的前提下，适度提高与导师研究方向相关的追问比例。"
+                )
+                print("✅ [聊天] 已注入自定义导师信息")
             else:
-                print(f"⚠️ [聊天] 未检测到导师信息，使用通用面试流程")
+                system_prompt += "\n\n" + DEFAULT_AI_ADVISOR_PROMPT
+                print("ℹ️ [聊天] 使用默认 AI 导师模式")
             
             # 更新历史
             history = list(request.history)

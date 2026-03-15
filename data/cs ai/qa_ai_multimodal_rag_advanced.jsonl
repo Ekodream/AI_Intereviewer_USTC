@@ -1,0 +1,16 @@
+{"question":"多模态模型中，早融合与晚融合的核心取舍是什么？","answer":"早融合利于跨模态细粒度交互但训练更不稳定、计算更重；晚融合更稳健且工程实现简单，但可能损失细粒度对齐能力。应按任务对齐粒度和算力预算选择。","topic":"ai-multimodal-rag","difficulty":"hard","type":"theory"}
+{"question":"为什么视觉编码器与语言解码器联合训练容易出现模态坍缩？","answer":"若损失权重或数据配比失衡，模型会过度依赖单一模态捷径。需通过对比学习约束、模态 dropout 与平衡采样维持跨模态互补。","topic":"ai-multimodal-rag","difficulty":"hard","type":"knowledge"}
+{"question":"检索增强系统中，召回提升为何可能降低最终答案质量？","answer":"召回扩大常引入更多噪声文档，若排序与证据聚合不足会稀释关键信号。RAG 需要联合优化召回、重排与答案生成，而非只追召回率。","topic":"ai-multimodal-rag","difficulty":"medium","type":"theory"}
+{"question":"如何设计 RAG 的证据可信度评估？","answer":"为每段证据打来源可信分、时效分、与问题相关分，并在生成时输出证据覆盖率和冲突检测信号。可信度低时应触发保守回答或拒答。","topic":"ai-multimodal-rag","difficulty":"hard","type":"design"}
+{"question":"向量检索与关键词检索混合时，最常见失败模式是什么？","answer":"语义检索容易忽略关键实体约束，关键词检索容易丢失同义表达。混合检索需做去重、重排和字段约束，否则会出现看似相关但事实错误的证据。","topic":"ai-multimodal-rag","difficulty":"medium","type":"knowledge"}
+{"question":"为什么 chunk 粒度直接影响 RAG 事实准确率？","answer":"chunk 过大导致主题混杂，过小导致上下文断裂。最佳粒度应与任务推理单位一致，并结合重叠窗口和结构化分段提升证据可用性。","topic":"ai-multimodal-rag","difficulty":"medium","type":"design"}
+{"question":"RAG 中如何处理证据冲突？","answer":"先做来源可信度加权，再做时间优先和规则优先裁决，无法裁决时应显式报告冲突而非强行合并。冲突处理是高可靠问答的关键机制。","topic":"ai-multimodal-rag","difficulty":"hard","type":"playbook"}
+{"question":"多模态检索里，如何避免文本主导导致图像信息被忽略？","answer":"需要跨模态对齐损失和模态平衡采样，并在评测中设置图像主导查询子集。仅看总体指标会掩盖图像通道退化。","topic":"ai-multimodal-rag","difficulty":"hard","type":"rubric"}
+{"question":"如何评估 OCR 噪声对文档问答系统的实际影响？","answer":"应构建分层噪声基准，分别测字符错误、版面错位和表格解析错误对最终答案的影响，并针对高敏感字段做后处理校验。","topic":"ai-multimodal-rag","difficulty":"hard","type":"design"}
+{"question":"何时应采用生成前重排而不是生成后校验？","answer":"当检索噪声高且上下文窗口紧张时，生成前重排收益更大；若任务强调可解释与合规，可叠加生成后校验作为双保险。","topic":"ai-multimodal-rag","difficulty":"medium","type":"knowledge"}
+{"question":"在企业知识库 RAG 中，更新策略应如何设计？","answer":"对高时效内容采用增量索引与优先刷新，对稳定文档采用批量重建。更新策略需与权限体系和审计日志联动。","topic":"ai-multimodal-rag","difficulty":"medium","type":"playbook"}
+{"question":"如何度量 RAG 的可溯源性而不是只看回答流畅度？","answer":"关键指标包括证据命中率、引用精确率、无证据断言率和证据冲突处理正确率。可溯源性是生产可用性的硬指标。","topic":"ai-multimodal-rag","difficulty":"hard","type":"rubric"}
+{"question":"跨语言检索为什么常出现语义对齐偏差？","answer":"不同语言语料分布与术语体系不一致，嵌入空间对齐不充分会导致召回偏移。需要双语对齐训练和术语词典增强。","topic":"ai-multimodal-rag","difficulty":"hard","type":"knowledge"}
+{"question":"如果检索结果质量波动大，优先优化检索器还是生成器？","answer":"先优化检索链路，因为低质量证据会给生成器设上限。通常先做查询改写、召回融合和重排，再调生成提示与解码策略。","topic":"ai-multimodal-rag","difficulty":"medium","type":"playbook"}
+{"question":"为什么多跳问题对 RAG 是系统级挑战？","answer":"多跳推理要求跨文档证据组合与中间结论维护，单轮检索常不足。需要迭代检索、路径评分和中间状态跟踪机制。","topic":"ai-multimodal-rag","difficulty":"hard","type":"theory"}
+{"question":"如何构建多模态系统的失败案例库以驱动迭代？","answer":"按失败类型分桶，如对齐错误、证据缺失、实体混淆、时间冲突、OCR 失真，并记录触发条件与修复动作，形成可检索复盘资产。","topic":"ai-multimodal-rag","difficulty":"medium","type":"playbook"}
