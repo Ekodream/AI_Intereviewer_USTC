@@ -1281,6 +1281,8 @@ class App {
         const progressText = document.getElementById('advisor-progress-text');
         const errorArea = document.getElementById('advisor-error');
         const errorText = document.getElementById('advisor-error-text');
+        const resultArea = document.getElementById('advisor-result');
+        const resultText = document.getElementById('advisor-info-text');
 
         const school = schoolInput?.value.trim() || '';
         const name = nameInput?.value.trim() || '';
@@ -1291,59 +1293,149 @@ class App {
             return;
         }
 
-        // 隐藏错误
         if (errorArea) errorArea.style.display = 'none';
 
-        // 显示进度
         if (inputArea) inputArea.style.display = 'none';
         if (progressArea) progressArea.style.display = 'block';
-        if (progressFill) progressFill.style.width = '20%';
+        if (progressFill) progressFill.style.width = '10%';
         if (progressText) progressText.textContent = '正在搜索导师信息...';
+
+        const aspectNames = {
+            'research_direction': '研究方向',
+            'recruitment_preference': '招生偏好',
+            'academic_style': '学术风格',
+            'training_method': '培养方式',
+            'students_background': '在读学生',
+            'recent_papers': '近期论文',
+            'representative_projects': '代表项目'
+        };
+
+        let collectedInfo = {};
 
         try {
             const formData = new FormData();
             formData.append('school', school);
             formData.append('name', name);
 
-            if (progressFill) progressFill.style.width = '40%';
-            if (progressText) progressText.textContent = 'AI 正在联网搜索（约 5-10 秒）...';
-
-            const response = await fetch('/api/advisor/search', {
+            const response = await fetch('/api/advisor/search/stream', {
                 method: 'POST',
                 body: formData
             });
 
-            const data = await response.json();
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
 
-            if (response.ok && data.status === 'ok') {
-                if (progressFill) progressFill.style.width = '100%';
-                if (progressText) progressText.textContent = '✅ 导师信息搜索成功！';
-                
-                this.advisorSearched = true;
-                this.advisorSchool = school;
-                this.advisorName = name;
-                // 确保是字符串类型
-                this.advisorInfo = typeof data.info === 'string' ? data.info : JSON.stringify(data.info);
-                
-                setTimeout(() => this.updateAdvisorUI(), 1500);
-            } else {
-                // 搜索失败，降级到通用模式
-                throw new Error(data.message || '未找到导师信息');
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+
+                            if (data.error) {
+                                throw new Error(data.error);
+                            }
+
+                            if (data.priority === 'verify') {
+                                if (progressFill) progressFill.style.width = '5%';
+                                if (progressText) progressText.textContent = '正在验证导师信息...';
+                            }
+
+                            else if (data.priority === 'verified') {
+                                if (progressFill) progressFill.style.width = '10%';
+                                if (progressText) progressText.textContent = '✅ 导师已确认，开始搜索详细信息...';
+                            }
+
+                            else if (data.priority === 'p1') {
+                                if (progressFill) progressFill.style.width = '30%';
+                                if (progressText) progressText.textContent = '✅ 核心信息已获取，继续搜索...';
+                                
+                                for (const r of data.results) {
+                                    if (r.success) {
+                                        collectedInfo[r.key] = r.data;
+                                    }
+                                }
+                                this.updateAdvisorProgress(collectedInfo, aspectNames);
+                            }
+
+                            else if (data.priority === 'p2') {
+                                if (progressFill) progressFill.style.width = '60%';
+                                if (progressText) progressText.textContent = '✅ 重要信息已获取，补充细节...';
+                                
+                                for (const r of data.results) {
+                                    if (r.success) {
+                                        collectedInfo[r.key] = r.data;
+                                    }
+                                }
+                                this.updateAdvisorProgress(collectedInfo, aspectNames);
+                            }
+
+                            else if (data.priority === 'p3') {
+                                if (progressFill) progressFill.style.width = '90%';
+                                if (progressText) progressText.textContent = '✅ 搜索即将完成...';
+                                
+                                for (const r of data.results) {
+                                    if (r.success) {
+                                        collectedInfo[r.key] = r.data;
+                                    }
+                                }
+                                this.updateAdvisorProgress(collectedInfo, aspectNames);
+                            }
+
+                            else if (data.priority === 'done') {
+                                if (progressFill) progressFill.style.width = '100%';
+                                if (progressText) progressText.textContent = '✅ 导师信息搜索成功！';
+                                
+                                this.advisorSearched = true;
+                                this.advisorSchool = school;
+                                this.advisorName = name;
+                                this.advisorInfo = data.full_info;
+                                
+                                setTimeout(() => this.updateAdvisorUI(), 1000);
+                            }
+
+                        } catch (parseError) {
+                            console.error('解析 SSE 数据失败:', parseError);
+                        }
+                    }
+                }
             }
+
         } catch (error) {
             console.error('导师搜索失败:', error);
             if (progressText) progressText.textContent = `❌ 搜索失败：${error.message}`;
             
-            // 显示错误信息
             if (errorArea) errorArea.style.display = 'block';
             if (errorText) errorText.textContent = `搜索失败：${error.message}，将使用通用面试流程`;
             
-            // 3 秒后恢复输入框
             setTimeout(() => {
                 if (inputArea) inputArea.style.display = 'block';
                 if (progressArea) progressArea.style.display = 'none';
             }, 3000);
         }
+    }
+
+    updateAdvisorProgress(collectedInfo, aspectNames) {
+        const resultArea = document.getElementById('advisor-result');
+        const resultText = document.getElementById('advisor-info-text');
+        
+        if (!resultArea || !resultText) return;
+        
+        resultArea.style.display = 'block';
+        
+        let html = '';
+        for (const [key, name] of Object.entries(aspectNames)) {
+            if (collectedInfo[key]) {
+                html += `<div style="margin-bottom: 8px;"><strong>${name}</strong><br><span style="color: #00ffcc;">${collectedInfo[key]}</span></div>`;
+            }
+        }
+        
+        resultText.innerHTML = html;
     }
 
     async deleteAdvisor() {
