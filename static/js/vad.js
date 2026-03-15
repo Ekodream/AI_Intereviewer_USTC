@@ -335,6 +335,8 @@ class VADDetector {
                 this.recordBtn.classList.add('speaking');
             } else if (state === 'processing') {
                 this.recordBtn.classList.add('processing');
+            } else if (state === 'tts-playing') {
+                this.recordBtn.classList.add('tts-playing');
             }
         }
 
