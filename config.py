@@ -21,8 +21,15 @@ STEPFUN_API_KEYS = [
 # 兼容旧代码（使用第一个 Key）
 STEPFUN_API_KEY = STEPFUN_API_KEYS[0]
 
-# 阿里云 DashScope API (用于 LLM)
-DASHSCOPE_API_KEY ="sk-af8e9af4aae340bd86178117f7f3f33c" #os.getenv("DASHSCOPE_API_KEY", "sk-af8e9af4aae340bd86178117f7f3f33c")
+# 阿里云 DashScope API (用于 LLM) - 多 Key 并行搜索
+DASHSCOPE_API_KEYS = [
+    os.getenv("DASHSCOPE_API_KEY_1", "sk-af8e9af4aae340bd86178117f7f3f33c"),
+    os.getenv("DASHSCOPE_API_KEY_2", "sk-9837d229d1974106ad22a5a737c477f6"),  # 添加第 2 个 Key
+    os.getenv("DASHSCOPE_API_KEY_3", "sk-70836be9fd7a405fb7cad19495b3c72c"),  # 添加第 3 个 Key
+]
+
+# 兼容旧代码（使用第一个 Key）
+DASHSCOPE_API_KEY = DASHSCOPE_API_KEYS[0]
 
 # ==================== 模型配置 ====================
 # LLM 模型
