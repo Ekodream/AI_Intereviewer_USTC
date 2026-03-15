@@ -40,6 +40,7 @@ from modules.audio_processor import (
 )
 from modules.ai_report import ai_report_stream, _format_history_for_report
 from modules.resume_parser import parse_resume, format_resume_for_prompt
+from modules.advisor_search import search_advisor_info, format_advisor_info_for_prompt
 
 # 初始化目录
 init_directories()
@@ -99,6 +100,10 @@ session_store: Dict[str, Any] = {
     "resume_uploaded": False,
     "resume_analysis": None,
     "resume_file_name": "",
+    "advisor_searched": False,
+    "advisor_info": None,
+    "advisor_school": "",
+    "advisor_name": "",
 }
 
 # 预设系统提示词 - 基础流程
@@ -444,6 +449,77 @@ async def delete_resume():
     return {"status": "ok", "message": "简历已删除"}
 
 
+# ==================== 导师搜索相关 API ====================
+
+@app.get("/api/advisor/status")
+async def get_advisor_status():
+    """获取导师搜索状态"""
+    return {
+        "searched": session_store["advisor_searched"],
+        "school": session_store["advisor_school"],
+        "name": session_store["advisor_name"],
+        "info": session_store["advisor_info"]
+    }
+
+
+@app.post("/api/advisor/search")
+async def search_advisor(school: str = Form(...), name: str = Form(...)):
+    """搜索导师信息"""
+    try:
+        print(f"🔍 [导师搜索] 开始搜索：{school} - {name}")
+        
+        # 调用搜索模块
+        result = search_advisor_info(school, name)
+        
+        if result["success"]:
+            print(f"✅ [导师搜索] 搜索成功，from_cache={result['from_cache']}")
+            
+            # 存储到 session
+            session_store["advisor_searched"] = True
+            session_store["advisor_info"] = result["data"]
+            session_store["advisor_school"] = school
+            session_store["advisor_name"] = name
+            
+            return {
+                "status": "ok",
+                "message": "导师信息搜索成功",
+                "from_cache": result["from_cache"],
+                "info": result["data"]
+            }
+        else:
+            print(f"❌ [导师搜索] 搜索失败：{result['error']}")
+            
+            # 搜索失败时，设置为通用模式
+            session_store["advisor_searched"] = False
+            session_store["advisor_info"] = None
+            
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "status": "error",
+                    "message": f"未找到导师信息：{result['error']}",
+                    "fallback": True
+                }
+            )
+    
+    except Exception as e:
+        print(f"❌ [导师搜索] 异常：{str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": f"搜索失败：{str(e)}"}
+        )
+
+
+@app.delete("/api/advisor")
+async def delete_advisor():
+    """删除已搜索的导师信息"""
+    session_store["advisor_searched"] = False
+    session_store["advisor_info"] = None
+    session_store["advisor_school"] = ""
+    session_store["advisor_name"] = ""
+    return {"status": "ok", "message": "导师信息已清除"}
+
+
 @app.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest):
     """
@@ -483,16 +559,28 @@ async def chat_stream(request: ChatRequest):
                     print(f"RAG 检索失败: {e}")
             
             # 注入简历信息
-            print(f"🔍 [聊天] 检查简历状态: uploaded={session_store['resume_uploaded']}, analysis={session_store['resume_analysis'] is not None}")
+            print(f"🔍 [聊天] 检查简历状态：uploaded={session_store['resume_uploaded']}, analysis={session_store['resume_analysis'] is not None}")
             if session_store["resume_uploaded"] and session_store["resume_analysis"]:
                 resume_info = format_resume_for_prompt(session_store["resume_analysis"])
                 system_prompt += (
                     "\n\n【候选人简历信息】\n" + resume_info
                     + "\n\n请根据候选人的背景，调整面试难度和问题方向，个性化面试。"
                 )
-                print(f"✅ [聊天] 已注入简历信息，长度: {len(resume_info)} 字符")
+                print(f"✅ [聊天] 已注入简历信息，长度：{len(resume_info)} 字符")
             else:
                 print(f"⚠️ [聊天] 未检测到简历，跳过注入")
+            
+            # 注入导师信息
+            print(f"🔍 [聊天] 检查导师信息状态：searched={session_store['advisor_searched']}, info={session_store['advisor_info'] is not None}")
+            if session_store["advisor_searched"] and session_store["advisor_info"]:
+                advisor_info_text = format_advisor_info_for_prompt(session_store["advisor_info"])
+                system_prompt += (
+                    "\n\n【面试导师信息】\n" + advisor_info_text
+                    + "\n\n请根据导师的研究方向和学术背景，提出针对性的专业问题，考察候选人与该导师研究方向的匹配度。"
+                )
+                print(f"✅ [聊天] 已注入导师信息，长度：{len(advisor_info_text)} 字符")
+            else:
+                print(f"⚠️ [聊天] 未检测到导师信息，使用通用面试流程")
             
             # 更新历史
             history = list(request.history)
