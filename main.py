@@ -472,7 +472,7 @@ async def search_advisor(school: str = Form(...), name: str = Form(...)):
         result = search_advisor_info(school, name)
         
         if result["success"]:
-            print(f"✅ [导师搜索] 搜索成功，from_cache={result['from_cache']}")
+            print(f"✅ [导师搜索] 搜索成功")
             
             # 存储到 session
             session_store["advisor_searched"] = True
@@ -483,7 +483,6 @@ async def search_advisor(school: str = Form(...), name: str = Form(...)):
             return {
                 "status": "ok",
                 "message": "导师信息搜索成功",
-                "from_cache": result["from_cache"],
                 "info": result["data"]
             }
         else:
