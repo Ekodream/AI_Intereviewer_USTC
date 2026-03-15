@@ -16,6 +16,7 @@ class VADDetector {
         this.mediaStream = null;
         this.isListening = false;
         this.isSpeaking = false;
+        this.autoMonitoring = true;
         this.animationFrameId = null;
 
         this.config = {
@@ -34,6 +35,7 @@ class VADDetector {
         this.listeningStartTime = null;
         this.hasSpoken = false;
         this.noSpeechTimeoutId = null;  // 超时计时器 ID
+        this.skipProcessOnStop = false;
 
         this.recordBtn = document.getElementById('record-btn');
         this.recordIconEl = document.getElementById('record-icon-i');
@@ -103,13 +105,23 @@ class VADDetector {
 
             this.isListening = true;
             this.isSpeaking = false;
-            this.updateStatus('listening', '监听中...');
-            console.log('🎤 VAD 开始监听 (RMS)');
+            this.skipProcessOnStop = false;
 
-            // 启动超时计时器
-            this.startNoSpeechTimeout();
+            if (this.autoMonitoring) {
+                this.updateStatus('listening', '监听中...');
+                console.log('🎤 VAD 开始监听 (RMS)');
 
-            this.detect();
+                // 启动超时计时器
+                this.startNoSpeechTimeout();
+                this.detect();
+            } else {
+                // 手动模式：点击后立即开始录音，再次点击结束
+                this.audioChunks = [];
+                this.isSpeaking = true;
+                this.mediaRecorder.start(100);
+                this.updateStatus('speaking', '手动录音中... 再次点击结束');
+                console.log('🎙️ 手动模式开始录音');
+            }
 
         } catch (error) {
             console.error('VAD 启动失败:', error);
@@ -130,6 +142,11 @@ class VADDetector {
         };
 
         this.mediaRecorder.onstop = () => {
+            if (this.skipProcessOnStop) {
+                this.skipProcessOnStop = false;
+                this.audioChunks = [];
+                return;
+            }
             this.processAudio();
         };
     }
@@ -267,9 +284,12 @@ class VADDetector {
 
     async processAudio() {
         if (this.audioChunks.length === 0) {
-            this.updateStatus('listening', '监听中...');
-            // 重新启动超时计时器
-            this.startNoSpeechTimeout();
+            if (this.isListening && this.autoMonitoring) {
+                this.updateStatus('listening', '监听中...');
+                this.startNoSpeechTimeout();
+            } else {
+                this.updateStatus('', this.autoMonitoring ? '点击麦克风开始' : '手动模式：点击开始录音');
+            }
             return;
         }
 
@@ -298,20 +318,24 @@ class VADDetector {
                 }
             } else {
                 console.log('⚠️ 未识别到有效内容');
-                // 重新启动超时计时器
-                this.startNoSpeechTimeout();
+                if (this.isListening && this.autoMonitoring) {
+                    this.startNoSpeechTimeout();
+                }
             }
         } catch (error) {
             console.error('ASR 请求失败:', error);
             if (this.onError) {
                 this.onError(error);
             }
-            // 重新启动超时计时器
-            this.startNoSpeechTimeout();
+            if (this.isListening && this.autoMonitoring) {
+                this.startNoSpeechTimeout();
+            }
         } finally {
             window.app?.hideLoading();
             if (this.isListening) {
-                this.updateStatus('listening', '监听中...');
+                this.updateStatus(this.autoMonitoring ? 'listening' : '', this.autoMonitoring ? '监听中...' : '手动模式：点击开始录音');
+            } else {
+                this.updateStatus('', this.autoMonitoring ? '点击麦克风开始' : '手动模式：点击开始录音');
             }
         }
     }
@@ -355,6 +379,7 @@ class VADDetector {
 
     // TTS 开始时调用：关闭麦克风和超时计时器
     pauseForTTSPlayback() {
+        if (!this.autoMonitoring) return;
         console.log('⏸️ TTS 开始播放，关闭麦克风和超时计时器');
         
         // 停止超时计时器
@@ -387,6 +412,7 @@ class VADDetector {
 
     // TTS 结束时调用：重新打开麦克风和超时计时器
     async resumeAfterTTS() {
+        if (!this.autoMonitoring) return;
         console.log('▶️ TTS 播放结束，重新打开麦克风');
         
         // 重新启动
@@ -427,10 +453,23 @@ class VADDetector {
 
         this.analyser = null;
         this.mediaRecorder = null;
-        this.audioChunks = [];
-
-        this.updateStatus('', '点击麦克风开始');
+        this.updateStatus('', this.autoMonitoring ? '点击麦克风开始' : '手动模式：点击开始录音');
         console.log('🛑 VAD 停止监听');
+    }
+
+    async setAutoMonitoring(enabled) {
+        const next = !!enabled;
+        if (this.autoMonitoring === next) {
+            this.updateStatus('', this.autoMonitoring ? '点击麦克风开始' : '手动模式：点击开始录音');
+            return;
+        }
+
+        this.autoMonitoring = next;
+        if (this.isListening) {
+            // 切换模式时先停止当前录音，避免状态混乱。
+            await this.stop();
+        }
+        this.updateStatus('', this.autoMonitoring ? '点击麦克风开始' : '手动模式：点击开始录音');
     }
 
     setConfig(config) {

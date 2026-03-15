@@ -5,6 +5,8 @@
 """
 
 import asyncio
+import re
+from urllib.parse import quote_plus
 from openai import OpenAI
 
 try:
@@ -37,6 +39,82 @@ class APIKeyManager:
         )
 
 key_manager = APIKeyManager(DASHSCOPE_API_KEYS)
+
+URL_REGEX = re.compile(r'https?://[^\s\]\[\)\(}"\'<>]+')
+
+
+def _collect_urls_from_obj(obj, out):
+    """递归扫描对象中的 URL。"""
+    if obj is None:
+        return
+    if isinstance(obj, str):
+        for m in URL_REGEX.findall(obj):
+            out.append(m.rstrip('.,;!?'))
+        return
+    if isinstance(obj, dict):
+        for v in obj.values():
+            _collect_urls_from_obj(v, out)
+        return
+    if isinstance(obj, (list, tuple)):
+        for item in obj:
+            _collect_urls_from_obj(item, out)
+        return
+
+    model_dump = getattr(obj, "model_dump", None)
+    if callable(model_dump):
+        try:
+            _collect_urls_from_obj(model_dump(), out)
+        except Exception:
+            pass
+
+
+def _unique_keep_order(items):
+    """保持顺序去重。"""
+    seen = set()
+    result = []
+    for item in items:
+        if item and item not in seen:
+            seen.add(item)
+            result.append(item)
+    return result
+
+
+def extract_reference_links(response, content_text="", max_links=12):
+    """从模型响应中提取参考链接（正文 + 注释 + 原始响应字段）。"""
+    urls = []
+    _collect_urls_from_obj(response, urls)
+    if content_text:
+        _collect_urls_from_obj(content_text, urls)
+
+    urls = _unique_keep_order(urls)
+    if max_links > 0:
+        return urls[:max_links]
+    return urls
+
+
+def build_search_reference_links(school, advisor_name, max_links=12):
+    """构造导师搜索阶段使用的来源 URL（固定来源，便于学生复核）。"""
+    school = (school or "").strip()
+    advisor_name = (advisor_name or "").strip()
+    keyword = f"{school} {advisor_name}".strip()
+    q = quote_plus(keyword)
+
+    links = [
+        f"https://www.baidu.com/s?wd={q}",
+        f"https://scholar.google.com/scholar?q={q}",
+        f"https://dblp.org/search?q={q}",
+        f"https://kns.cnki.net/kns8s?kw={q}",
+        f"https://www.researchgate.net/search/publication?q={q}",
+        f"https://xueshu.baidu.com/s?wd={q}",
+        f"https://cn.bing.com/academic/search?q={q}",
+        f"https://www.zhihu.com/search?type=content&q={q}",
+        f"https://www.xiaohongshu.com/search_result?keyword={q}",
+        f"https://search.bilibili.com/all?keyword={q}",
+    ]
+    links = _unique_keep_order(links)
+    if max_links > 0:
+        return links[:max_links]
+    return links
 
 SEARCH_SOURCE_HINT = """
 【推荐搜索来源】
@@ -303,14 +381,15 @@ def verify_advisor(client, school, advisor_name):
         )
         
         result = response.choices[0].message.content.strip()
+        links = extract_reference_links(response, result)
         
         if "未找到该导师信息" in result or "不存在" in result:
-            return {"exists": False, "info": result, "error": None}
+            return {"exists": False, "info": result, "error": None, "links": links}
         
-        return {"exists": True, "info": result, "error": None}
+        return {"exists": True, "info": result, "error": None, "links": links}
         
     except Exception as e:
-        return {"exists": None, "info": None, "error": str(e)}
+        return {"exists": None, "info": None, "error": str(e), "links": []}
 
 
 def search_single_aspect(client, school, advisor_name, aspect_info):
@@ -336,6 +415,7 @@ def search_single_aspect(client, school, advisor_name, aspect_info):
         )
         
         result = response.choices[0].message.content.strip()
+        links = extract_reference_links(response, result)
         
         if result.startswith("```"):
             lines = result.split('\n')
@@ -353,13 +433,15 @@ def search_single_aspect(client, school, advisor_name, aspect_info):
             "key": aspect_info["key"],
             "name": aspect_info["name"],
             "success": success,
-            "data": result
+            "data": result,
+            "links": links,
         }
     except Exception as e:
         return {
             "key": aspect_info["key"],
             "name": aspect_info["name"],
             "success": False,
+            "links": [],
             "error": str(e)
         }
 
@@ -433,6 +515,8 @@ async def search_advisor_stream(school, advisor_name):
             "results": [{"error": "学校和导师姓名不能为空"}]
         }
         return
+
+    search_reference_links = build_search_reference_links(school, advisor_name)
     
     print(f"🔍 开始联网搜索：{school} - {advisor_name}")
     print(f"🔑 使用 {len(DASHSCOPE_API_KEYS)} 个 API Key 并行搜索")
@@ -456,7 +540,8 @@ async def search_advisor_stream(school, advisor_name):
     if verify_result["exists"] == True:
         yield {
             "priority": "verified",
-            "info": verify_result["info"]
+            "info": verify_result["info"],
+            "links": search_reference_links,
         }
     
     # 第二阶段：搜索详细信息（多Key并行）
@@ -488,7 +573,8 @@ async def search_advisor_stream(school, advisor_name):
     
     yield {
         "priority": "done",
-        "full_info": full_info
+        "full_info": full_info,
+        "links": search_reference_links,
     }
     
     print(f"✅ 搜索完成：{school} - {advisor_name}")
@@ -575,6 +661,8 @@ def search_advisor_info(school, lab=None, advisor_name=None):
             "data": None,
             "error": "学校和导师姓名不能为空"
         }
+
+    search_reference_links = build_search_reference_links(school, advisor_name)
     
     print(f"🔍 开始联网搜索：{school} - {advisor_name}")
     print(f"🔑 使用 {len(DASHSCOPE_API_KEYS)} 个 API Key")
@@ -588,7 +676,8 @@ def search_advisor_info(school, lab=None, advisor_name=None):
         return {
             "success": False,
             "data": None,
-            "error": f"未找到 {school} {advisor_name} 导师的信息，请确认学校名称和导师姓名是否正确"
+            "error": f"未找到 {school} {advisor_name} 导师的信息，请确认学校名称和导师姓名是否正确",
+            "references": search_reference_links,
         }
     
     # 第二阶段：搜索详细信息（多Key轮询）
@@ -614,7 +703,8 @@ def search_advisor_info(school, lab=None, advisor_name=None):
     return {
         "success": True,
         "data": full_info,
-        "error": None
+        "error": None,
+        "references": search_reference_links,
     }
 
 

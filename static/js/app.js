@@ -9,6 +9,7 @@ class App {
             prompt_choice: '正常型导师（默认）',
             system_prompt: '',
             enable_tts: true,
+            auto_vad: true,
             enable_rag: true,
             rag_domain: 'cs ai',
             rag_top_k: 6,
@@ -530,6 +531,28 @@ class App {
             });
         }
 
+        const autoVad = document.getElementById('auto-vad');
+        const immersiveAutoVad = document.getElementById('immersive-auto-vad');
+        const syncAutoVad = (enabled) => {
+            this.settings.auto_vad = enabled;
+            if (autoVad) autoVad.checked = enabled;
+            if (immersiveAutoVad) immersiveAutoVad.checked = enabled;
+            if (window.vadDetector?.setAutoMonitoring) {
+                window.vadDetector.setAutoMonitoring(enabled);
+            }
+            this.saveSettings();
+        };
+        if (autoVad) {
+            autoVad.addEventListener('change', () => {
+                syncAutoVad(autoVad.checked);
+            });
+        }
+        if (immersiveAutoVad) {
+            immersiveAutoVad.addEventListener('change', () => {
+                syncAutoVad(immersiveAutoVad.checked);
+            });
+        }
+
         const enableRag = document.getElementById('enable-rag');
         const ragSettings = document.getElementById('rag-settings');
         if (enableRag) {
@@ -719,12 +742,18 @@ class App {
         if (systemPrompt) systemPrompt.value = this.settings.system_prompt || this.presets[this.settings.prompt_choice] || '';
         if (enableTts) enableTts.checked = this.settings.enable_tts;
         if (enableRag) enableRag.checked = this.settings.enable_rag;
+        if (autoVad) autoVad.checked = this.settings.auto_vad !== false;
         if (ragSettings) ragSettings.style.display = this.settings.enable_rag ? 'block' : 'none';
         if (ragDomain) ragDomain.value = this.settings.rag_domain;
         if (ragTopk) ragTopk.value = this.settings.rag_top_k;
         if (topkValue) topkValue.textContent = this.settings.rag_top_k;
         const immersiveRag = document.getElementById('immersive-enable-rag');
         if (immersiveRag) immersiveRag.checked = this.settings.enable_rag;
+        if (immersiveAutoVad) immersiveAutoVad.checked = this.settings.auto_vad !== false;
+
+        if (window.vadDetector?.setAutoMonitoring) {
+            window.vadDetector.setAutoMonitoring(this.settings.auto_vad !== false);
+        }
 
         // 精简模式
         const compactMode = document.getElementById('compact-mode');

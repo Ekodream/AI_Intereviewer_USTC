@@ -78,6 +78,7 @@ class SettingsModel(BaseModel):
     prompt_choice: str = "正常型导师（默认）"
     system_prompt: str = ""
     enable_tts: bool = True
+    auto_vad: bool = True
     enable_rag: bool = True
     rag_domain: str = "cs ai"
     rag_top_k: int = 6
@@ -106,6 +107,7 @@ session_store: Dict[str, Any] = {
     "resume_file_name": "",
     "advisor_searched": False,
     "advisor_info": None,
+    "advisor_references": [],
     "advisor_school": "",
     "advisor_lab": "",
     "advisor_name": "",
@@ -336,6 +338,37 @@ def strip_next_markers(text: str) -> str:
     return cleaned
 
 
+def append_advisor_reference_links(report_text: str, links: List[str]) -> str:
+    """在报告末尾追加导师搜索参考链接。"""
+    if not links:
+        return report_text
+
+    deduped_links = []
+    seen = set()
+    for link in links:
+        link = (link or "").strip()
+        if not link or link in seen:
+            continue
+        seen.add(link)
+        deduped_links.append(link)
+    deduped_links = deduped_links[:12]
+
+    if not deduped_links:
+        return report_text
+
+    lines = [
+        "",
+        "---",
+        "",
+        "## 附录：导师搜索参考链接",
+        "以下链接来自导师信息联网搜索阶段，供你复核和延伸阅读：",
+    ]
+    for idx, link in enumerate(deduped_links, start=1):
+        lines.append(f"{idx}. {link}")
+
+    return (report_text or "").rstrip() + "\n" + "\n".join(lines) + "\n"
+
+
 async def generate_tts_audio(text: str) -> Optional[str]:
     """
     生成 TTS 音频并返回 base64 编码
@@ -522,6 +555,7 @@ async def get_advisor_status():
         "lab": session_store["advisor_lab"],
         "name": session_store["advisor_name"],
         "info": session_store["advisor_info"],
+        "references": session_store.get("advisor_references", []),
     }
 
 
@@ -536,6 +570,7 @@ async def search_advisor(school: str = Form(...), lab: str = Form(...), name: st
             session_store["advisor_mode"] = "custom"
             session_store["advisor_searched"] = True
             session_store["advisor_info"] = result["data"]
+            session_store["advisor_references"] = result.get("references", [])
             session_store["advisor_school"] = school
             session_store["advisor_lab"] = lab
             session_store["advisor_name"] = name
@@ -553,10 +588,12 @@ async def search_advisor(school: str = Form(...), lab: str = Form(...), name: st
                 "status": "ok",
                 "message": "导师信息搜索成功",
                 "info": result["data"],
+                "references": result.get("references", []),
             }
 
         session_store["advisor_searched"] = False
         session_store["advisor_info"] = None
+        session_store["advisor_references"] = []
         return JSONResponse(
             status_code=404,
             content={"status": "error", "message": result.get("error", "未找到导师信息")},
@@ -574,6 +611,7 @@ async def delete_advisor():
     session_store["advisor_mode"] = "ai_default"
     session_store["advisor_searched"] = False
     session_store["advisor_info"] = None
+    session_store["advisor_references"] = []
     session_store["advisor_school"] = ""
     session_store["advisor_lab"] = ""
     session_store["advisor_name"] = ""
@@ -763,8 +801,16 @@ async def report_stream():
             
             # 传入简历分析结果
             resume_analysis = session_store.get("resume_analysis", None)
+            advisor_links = session_store.get("advisor_references", [])
+            final_report = ""
             for partial_report in ai_report_stream(history, resume_analysis=resume_analysis):
+                final_report = partial_report
                 yield f"data: {json.dumps({'type': 'text', 'content': partial_report}, ensure_ascii=False)}\n\n"
+
+            # 在最终报告末尾追加导师搜索阶段提取到的参考链接
+            if advisor_links:
+                final_with_links = append_advisor_reference_links(final_report, advisor_links)
+                yield f"data: {json.dumps({'type': 'text', 'content': final_with_links}, ensure_ascii=False)}\n\n"
             
             yield f"data: {json.dumps({'type': 'done'}, ensure_ascii=False)}\n\n"
             

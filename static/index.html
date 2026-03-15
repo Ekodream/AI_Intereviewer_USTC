@@ -185,6 +185,12 @@
                         <span class="toggle-slider"></span>
                         <span class="toggle-text">TTS 语音播报</span>
                     </label>
+                    <label class="cyber-toggle" style="margin-top:10px;">
+                        <input type="checkbox" id="auto-vad" checked>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">自动录音监听（VAD）</span>
+                    </label>
+                    <p class="hint-text" style="margin-top:6px;">关闭后需手动点击麦克风开始和结束录音</p>
                 </div>
 
                 <div class="panel-divider"></div>
@@ -573,6 +579,14 @@
                     </label>
                 </div>
 
+                <div class="immersive-setting-item">
+                    <label class="cyber-toggle">
+                        <input type="checkbox" id="immersive-auto-vad" checked>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">自动录音监听（VAD）</span>
+                    </label>
+                </div>
+
                 <div class="immersive-settings-divider"></div>
 
                 <div class="immersive-setting-item">
@@ -702,8 +716,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/indent-fold.min.js"></script>
 
     <script src="/static/js/tts-stream.js"></script>
-    <script src="/static/js/vad.js"></script>
+    <script src="/static/js/vad.js?v=2"></script>
     <script src="/static/js/chat.js?v=4"></script>
-    <script src="/static/js/app.js?v=6"></script>
+    <script src="/static/js/app.js?v=7"></script>
 </body>
 </html>
