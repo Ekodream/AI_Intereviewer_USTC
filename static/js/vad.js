@@ -80,7 +80,7 @@ class VADDetector {
 
         try {
             this.updateStatus('requesting', '请求麦克风权限...');
-            
+
             this.mediaStream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     sampleRate: this.config.sampleRate,
@@ -106,6 +106,11 @@ class VADDetector {
             this.isListening = true;
             this.isSpeaking = false;
             this.skipProcessOnStop = false;
+
+            // 同步启动视频录制
+            if (window.videoRecorder && window.app?.settings?.enable_video) {
+                window.videoRecorder.startRecording();
+            }
 
             if (this.autoMonitoring) {
                 this.updateStatus('listening', '监听中...');
@@ -449,6 +454,14 @@ class VADDetector {
         if (this.audioContext) {
             await this.audioContext.close();
             this.audioContext = null;
+        }
+
+        // 同步停止视频录制并上传
+        if (window.videoRecorder && window.videoRecorder.isRecording) {
+            const videoBlob = await window.videoRecorder.stopRecording();
+            if (videoBlob && videoBlob.size > 0) {
+                window.videoRecorder.uploadVideo(videoBlob);
+            }
         }
 
         this.analyser = null;

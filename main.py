@@ -29,6 +29,7 @@ if str(BASE_DIR) not in sys.path:
 from config import (
     STEPFUN_API_KEY,
     TEMP_DIR,
+    VIDEOS_DIR,
     init_directories,
 )
 from modules.llm_agent import llm_stream_chat
@@ -112,6 +113,7 @@ session_store: Dict[str, Any] = {
     "advisor_lab": "",
     "advisor_name": "",
     "advisor_mode": "ai_default",
+    "videos": [],
 }
 
 # 预设系统提示词 - 10 阶段流程（保留三种面试风格）
@@ -1045,6 +1047,52 @@ async def execute_code(request: CodeExecuteRequest):
         return await execute_cpp(code, stdin)
     else:
         return {"status": "error", "message": f"不支持的语言: {language}"}
+
+
+# ==================== 视频录制 API ====================
+
+@app.post("/api/video/upload")
+async def upload_video(file: UploadFile = File(...)):
+    """上传面试视频片段"""
+    try:
+        # 生成唯一文件名
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        video_filename = f"interview_{timestamp}_{uuid.uuid4().hex[:8]}.webm"
+        video_path = VIDEOS_DIR / video_filename
+
+        # 保存视频文件
+        with open(video_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+
+        # 记录到 session
+        session_store["videos"].append({
+            "filename": video_filename,
+            "path": str(video_path),
+            "timestamp": datetime.now().isoformat(),
+            "size": len(content)
+        })
+
+        print(f"📹 [视频上传] 保存成功: {video_filename}, 大小: {len(content) / 1024:.1f}KB")
+
+        return {
+            "status": "ok",
+            "message": "视频上传成功",
+            "filename": video_filename,
+            "size": len(content)
+        }
+    except Exception as e:
+        print(f"❌ [视频上传] 失败: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": f"视频上传失败: {str(e)}"}
+        )
+
+
+@app.get("/api/video/list")
+async def list_videos():
+    """获取已录制的视频列表"""
+    return {"videos": session_store.get("videos", [])}
 
 
 # ==================== 启动入口 ====================

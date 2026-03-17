@@ -191,6 +191,12 @@
                         <span class="toggle-text">自动录音监听（VAD）</span>
                     </label>
                     <p class="hint-text" style="margin-top:6px;">关闭后需手动点击麦克风开始和结束录音</p>
+                    <label class="cyber-toggle" style="margin-top:10px;">
+                        <input type="checkbox" id="enable-video">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">视频录制</span>
+                    </label>
+                    <p class="hint-text" style="margin-top:6px;">开启后同步录制摄像头视频</p>
                 </div>
 
                 <div class="panel-divider"></div>
@@ -353,6 +359,20 @@
                     </div>
                 </div>
                 <div id="voice-history" style="display:none;"></div>
+
+                <!-- 视频预览窗口 -->
+                <div class="video-preview-container" id="video-preview-container" style="display: none;">
+                    <div class="video-preview-header">
+                        <span><i class="fas fa-video"></i> 摄像头预览</span>
+                        <div class="video-controls">
+                            <span class="video-rec-status" id="video-rec-status"></span>
+                            <button class="icon-btn icon-btn-ghost video-toggle-btn" id="video-toggle-btn" title="开关摄像头">
+                                <i class="fas fa-video"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <video id="video-preview" autoplay muted playsinline></video>
+                </div>
 
                 <!-- TTS 浮层 -->
                 <div class="tts-float" id="tts-player">
@@ -527,6 +547,11 @@
             </div>
 
             <div class="immersive-center">
+                <div class="immersive-video-preview" id="immersive-video-container" style="display: none;">
+                    <video id="immersive-video-preview" autoplay muted playsinline></video>
+                    <span class="video-rec-dot" id="immersive-video-rec-dot"></span>
+                </div>
+
                 <div class="immersive-mic-area">
                     <button class="immersive-mic-btn" id="immersive-record-btn" title="点击开始录音">
                         <span class="immersive-ring"></span>
@@ -584,6 +609,14 @@
                         <input type="checkbox" id="immersive-auto-vad" checked>
                         <span class="toggle-slider"></span>
                         <span class="toggle-text">自动录音监听（VAD）</span>
+                    </label>
+                </div>
+
+                <div class="immersive-setting-item">
+                    <label class="cyber-toggle">
+                        <input type="checkbox" id="immersive-enable-video">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">视频录制</span>
                     </label>
                 </div>
 
@@ -716,6 +749,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/indent-fold.min.js"></script>
 
     <script src="/static/js/tts-stream.js"></script>
+    <script src="/static/js/video.js?v=1"></script>
     <script src="/static/js/vad.js?v=2"></script>
     <script src="/static/js/chat.js?v=4"></script>
     <script src="/static/js/app.js?v=7"></script>

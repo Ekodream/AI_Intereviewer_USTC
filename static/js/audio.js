@@ -59,6 +59,12 @@ class AudioRecorder {
             this.mediaRecorder.start();
             this.isRecording = true;
             this.updateUI(true);
+
+            // 同步启动视频录制
+            if (window.videoRecorder && window.app?.settings?.enable_video) {
+                window.videoRecorder.startRecording();
+            }
+
             console.log('🎤 开始录音');
         } catch (error) {
             console.error('无法访问麦克风:', error);
@@ -74,6 +80,15 @@ class AudioRecorder {
                 this.stream.getTracks().forEach(track => track.stop());
             }
             this.updateUI(false);
+
+            // 同步停止视频录制并上传
+            if (window.videoRecorder && window.videoRecorder.isRecording) {
+                const videoBlob = await window.videoRecorder.stopRecording();
+                if (videoBlob && videoBlob.size > 0) {
+                    window.videoRecorder.uploadVideo(videoBlob);
+                }
+            }
+
             console.log('🛑 停止录音');
         }
     }

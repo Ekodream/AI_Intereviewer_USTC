@@ -14,6 +14,7 @@ class App {
             rag_domain: 'cs ai',
             rag_top_k: 6,
             compact_mode: false,  // 精简对话模式
+            enable_video: false,  // 视频录制
             advisor_mode: 'ai_default',
             advisor_school: '',
             advisor_lab: '',
@@ -163,6 +164,10 @@ class App {
 
         const immersiveRag = document.getElementById('immersive-enable-rag');
         if (immersiveRag) immersiveRag.checked = this.settings.enable_rag;
+
+        // 同步视频开关状态
+        const immersiveEnableVideo = document.getElementById('immersive-enable-video');
+        if (immersiveEnableVideo) immersiveEnableVideo.checked = this.settings.enable_video;
 
         this.updateImmersiveResumeBtn();
         this.updateImmersiveMsgCount();
@@ -596,6 +601,27 @@ class App {
             });
         }
 
+        // 视频录制开关
+        const enableVideo = document.getElementById('enable-video');
+        const immersiveEnableVideo = document.getElementById('immersive-enable-video');
+        const syncVideoToggle = (enabled) => {
+            this.settings.enable_video = enabled;
+            if (enableVideo) enableVideo.checked = enabled;
+            if (immersiveEnableVideo) immersiveEnableVideo.checked = enabled;
+            this.toggleVideoPreview(enabled);
+            this.saveSettings();
+        };
+        if (enableVideo) {
+            enableVideo.addEventListener('change', () => {
+                syncVideoToggle(enableVideo.checked);
+            });
+        }
+        if (immersiveEnableVideo) {
+            immersiveEnableVideo.addEventListener('change', () => {
+                syncVideoToggle(immersiveEnableVideo.checked);
+            });
+        }
+
         const advisorMode = document.getElementById('advisor-mode');
         if (advisorMode) {
             advisorMode.addEventListener('change', async () => {
@@ -762,6 +788,14 @@ class App {
         if (window.chat) {
             window.chat.setCompactMode(this.settings.compact_mode);
         }
+
+        // 视频录制
+        const enableVideo = document.getElementById('enable-video');
+        const immersiveEnableVideo = document.getElementById('immersive-enable-video');
+        if (enableVideo) enableVideo.checked = this.settings.enable_video;
+        if (immersiveEnableVideo) immersiveEnableVideo.checked = this.settings.enable_video;
+        // 同步视频预览状态
+        this.toggleVideoPreview(this.settings.enable_video);
 
         const advisorMode = document.getElementById('advisor-mode');
         const advisorCustomFields = document.getElementById('advisor-custom-fields');
@@ -1338,6 +1372,21 @@ class App {
     /* ==================== Utilities ==================== */
     getSettings() {
         return this.settings;
+    }
+
+    /* ==================== Video Preview ==================== */
+    toggleVideoPreview(enabled) {
+        const container = document.getElementById('video-preview-container');
+        const immersiveContainer = document.getElementById('immersive-video-container');
+        if (enabled) {
+            if (container) container.style.display = '';
+            if (immersiveContainer) immersiveContainer.style.display = '';
+            window.videoRecorder?.initCamera();
+        } else {
+            if (container) container.style.display = 'none';
+            if (immersiveContainer) immersiveContainer.style.display = 'none';
+            window.videoRecorder?.releaseCamera();
+        }
     }
 
     showLoading(text = '正在处理...') {
