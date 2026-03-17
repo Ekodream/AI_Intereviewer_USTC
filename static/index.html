@@ -251,11 +251,12 @@
                     </select>
 
                     <div id="advisor-custom-fields" style="display:none;">
-                        <input type="text" id="advisor-school-input" placeholder="导师所在大学（如：中国科学技术大学）" class="cyber-input" style="margin-bottom:8px;">
-                        <input type="text" id="advisor-lab-input" placeholder="实验室名称（如：数据科学实验室）" class="cyber-input" style="margin-bottom:8px;">
-                        <input type="text" id="advisor-name-input" placeholder="导师姓名（如：陈恩红）" class="cyber-input" style="margin-bottom:8px;">
+                        <p class="hint-text" style="margin-bottom:8px;">支持模糊搜索：简写、拼音、英文名等。至少填写一项即可搜索。</p>
+                        <input type="text" id="advisor-school-input" placeholder="导师所在大学（如：中国科学技术大学、USTC）" class="cyber-input" style="margin-bottom:8px;">
+                        <input type="text" id="advisor-lab-input" placeholder="实验室名称（选填，如：数据科学实验室）" class="cyber-input" style="margin-bottom:8px;">
+                        <input type="text" id="advisor-name-input" placeholder="导师姓名（如：陈恩红、Chen Enhong）" class="cyber-input" style="margin-bottom:8px;">
                         <button class="cyber-btn cyber-btn-accent full-width" id="advisor-search-btn">
-                            <i class="fas fa-search"></i> 联网检索导师信息
+                            <i class="fas fa-search"></i> 联网检索导师信息（可选）
                         </button>
                     </div>
 
@@ -281,6 +282,30 @@
 
                     <div id="advisor-error" style="display:none;">
                         <p class="hint-text" style="color: #fc8181;" id="advisor-error-text"></p>
+                    </div>
+
+                    <!-- 导师文档上传区域 -->
+                    <div id="advisor-docs-section" style="display:none; margin-top:15px;">
+                        <label class="field-label">
+                            <i class="fas fa-file-pdf"></i> 导师相关文档
+                        </label>
+                        <p class="hint-text" style="margin-bottom:8px;">上传导师论文、研究资料等 PDF 文档</p>
+
+                        <input type="file" id="advisor-doc-input" accept=".pdf" style="display: none;">
+                        <button class="cyber-btn cyber-btn-accent cyber-btn-sm full-width" id="advisor-doc-upload-btn">
+                            <i class="fas fa-cloud-upload-alt"></i> 上传文档
+                        </button>
+
+                        <div id="advisor-docs-list" style="margin-top:10px;">
+                            <!-- 文档列表将动态插入这里 -->
+                        </div>
+
+                        <div id="advisor-doc-progress" style="display:none; margin-top:10px;">
+                            <div class="progress-track">
+                                <div class="progress-glow" id="advisor-doc-progress-fill"></div>
+                            </div>
+                            <p class="hint-text" id="advisor-doc-progress-text">正在上传...</p>
+                        </div>
                     </div>
                 </div>
 
@@ -725,6 +750,9 @@
                 <div id="modal-advisor-result" style="display:none; margin-top: 12px;">
                     <label class="field-label" for="modal-advisor-result-text">导师检索结果</label>
                     <textarea id="modal-advisor-result-text" class="advisor-result-textbox" rows="10" readonly placeholder="检索完成后将在这里展示导师信息..."></textarea>
+                    <button class="cyber-btn cyber-btn-danger cyber-btn-sm full-width" id="modal-advisor-delete-btn" style="margin-top:10px;">
+                        <i class="fas fa-trash-alt"></i> 清除导师信息
+                    </button>
                 </div>
             </div>
         </div>

@@ -48,6 +48,7 @@ VECTOR_STORE_DIR = DATA_DIR / "vector_store"
 OUTPUT_DIR = BASE_DIR / "output"
 REPORTS_DIR = OUTPUT_DIR / "reports"
 VIDEOS_DIR = OUTPUT_DIR / "videos"
+ADVISOR_DOCS_DIR = OUTPUT_DIR / "advisor_docs"
 
 # 临时文件目录
 TEMP_DIR = BASE_DIR / "temp_audio"
@@ -72,6 +73,7 @@ def init_directories():
         OUTPUT_DIR,
         REPORTS_DIR,
         VIDEOS_DIR,
+        ADVISOR_DOCS_DIR,
         TEMP_DIR
     ]
     

@@ -20,6 +20,7 @@ pip-delete-this-directory.txt
 # 音频临时文件与输出
 temp_audio/
 output/
+output/advisor_docs/
 
 # 日志
 logs/
@@ -36,3 +37,4 @@ desktop.ini
 
 # AI编程相关
 .qoder/
+.claudesignore

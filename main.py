@@ -11,6 +11,7 @@ import re
 import sys
 import tempfile
 import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Optional, Any
@@ -30,6 +31,7 @@ from config import (
     STEPFUN_API_KEY,
     TEMP_DIR,
     VIDEOS_DIR,
+    ADVISOR_DOCS_DIR,
     init_directories,
 )
 from modules.llm_agent import llm_stream_chat
@@ -42,12 +44,33 @@ from modules.audio_processor import (
 from modules.ai_report import ai_report_stream, _format_history_for_report
 from modules.resume_parser import parse_resume, format_resume_for_prompt
 from modules.advisor_search import search_advisor_info, format_advisor_info_for_prompt
+from modules.advisor_docs import index_advisor_document, get_advisor_documents
 
 # 初始化目录
 init_directories()
 
+
+# ==================== Lifespan 事件处理器 ====================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI 生命周期管理器：启动和关闭时执行的任务。"""
+    # 启动时执行：启动后台会话清理任务
+    cleanup_task = asyncio.create_task(cleanup_sessions())
+    print("✅ [启动] 会话清理后台任务已启动")
+    
+    yield  # 应用运行期间
+    
+    # 关闭时执行：取消后台任务
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
+    print("🛑 [关闭] 会话清理后台任务已停止")
+
+
 # ==================== FastAPI 应用 ====================
-app = FastAPI(title="AI Lab-InterReviewer", version="2.0.0")
+app = FastAPI(title="AI Lab-InterReviewer", version="2.0.0", lifespan=lifespan)
 
 # CORS 配置
 app.add_middleware(
@@ -119,18 +142,13 @@ def get_session(session_id: str) -> Dict[str, Any]:
             "advisor_lab": "",
             "advisor_name": "",
             "advisor_mode": "ai_default",
+            "advisor_documents": [],
             "videos": [],
             "last_active": datetime.now(),
         }
     else:
         sessions[session_id]["last_active"] = datetime.now()
     return sessions[session_id]
-
-
-@app.on_event("startup")
-async def start_session_cleanup():
-    """应用启动时启动后台会话清理任务。"""
-    asyncio.create_task(cleanup_sessions())
 
 
 async def cleanup_sessions():
@@ -590,7 +608,7 @@ async def get_advisor_status(session_id: str = Header(default="default", alias="
 
 
 @app.post("/api/advisor/search")
-async def search_advisor(school: str = Form(...), lab: str = Form(...), name: str = Form(...), session_id: str = Header(default="default", alias="X-Session-ID")):
+async def search_advisor(school: str = Form(""), lab: str = Form(""), name: str = Form(""), session_id: str = Header(default="default", alias="X-Session-ID")):
     """联网搜索导师信息"""
     try:
         print(f"🔍 [导师搜索] 开始搜索: {school} | {lab} | {name}")
@@ -657,6 +675,155 @@ async def delete_advisor(session_id: str = Header(default="default", alias="X-Se
     return {"status": "ok", "message": "导师信息已清除，已切换为默认 AI 导师"}
 
 
+# ==================== 导师文档相关 API ====================
+
+@app.post("/api/advisor/document/upload")
+async def upload_advisor_document(
+    file: UploadFile = File(...),
+    advisor_school: str = Form(default=""),
+    advisor_lab: str = Form(default=""),
+    advisor_name: str = Form(default=""),
+    session_id: str = Header(default="default", alias="X-Session-ID")
+):
+    """上传导师相关文档并索引到 RAG 系统"""
+    try:
+        if not file.filename.lower().endswith('.pdf'):
+            return JSONResponse(
+                status_code=400,
+                content={"status": "error", "message": "只支持 PDF 文件格式"}
+            )
+
+        # 优先使用表单参数，如果为空则从 session 获取
+        school = advisor_school.strip() or get_session(session_id).get("advisor_school", "")
+        lab = advisor_lab.strip() or get_session(session_id).get("advisor_lab", "")
+        name = advisor_name.strip() or get_session(session_id).get("advisor_name", "")
+
+        # 至少需要提供导师姓名或学校信息之一
+        if not name and not school:
+            return JSONResponse(
+                status_code=400,
+                content={"status": "error", "message": "请至少提供导师姓名或学校信息"}
+            )
+
+        # 生成 advisor_id（使用提供的信息组合）
+        id_parts = []
+        if school:
+            id_parts.append(school)
+        if lab:
+            id_parts.append(lab)
+        if name:
+            id_parts.append(name)
+        advisor_id = "_".join(id_parts).replace(" ", "_")
+
+        advisor_doc_dir = ADVISOR_DOCS_DIR / advisor_id / session_id
+        advisor_doc_dir.mkdir(parents=True, exist_ok=True)
+
+        file_id = uuid.uuid4().hex[:8]
+        safe_filename = f"{file_id}_{file.filename}"
+        file_path = advisor_doc_dir / safe_filename
+
+        with open(file_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+
+        print(f"📄 [导师文档] 文件已保存: {file_path}")
+
+        result = index_advisor_document(
+            file_path=str(file_path),
+            advisor_id=advisor_id,
+            session_id=session_id,
+            filename=file.filename,
+            persist_dir=str(BASE_DIR / "vector_db")
+        )
+
+        if not result["success"]:
+            try:
+                file_path.unlink(missing_ok=True)
+            except:
+                pass
+            return JSONResponse(
+                status_code=500,
+                content={"status": "error", "message": f"文档索引失败: {result.get('error', '未知错误')}"}
+            )
+
+        doc_info = {
+            "filename": file.filename,
+            "safe_filename": safe_filename,
+            "path": str(file_path),
+            "size": len(content),
+            "timestamp": datetime.now().isoformat(),
+            "advisor_id": advisor_id,
+            "advisor_school": school,
+            "advisor_lab": lab,
+            "advisor_name": name
+        }
+
+        get_session(session_id)["advisor_documents"].append(doc_info)
+
+        print(f"✅ [导师文档] 索引成功: {file.filename}, 内容长度: {result['content_length']} 字符")
+
+        return {
+            "status": "ok",
+            "message": "文档上传并索引成功",
+            "filename": file.filename,
+            "size": len(content),
+            "content_length": result["content_length"]
+        }
+
+    except Exception as e:
+        print(f"❌ [导师文档] 上传失败: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": f"文档上传失败: {str(e)}"}
+        )
+
+
+@app.get("/api/advisor/document/list")
+async def list_advisor_documents(session_id: str = Header(default="default", alias="X-Session-ID")):
+    """获取导师相关文档列表"""
+    return {"documents": get_session(session_id).get("advisor_documents", [])}
+
+
+@app.delete("/api/advisor/document/{filename}")
+async def delete_advisor_document(
+    filename: str,
+    session_id: str = Header(default="default", alias="X-Session-ID")
+):
+    """删除导师文档"""
+    try:
+        documents = get_session(session_id).get("advisor_documents", [])
+        doc_to_delete = None
+
+        for doc in documents:
+            if doc["safe_filename"] == filename:
+                doc_to_delete = doc
+                break
+
+        if not doc_to_delete:
+            return JSONResponse(
+                status_code=404,
+                content={"status": "error", "message": "文档不存在"}
+            )
+
+        file_path = Path(doc_to_delete["path"])
+        if file_path.exists():
+            file_path.unlink()
+
+        documents.remove(doc_to_delete)
+        get_session(session_id)["advisor_documents"] = documents
+
+        print(f"🗑️ [导师文档] 已删除: {doc_to_delete['filename']}")
+
+        return {"status": "ok", "message": "文档已删除"}
+
+    except Exception as e:
+        print(f"❌ [导师文档] 删除失败: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": f"删除失败: {str(e)}"}
+        )
+
+
 @app.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest, session_id: str = Header(default="default", alias="X-Session-ID")):
     """
@@ -694,7 +861,29 @@ async def chat_stream(request: ChatRequest, session_id: str = Header(default="de
                         })
                 except Exception as e:
                     print(f"RAG 检索失败: {e}")
-            
+
+            # 检索导师文档
+            advisor_mode = get_session(session_id).get("advisor_mode", "ai_default")
+            advisor_ready = get_session(session_id).get("advisor_searched", False)
+            if advisor_mode == "custom" and advisor_ready:
+                advisor_school = get_session(session_id).get("advisor_school", "")
+                advisor_name = get_session(session_id).get("advisor_name", "")
+                if advisor_school and advisor_name:
+                    advisor_id = f"{advisor_school}_{advisor_name}".replace(" ", "_")
+                    try:
+                        persist_dir = str(BASE_DIR / "vector_db")
+                        advisor_doc_retrieved = get_retrieved_context(
+                            request.message,
+                            domain=f"advisor_{advisor_id}",
+                            k=3,
+                            persist_dir=persist_dir,
+                        )
+                        if advisor_doc_retrieved and advisor_doc_retrieved.strip():
+                            system_prompt += f"\n\n【导师相关文档内容】\n{advisor_doc_retrieved}\n\n以上内容来自导师相关文档，可作为提问和评估的参考。"
+                            print(f"✅ [聊天] 已检索导师文档，长度: {len(advisor_doc_retrieved)} 字符")
+                    except Exception as e:
+                        print(f"导师文档检索失败: {e}")
+
             # 注入简历信息
             print(f"🔍 [聊天] 检查简历状态: uploaded={get_session(session_id)['resume_uploaded']}, analysis={get_session(session_id)['resume_analysis'] is not None}")
             if get_session(session_id)["resume_uploaded"] and get_session(session_id)["resume_analysis"]:
