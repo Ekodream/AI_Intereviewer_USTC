@@ -11,11 +11,11 @@ import re
 import sys
 import tempfile
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Optional, Any
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, Header, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -97,24 +97,52 @@ class CodeExecuteRequest(BaseModel):
     stdin: str = ""
 
 
-# ==================== 全局状态 ====================
-# 使用内存存储会话状态（生产环境应使用 Redis 等）
-session_store: Dict[str, Any] = {
-    "history": [],
-    "rag_history": [],
-    "settings": SettingsModel().model_dump(),
-    "resume_uploaded": False,
-    "resume_analysis": None,
-    "resume_file_name": "",
-    "advisor_searched": False,
-    "advisor_info": None,
-    "advisor_references": [],
-    "advisor_school": "",
-    "advisor_lab": "",
-    "advisor_name": "",
-    "advisor_mode": "ai_default",
-    "videos": [],
-}
+# ==================== 多用户会话管理 ====================
+SESSION_TTL_HOURS = 2  # 会话超时时间（小时）
+sessions: Dict[str, Dict[str, Any]] = {}
+
+
+def get_session(session_id: str) -> Dict[str, Any]:
+    """获取或创建指定 session_id 的用户会话数据，保证用户间数据完全隔离。"""
+    if session_id not in sessions:
+        sessions[session_id] = {
+            "history": [],
+            "rag_history": [],
+            "settings": SettingsModel().model_dump(),
+            "resume_uploaded": False,
+            "resume_analysis": None,
+            "resume_file_name": "",
+            "advisor_searched": False,
+            "advisor_info": None,
+            "advisor_references": [],
+            "advisor_school": "",
+            "advisor_lab": "",
+            "advisor_name": "",
+            "advisor_mode": "ai_default",
+            "videos": [],
+            "last_active": datetime.now(),
+        }
+    else:
+        sessions[session_id]["last_active"] = datetime.now()
+    return sessions[session_id]
+
+
+@app.on_event("startup")
+async def start_session_cleanup():
+    """应用启动时启动后台会话清理任务。"""
+    asyncio.create_task(cleanup_sessions())
+
+
+async def cleanup_sessions():
+    """定期清理超时会话，释放内存。每 30 分钟运行一次。"""
+    while True:
+        await asyncio.sleep(1800)
+        cutoff = datetime.now() - timedelta(hours=SESSION_TTL_HOURS)
+        expired = [sid for sid, s in list(sessions.items()) if s["last_active"] < cutoff]
+        for sid in expired:
+            del sessions[sid]
+        if expired:
+            print(f"🧹 [会话清理] 已清理 {len(expired)} 个过期会话，当前活跃会话数: {len(sessions)}")
 
 # 预设系统提示词 - 10 阶段流程（保留三种面试风格）
 default_prompt = """
@@ -423,42 +451,42 @@ async def get_presets():
 
 
 @app.get("/api/settings")
-async def get_settings():
+async def get_settings(session_id: str = Header(default="default", alias="X-Session-ID")):
     """获取当前设置"""
-    return session_store["settings"]
+    return get_session(session_id)["settings"]
 
 
 @app.post("/api/settings")
-async def update_settings(settings: SettingsModel):
+async def update_settings(settings: SettingsModel, session_id: str = Header(default="default", alias="X-Session-ID")):
     """更新设置"""
     settings.prompt_choice = normalize_prompt_choice(settings.prompt_choice)
-    session_store["settings"] = settings.model_dump()
+    get_session(session_id)["settings"] = settings.model_dump()
     # 同步导师设置，便于后端在聊天时直接读取
-    session_store["advisor_mode"] = settings.advisor_mode
-    session_store["advisor_school"] = settings.advisor_school
-    session_store["advisor_lab"] = settings.advisor_lab
-    session_store["advisor_name"] = settings.advisor_name
-    return {"status": "ok", "settings": session_store["settings"]}
+    get_session(session_id)["advisor_mode"] = settings.advisor_mode
+    get_session(session_id)["advisor_school"] = settings.advisor_school
+    get_session(session_id)["advisor_lab"] = settings.advisor_lab
+    get_session(session_id)["advisor_name"] = settings.advisor_name
+    return {"status": "ok", "settings": get_session(session_id)["settings"]}
 
 
 @app.get("/api/history")
-async def get_history():
+async def get_history(session_id: str = Header(default="default", alias="X-Session-ID")):
     """获取对话历史"""
-    return {"history": session_store["history"]}
+    return {"history": get_session(session_id)["history"]}
 
 
 @app.delete("/api/history")
-async def clear_history():
+async def clear_history(session_id: str = Header(default="default", alias="X-Session-ID")):
     """清空对话历史"""
-    session_store["history"] = []
-    session_store["rag_history"] = []
+    get_session(session_id)["history"] = []
+    get_session(session_id)["rag_history"] = []
     return {"status": "ok", "message": "对话历史已清空"}
 
 
 @app.get("/api/rag/history")
-async def get_rag_history():
+async def get_rag_history(session_id: str = Header(default="default", alias="X-Session-ID")):
     """获取 RAG 检索历史"""
-    return {"rag_history": session_store["rag_history"]}
+    return {"rag_history": get_session(session_id)["rag_history"]}
 
 
 @app.get("/api/rag/domains")
@@ -474,17 +502,17 @@ async def get_rag_domains():
 # ==================== 简历相关 API ====================
 
 @app.get("/api/resume/status")
-async def get_resume_status():
+async def get_resume_status(session_id: str = Header(default="default", alias="X-Session-ID")):
     """获取简历上传状态"""
     return {
-        "uploaded": session_store["resume_uploaded"],
-        "file_name": session_store["resume_file_name"],
-        "analysis": session_store["resume_analysis"]
+        "uploaded": get_session(session_id)["resume_uploaded"],
+        "file_name": get_session(session_id)["resume_file_name"],
+        "analysis": get_session(session_id)["resume_analysis"]
     }
 
 
 @app.post("/api/resume/upload")
-async def upload_resume(file: UploadFile = File(...)):
+async def upload_resume(file: UploadFile = File(...), session_id: str = Header(default="default", alias="X-Session-ID")):
     """上传并解析简历 PDF"""
     try:
         # 验证文件类型
@@ -509,11 +537,11 @@ async def upload_resume(file: UploadFile = File(...)):
             print(f"✅ [简历上传] 解析成功，基本信息: {analysis_result.get('basic_info', {})}")
             
             # 存储到 session
-            session_store["resume_uploaded"] = True
-            session_store["resume_analysis"] = analysis_result
-            session_store["resume_file_name"] = file.filename
+            get_session(session_id)["resume_uploaded"] = True
+            get_session(session_id)["resume_analysis"] = analysis_result
+            get_session(session_id)["resume_file_name"] = file.filename
             
-            print(f"💾 [简历上传] 已存储到 session_store, resume_uploaded={session_store['resume_uploaded']}")
+            print(f"\U0001f4be [简历上传] 已存储到会话 {session_id[:8]}..., resume_uploaded={get_session(session_id)['resume_uploaded']}")
             
             return {
                 "status": "ok",
@@ -537,54 +565,54 @@ async def upload_resume(file: UploadFile = File(...)):
 
 
 @app.delete("/api/resume")
-async def delete_resume():
+async def delete_resume(session_id: str = Header(default="default", alias="X-Session-ID")):
     """删除已上传的简历"""
-    session_store["resume_uploaded"] = False
-    session_store["resume_analysis"] = None
-    session_store["resume_file_name"] = ""
+    get_session(session_id)["resume_uploaded"] = False
+    get_session(session_id)["resume_analysis"] = None
+    get_session(session_id)["resume_file_name"] = ""
     return {"status": "ok", "message": "简历已删除"}
 
 
 # ==================== 导师搜索相关 API ====================
 
 @app.get("/api/advisor/status")
-async def get_advisor_status():
+async def get_advisor_status(session_id: str = Header(default="default", alias="X-Session-ID")):
     """获取导师搜索状态"""
     return {
-        "mode": session_store.get("advisor_mode", "ai_default"),
-        "searched": session_store["advisor_searched"],
-        "school": session_store["advisor_school"],
-        "lab": session_store["advisor_lab"],
-        "name": session_store["advisor_name"],
-        "info": session_store["advisor_info"],
-        "references": session_store.get("advisor_references", []),
+        "mode": get_session(session_id).get("advisor_mode", "ai_default"),
+        "searched": get_session(session_id)["advisor_searched"],
+        "school": get_session(session_id)["advisor_school"],
+        "lab": get_session(session_id)["advisor_lab"],
+        "name": get_session(session_id)["advisor_name"],
+        "info": get_session(session_id)["advisor_info"],
+        "references": get_session(session_id).get("advisor_references", []),
     }
 
 
 @app.post("/api/advisor/search")
-async def search_advisor(school: str = Form(...), lab: str = Form(...), name: str = Form(...)):
+async def search_advisor(school: str = Form(...), lab: str = Form(...), name: str = Form(...), session_id: str = Header(default="default", alias="X-Session-ID")):
     """联网搜索导师信息"""
     try:
         print(f"🔍 [导师搜索] 开始搜索: {school} | {lab} | {name}")
 
         result = search_advisor_info(school=school, lab=lab, advisor_name=name)
         if result["success"]:
-            session_store["advisor_mode"] = "custom"
-            session_store["advisor_searched"] = True
-            session_store["advisor_info"] = result["data"]
-            session_store["advisor_references"] = result.get("references", [])
-            session_store["advisor_school"] = school
-            session_store["advisor_lab"] = lab
-            session_store["advisor_name"] = name
+            get_session(session_id)["advisor_mode"] = "custom"
+            get_session(session_id)["advisor_searched"] = True
+            get_session(session_id)["advisor_info"] = result["data"]
+            get_session(session_id)["advisor_references"] = result.get("references", [])
+            get_session(session_id)["advisor_school"] = school
+            get_session(session_id)["advisor_lab"] = lab
+            get_session(session_id)["advisor_name"] = name
 
-            settings = session_store.get("settings", {})
+            settings = get_session(session_id).get("settings", {})
             settings.update({
                 "advisor_mode": "custom",
                 "advisor_school": school,
                 "advisor_lab": lab,
                 "advisor_name": name,
             })
-            session_store["settings"] = settings
+            get_session(session_id)["settings"] = settings
 
             return {
                 "status": "ok",
@@ -593,9 +621,9 @@ async def search_advisor(school: str = Form(...), lab: str = Form(...), name: st
                 "references": result.get("references", []),
             }
 
-        session_store["advisor_searched"] = False
-        session_store["advisor_info"] = None
-        session_store["advisor_references"] = []
+        get_session(session_id)["advisor_searched"] = False
+        get_session(session_id)["advisor_info"] = None
+        get_session(session_id)["advisor_references"] = []
         return JSONResponse(
             status_code=404,
             content={"status": "error", "message": result.get("error", "未找到导师信息")},
@@ -608,29 +636,29 @@ async def search_advisor(school: str = Form(...), lab: str = Form(...), name: st
 
 
 @app.delete("/api/advisor")
-async def delete_advisor():
+async def delete_advisor(session_id: str = Header(default="default", alias="X-Session-ID")):
     """清除已搜索导师信息，并回退到默认 AI 导师"""
-    session_store["advisor_mode"] = "ai_default"
-    session_store["advisor_searched"] = False
-    session_store["advisor_info"] = None
-    session_store["advisor_references"] = []
-    session_store["advisor_school"] = ""
-    session_store["advisor_lab"] = ""
-    session_store["advisor_name"] = ""
+    get_session(session_id)["advisor_mode"] = "ai_default"
+    get_session(session_id)["advisor_searched"] = False
+    get_session(session_id)["advisor_info"] = None
+    get_session(session_id)["advisor_references"] = []
+    get_session(session_id)["advisor_school"] = ""
+    get_session(session_id)["advisor_lab"] = ""
+    get_session(session_id)["advisor_name"] = ""
 
-    settings = session_store.get("settings", {})
+    settings = get_session(session_id).get("settings", {})
     settings.update({
         "advisor_mode": "ai_default",
         "advisor_school": "",
         "advisor_lab": "",
         "advisor_name": "",
     })
-    session_store["settings"] = settings
+    get_session(session_id)["settings"] = settings
     return {"status": "ok", "message": "导师信息已清除，已切换为默认 AI 导师"}
 
 
 @app.post("/api/chat/stream")
-async def chat_stream(request: ChatRequest):
+async def chat_stream(request: ChatRequest, session_id: str = Header(default="default", alias="X-Session-ID")):
     """
     流式聊天 + 实时 TTS
     返回 SSE 流，包含文本更新和音频数据
@@ -640,7 +668,7 @@ async def chat_stream(request: ChatRequest):
             # 准备系统提示词
             system_prompt = request.system_prompt
             if not system_prompt:
-                settings = session_store["settings"]
+                settings = get_session(session_id)["settings"]
                 prompt_choice = normalize_prompt_choice(settings.get("prompt_choice"))
                 system_prompt = PRESET_PROMPTS.get(prompt_choice, "")
             
@@ -657,7 +685,7 @@ async def chat_stream(request: ChatRequest):
                     )
                     if retrieved and retrieved.strip():
                         system_prompt += f"\n\n参考知识库内容（仅供回答参考）：\n{retrieved}"
-                        session_store["rag_history"].append({
+                        get_session(session_id)["rag_history"].append({
                             "query": request.message,
                             "retrieved": retrieved,
                             "domain": request.rag_domain,
@@ -668,9 +696,9 @@ async def chat_stream(request: ChatRequest):
                     print(f"RAG 检索失败: {e}")
             
             # 注入简历信息
-            print(f"🔍 [聊天] 检查简历状态: uploaded={session_store['resume_uploaded']}, analysis={session_store['resume_analysis'] is not None}")
-            if session_store["resume_uploaded"] and session_store["resume_analysis"]:
-                resume_info = format_resume_for_prompt(session_store["resume_analysis"])
+            print(f"🔍 [聊天] 检查简历状态: uploaded={get_session(session_id)['resume_uploaded']}, analysis={get_session(session_id)['resume_analysis'] is not None}")
+            if get_session(session_id)["resume_uploaded"] and get_session(session_id)["resume_analysis"]:
+                resume_info = format_resume_for_prompt(get_session(session_id)["resume_analysis"])
                 system_prompt += (
                     "\n\n【候选人简历信息】\n" + resume_info
                     + "\n\n请根据候选人的背景，调整面试难度和问题方向，个性化面试。"
@@ -680,14 +708,14 @@ async def chat_stream(request: ChatRequest):
                 print(f"⚠️ [聊天] 未检测到简历，跳过注入")
 
             # 注入导师信息（默认 AI 导师；自定义模式且搜索成功后注入联网结果）
-            advisor_mode = session_store.get("advisor_mode", "ai_default")
-            advisor_ready = session_store.get("advisor_searched", False) and bool(session_store.get("advisor_info"))
+            advisor_mode = get_session(session_id).get("advisor_mode", "ai_default")
+            advisor_ready = get_session(session_id).get("advisor_searched", False) and bool(get_session(session_id).get("advisor_info"))
             if advisor_mode == "custom" and advisor_ready:
                 advisor_info = format_advisor_info_for_prompt(
-                    advisor_text=session_store.get("advisor_info", ""),
-                    school=session_store.get("advisor_school", ""),
-                    lab=session_store.get("advisor_lab", ""),
-                    advisor_name=session_store.get("advisor_name", ""),
+                    advisor_text=get_session(session_id).get("advisor_info", ""),
+                    school=get_session(session_id).get("advisor_school", ""),
+                    lab=get_session(session_id).get("advisor_lab", ""),
+                    advisor_name=get_session(session_id).get("advisor_name", ""),
                 )
                 system_prompt += (
                     "\n\n" + advisor_info
@@ -700,7 +728,7 @@ async def chat_stream(request: ChatRequest):
             
             # 更新历史
             history = list(request.history)
-            session_store["history"] = history + [{"role": "user", "content": request.message}]
+            get_session(session_id)["history"] = history + [{"role": "user", "content": request.message}]
             
             # 流式 LLM 输出 + 实时 TTS
             full_response = ""
@@ -744,7 +772,7 @@ async def chat_stream(request: ChatRequest):
                     yield f"data: {json.dumps({'type': 'audio', 'sentence': sentence_buffer, 'data': audio_base64}, ensure_ascii=False)}\n\n"
             
             # 更新历史
-            session_store["history"].append({"role": "assistant", "content": full_response})
+            get_session(session_id)["history"].append({"role": "assistant", "content": full_response})
             
             # 发送完成信号
             yield f"data: {json.dumps({'type': 'done', 'full_response': full_response}, ensure_ascii=False)}\n\n"
@@ -792,18 +820,18 @@ async def speech_to_text(file: UploadFile = File(...)):
 
 
 @app.post("/api/report/stream")
-async def report_stream():
+async def report_stream(session_id: str = Header(default="default", alias="X-Session-ID")):
     """流式生成面试报告"""
     async def generate():
         try:
-            history = session_store["history"]
+            history = get_session(session_id)["history"]
             if not history:
                 yield f"data: {json.dumps({'type': 'error', 'message': '没有对话记录'}, ensure_ascii=False)}\n\n"
                 return
             
             # 传入简历分析结果
-            resume_analysis = session_store.get("resume_analysis", None)
-            advisor_links = session_store.get("advisor_references", [])
+            resume_analysis = get_session(session_id).get("resume_analysis", None)
+            advisor_links = get_session(session_id).get("advisor_references", [])
             final_report = ""
             for partial_report in ai_report_stream(history, resume_analysis=resume_analysis):
                 final_report = partial_report
@@ -830,9 +858,9 @@ async def report_stream():
 
 
 @app.get("/api/report/download/{format}")
-async def download_report(format: str):
+async def download_report(format: str, session_id: str = Header(default="default", alias="X-Session-ID")):
     """下载报告/对话记录"""
-    history = session_store["history"]
+    history = get_session(session_id)["history"]
     
     if format == "json":
         return JSONResponse(
@@ -860,8 +888,10 @@ import shutil
 
 
 async def execute_python(code: str, stdin: str, timeout: int = 10) -> dict:
-    """执行 Python 代码"""
-    temp_file = TEMP_DIR / f"code_{uuid.uuid4().hex}.py"
+    """执行 Python 代码（每次使用独立临时子目录，防止用户间文件干扰）"""
+    temp_dir = TEMP_DIR / f"py_{uuid.uuid4().hex}"
+    temp_dir.mkdir(exist_ok=True)
+    temp_file = temp_dir / "main.py"
     try:
         temp_file.write_text(code, encoding='utf-8')
         result = subprocess.run(
@@ -870,7 +900,7 @@ async def execute_python(code: str, stdin: str, timeout: int = 10) -> dict:
             capture_output=True,
             text=True,
             timeout=timeout,
-            cwd=str(TEMP_DIR)
+            cwd=str(temp_dir)
         )
         return {
             "status": "ok",
@@ -883,15 +913,17 @@ async def execute_python(code: str, stdin: str, timeout: int = 10) -> dict:
     except Exception as e:
         return {"status": "error", "message": str(e)}
     finally:
-        temp_file.unlink(missing_ok=True)
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 async def execute_javascript(code: str, stdin: str, timeout: int = 10) -> dict:
-    """执行 JavaScript 代码 (Node.js)"""
+    """执行 JavaScript 代码 (Node.js)（每次使用独立临时子目录，防止用户间文件干扰）"""
     if not shutil.which('node'):
         return {"status": "error", "message": "未找到 Node.js，请先安装"}
     
-    temp_file = TEMP_DIR / f"code_{uuid.uuid4().hex}.js"
+    temp_dir = TEMP_DIR / f"js_{uuid.uuid4().hex}"
+    temp_dir.mkdir(exist_ok=True)
+    temp_file = temp_dir / "main.js"
     try:
         temp_file.write_text(code, encoding='utf-8')
         result = subprocess.run(
@@ -900,7 +932,7 @@ async def execute_javascript(code: str, stdin: str, timeout: int = 10) -> dict:
             capture_output=True,
             text=True,
             timeout=timeout,
-            cwd=str(TEMP_DIR)
+            cwd=str(temp_dir)
         )
         return {
             "status": "ok",
@@ -913,7 +945,7 @@ async def execute_javascript(code: str, stdin: str, timeout: int = 10) -> dict:
     except Exception as e:
         return {"status": "error", "message": str(e)}
     finally:
-        temp_file.unlink(missing_ok=True)
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 async def execute_java(code: str, stdin: str, timeout: int = 15) -> dict:
@@ -1052,7 +1084,7 @@ async def execute_code(request: CodeExecuteRequest):
 # ==================== 视频录制 API ====================
 
 @app.post("/api/video/upload")
-async def upload_video(file: UploadFile = File(...)):
+async def upload_video(file: UploadFile = File(...), session_id: str = Header(default="default", alias="X-Session-ID")):
     """上传面试视频片段"""
     try:
         # 生成唯一文件名
@@ -1066,7 +1098,7 @@ async def upload_video(file: UploadFile = File(...)):
             f.write(content)
 
         # 记录到 session
-        session_store["videos"].append({
+        get_session(session_id)["videos"].append({
             "filename": video_filename,
             "path": str(video_path),
             "timestamp": datetime.now().isoformat(),
@@ -1090,9 +1122,9 @@ async def upload_video(file: UploadFile = File(...)):
 
 
 @app.get("/api/video/list")
-async def list_videos():
+async def list_videos(session_id: str = Header(default="default", alias="X-Session-ID")):
     """获取已录制的视频列表"""
-    return {"videos": session_store.get("videos", [])}
+    return {"videos": get_session(session_id).get("videos", [])}
 
 
 # ==================== 启动入口 ====================

@@ -105,6 +105,7 @@ class AudioRecorder {
 
             const response = await fetch('/api/asr', {
                 method: 'POST',
+                headers: window.getApiHeaders(),
                 body: formData
             });
             const result = await response.json();

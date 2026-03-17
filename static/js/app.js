@@ -721,7 +721,7 @@ class App {
     /* ==================== Data Loading ==================== */
     async loadPresets() {
         try {
-            const response = await fetch('/api/presets');
+            const response = await fetch('/api/presets', { headers: window.getApiHeaders() });
             const data = await response.json();
             this.presets = data.prompts || {};
             this.settings.prompt_choice = this.normalizePromptChoice(this.settings.prompt_choice);
@@ -732,7 +732,7 @@ class App {
 
     async loadSettings() {
         try {
-            const response = await fetch('/api/settings');
+            const response = await fetch('/api/settings', { headers: window.getApiHeaders() });
             const data = await response.json();
             this.settings = { ...this.settings, ...data };
             this.settings.prompt_choice = this.normalizePromptChoice(this.settings.prompt_choice);
@@ -746,7 +746,7 @@ class App {
         try {
             await fetch('/api/settings', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: window.getApiHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(this.settings)
             });
         } catch (error) {
@@ -814,7 +814,7 @@ class App {
 
     async loadRagDomains() {
         try {
-            const response = await fetch('/api/rag/domains');
+            const response = await fetch('/api/rag/domains', { headers: window.getApiHeaders() });
             const data = await response.json();
             const domains = data.domains || [];
             const ragDomain = document.getElementById('rag-domain');
@@ -837,7 +837,7 @@ class App {
 
     async loadRagHistory() {
         try {
-            const response = await fetch('/api/rag/history');
+            const response = await fetch('/api/rag/history', { headers: window.getApiHeaders() });
             const data = await response.json();
             const history = data.rag_history || [];
             const container = document.getElementById('rag-history');
@@ -880,7 +880,7 @@ class App {
         this.reportContent = '';
 
         try {
-            const response = await fetch('/api/report/stream', { method: 'POST' });
+            const response = await fetch('/api/report/stream', { method: 'POST', headers: window.getApiHeaders() });
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
@@ -959,7 +959,7 @@ class App {
 
     async loadResumeStatus() {
         try {
-            const response = await fetch('/api/resume/status');
+            const response = await fetch('/api/resume/status', { headers: window.getApiHeaders() });
             const data = await response.json();
             this.resumeUploaded = data.uploaded;
             this.resumeFileName = data.file_name || '';
@@ -988,6 +988,7 @@ class App {
 
             const response = await fetch('/api/resume/upload', {
                 method: 'POST',
+                headers: window.getApiHeaders(),
                 body: formData
             });
             const data = await response.json();
@@ -1011,7 +1012,7 @@ class App {
     async deleteResume() {
         if (!confirm('确定要删除已上传的简历吗？')) return;
         try {
-            const response = await fetch('/api/resume', { method: 'DELETE' });
+            const response = await fetch('/api/resume', { method: 'DELETE', headers: window.getApiHeaders() });
             const data = await response.json();
             if (data.status === 'ok') {
                 this.resumeUploaded = false;
@@ -1090,7 +1091,7 @@ class App {
 
     async loadAdvisorStatus() {
         try {
-            const response = await fetch('/api/advisor/status');
+            const response = await fetch('/api/advisor/status', { headers: window.getApiHeaders() });
             const data = await response.json();
 
             this.settings.advisor_mode = data.mode || this.settings.advisor_mode || 'ai_default';
@@ -1261,6 +1262,7 @@ class App {
 
             const response = await fetch('/api/advisor/search', {
                 method: 'POST',
+                headers: window.getApiHeaders(),
                 body: formData
             });
             const data = await response.json();
@@ -1300,7 +1302,7 @@ class App {
     async deleteAdvisor(showConfirm = true) {
         if (showConfirm && !confirm('确定要清除导师信息并恢复为默认 AI 导师吗？')) return;
         try {
-            const response = await fetch('/api/advisor', { method: 'DELETE' });
+            const response = await fetch('/api/advisor', { method: 'DELETE', headers: window.getApiHeaders() });
             const data = await response.json();
             if (data.status === 'ok') {
                 this.settings.advisor_mode = 'ai_default';

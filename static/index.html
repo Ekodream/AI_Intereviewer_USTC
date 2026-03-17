@@ -748,6 +748,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/brace-fold.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/indent-fold.min.js"></script>
 
+    <script>
+    // 会话 ID 管理：从 localStorage 读取，不存在则生成新 UUID
+    (function () {
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                const r = Math.random() * 16 | 0;
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
+        if (!localStorage.getItem('ai_interview_session_id')) {
+            localStorage.setItem('ai_interview_session_id', generateUUID());
+        }
+        window.SESSION_ID = localStorage.getItem('ai_interview_session_id');
+
+        // 全局 API 请求头工具函数
+        window.getApiHeaders = function (extra) {
+            return Object.assign({ 'X-Session-ID': window.SESSION_ID }, extra || {});
+        };
+    })();
+    </script>
+
     <script src="/static/js/tts-stream.js"></script>
     <script src="/static/js/video.js?v=1"></script>
     <script src="/static/js/vad.js?v=2"></script>

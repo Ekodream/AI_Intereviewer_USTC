@@ -306,7 +306,7 @@ class ChatModule {
         try {
             const response = await fetch('/api/code/execute', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: window.getApiHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ code, language, stdin })
             });
             const result = await response.json();
@@ -407,7 +407,7 @@ class ChatModule {
     /* ==================== History & Messages ==================== */
     async loadHistory() {
         try {
-            const response = await fetch('/api/history');
+            const response = await fetch('/api/history', { headers: window.getApiHeaders() });
             const data = await response.json();
             this.history = data.history || [];
             this.renderHistory();
@@ -439,7 +439,7 @@ class ChatModule {
         try {
             const response = await fetch('/api/chat/stream', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: window.getApiHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({
                     message,
                     history: this.history.slice(0, -1),
@@ -643,7 +643,7 @@ class ChatModule {
 
     async clearHistory() {
         try {
-            await fetch('/api/history', { method: 'DELETE' });
+            await fetch('/api/history', { method: 'DELETE', headers: window.getApiHeaders() });
             this.history = [];
             this.currentPhase = 0;
             this.renderHistory();

@@ -135,6 +135,7 @@ class VideoRecorder {
 
             const response = await fetch('/api/video/upload', {
                 method: 'POST',
+                headers: window.getApiHeaders(),
                 body: formData
             });
 
