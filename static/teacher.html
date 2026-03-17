@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Lab-InterReviewer - 导师端</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="command-center">
+        <!-- 顶部导航栏 -->
+        <header class="command-bar">
+            <div class="command-bar-left">
+                <div class="brand">
+                    <div class="brand-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <div class="brand-text">
+                        <h1>AI Lab-InterReviewer</h1>
+                        <span class="brand-sub">导师管理端</span>
+                    </div>
+                </div>
+            </div>
+            <div class="command-bar-right">
+                <button class="icon-btn" id="refresh-rooms-btn" title="刷新房间列表">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <a href="/static/index.html" class="icon-btn" title="学生端">
+                    <i class="fas fa-user-graduate"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- 主体区域 -->
+        <div class="command-body" style="display: flex; flex-direction: column; padding: 20px;">
+
+            <!-- 创建房间区域 -->
+            <div class="panel-section" style="background: rgba(26, 32, 44, 0.6); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+                <div class="panel-section-title" style="font-size: 18px; margin-bottom: 20px;">
+                    <i class="fas fa-plus-circle"></i> 创建测试房间
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div>
+                        <label class="field-label">导师姓名</label>
+                        <input type="text" id="teacher-name" placeholder="例如：陈恩红" class="cyber-input">
+                    </div>
+                    <div>
+                        <label class="field-label">导师风格</label>
+                        <select id="prompt-choice" class="cyber-select">
+                            <option value="温和型导师">温和型导师</option>
+                            <option value="正常型导师（默认）" selected>正常型导师</option>
+                            <option value="压力型导师">压力型导师</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <label class="cyber-toggle">
+                        <input type="checkbox" id="enable-tts" checked>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">TTS 语音播报</span>
+                    </label>
+                    <label class="cyber-toggle">
+                        <input type="checkbox" id="auto-vad" checked>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">自动录音监听</span>
+                    </label>
+                    <label class="cyber-toggle">
+                        <input type="checkbox" id="enable-video">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">视频录制</span>
+                    </label>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <label class="cyber-toggle">
+                        <input type="checkbox" id="enable-rag" checked>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">知识库检索</span>
+                    </label>
+                    <label class="cyber-toggle">
+                        <input type="checkbox" id="require-resume">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">要求学生提交简历</span>
+                    </label>
+                </div>
+
+                <button class="cyber-btn cyber-btn-accent full-width" id="create-room-btn" style="margin-top: 12px;">
+                    <i class="fas fa-rocket"></i> 创建房间
+                </button>
+            </div>
+
+            <!-- 房间列表区域 -->
+            <div class="panel-section" style="background: rgba(26, 32, 44, 0.6); padding: 24px; border-radius: 12px;">
+                <div class="panel-section-title" style="font-size: 18px; margin-bottom: 20px;">
+                    <i class="fas fa-list"></i> 测试房间列表
+                </div>
+                <div id="rooms-container">
+                    <p class="hint-text">暂无房间，点击上方创建第一个测试房间</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载覆盖层 -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-orb">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring spinner-ring-2"></div>
+        </div>
+        <p id="loading-text">正在处理...</p>
+    </div>
+
+    <script src="/static/js/teacher.js"></script>
+</body>
+</html>

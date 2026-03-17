@@ -49,6 +49,8 @@ OUTPUT_DIR = BASE_DIR / "output"
 REPORTS_DIR = OUTPUT_DIR / "reports"
 VIDEOS_DIR = OUTPUT_DIR / "videos"
 ADVISOR_DOCS_DIR = OUTPUT_DIR / "advisor_docs"
+ROOMS_DIR = OUTPUT_DIR / "rooms"
+ROOMS_INDEX_FILE = ROOMS_DIR / "rooms.json"
 
 # 临时文件目录
 TEMP_DIR = BASE_DIR / "temp_audio"
@@ -74,12 +76,13 @@ def init_directories():
         REPORTS_DIR,
         VIDEOS_DIR,
         ADVISOR_DOCS_DIR,
+        ROOMS_DIR,
         TEMP_DIR
     ]
-    
+
     for directory in directories:
         directory.mkdir(parents=True, exist_ok=True)
-    
+
     print("✅ 目录初始化完成")
 
 # 自动初始化

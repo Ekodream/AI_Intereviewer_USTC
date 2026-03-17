@@ -32,6 +32,7 @@ from config import (
     TEMP_DIR,
     VIDEOS_DIR,
     ADVISOR_DOCS_DIR,
+    ROOMS_DIR,
     init_directories,
 )
 from modules.llm_agent import llm_stream_chat
@@ -45,6 +46,7 @@ from modules.ai_report import ai_report_stream, _format_history_for_report
 from modules.resume_parser import parse_resume, format_resume_for_prompt
 from modules.advisor_search import search_advisor_info, format_advisor_info_for_prompt
 from modules.advisor_docs import index_advisor_document, get_advisor_documents
+from modules import room_manager
 
 # 初始化目录
 init_directories()
@@ -145,10 +147,21 @@ def get_session(session_id: str) -> Dict[str, Any]:
             "advisor_documents": [],
             "videos": [],
             "last_active": datetime.now(),
+            "room_id": None,  # 新增：关联的房间ID
+            "mode": "practice",  # 新增：practice/test
+            "start_time": datetime.now().isoformat(),  # 新增：会话开始时间
         }
     else:
         sessions[session_id]["last_active"] = datetime.now()
     return sessions[session_id]
+
+
+def link_session_to_room(session_id: str, room_id: str) -> None:
+    """将会话关联到测试房间"""
+    session = get_session(session_id)
+    session["room_id"] = room_id
+    session["mode"] = "test"
+    room_manager.increment_student_count(room_id)
 
 
 async def cleanup_sessions():
@@ -1013,14 +1026,15 @@ async def report_stream(session_id: str = Header(default="default", alias="X-Ses
     """流式生成面试报告"""
     async def generate():
         try:
-            history = get_session(session_id)["history"]
+            session = get_session(session_id)
+            history = session["history"]
             if not history:
                 yield f"data: {json.dumps({'type': 'error', 'message': '没有对话记录'}, ensure_ascii=False)}\n\n"
                 return
-            
+
             # 传入简历分析结果
-            resume_analysis = get_session(session_id).get("resume_analysis", None)
-            advisor_links = get_session(session_id).get("advisor_references", [])
+            resume_analysis = session.get("resume_analysis", None)
+            advisor_links = session.get("advisor_references", [])
             final_report = ""
             for partial_report in ai_report_stream(history, resume_analysis=resume_analysis):
                 final_report = partial_report
@@ -1029,13 +1043,19 @@ async def report_stream(session_id: str = Header(default="default", alias="X-Ses
             # 在最终报告末尾追加导师搜索阶段提取到的参考链接
             if advisor_links:
                 final_with_links = append_advisor_reference_links(final_report, advisor_links)
+                final_report = final_with_links
                 yield f"data: {json.dumps({'type': 'text', 'content': final_with_links}, ensure_ascii=False)}\n\n"
-            
+
+            # 如果是测试模式，保存报告到房间目录
+            room_id = session.get("room_id")
+            if room_id:
+                room_manager.save_student_result(room_id, session_id, "report", final_report)
+
             yield f"data: {json.dumps({'type': 'done'}, ensure_ascii=False)}\n\n"
-            
+
         except Exception as e:
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
-    
+
     return StreamingResponse(
         generate(),
         media_type="text/event-stream",
@@ -1276,10 +1296,22 @@ async def execute_code(request: CodeExecuteRequest):
 async def upload_video(file: UploadFile = File(...), session_id: str = Header(default="default", alias="X-Session-ID")):
     """上传面试视频片段"""
     try:
+        session = get_session(session_id)
+        room_id = session.get("room_id")
+
         # 生成唯一文件名
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        video_filename = f"interview_{timestamp}_{uuid.uuid4().hex[:8]}.webm"
-        video_path = VIDEOS_DIR / video_filename
+        video_filename = f"video_{timestamp}_{uuid.uuid4().hex[:8]}.webm"
+
+        # 根据模式选择保存路径
+        if room_id:
+            # 测试模式：保存到房间目录
+            video_dir = ROOMS_DIR / room_id / "students" / session_id
+            video_dir.mkdir(parents=True, exist_ok=True)
+            video_path = video_dir / video_filename
+        else:
+            # 练习模式：保存到默认目录
+            video_path = VIDEOS_DIR / video_filename
 
         # 保存视频文件
         with open(video_path, "wb") as f:
@@ -1287,14 +1319,14 @@ async def upload_video(file: UploadFile = File(...), session_id: str = Header(de
             f.write(content)
 
         # 记录到 session
-        get_session(session_id)["videos"].append({
+        session["videos"].append({
             "filename": video_filename,
             "path": str(video_path),
             "timestamp": datetime.now().isoformat(),
             "size": len(content)
         })
 
-        print(f"📹 [视频上传] 保存成功: {video_filename}, 大小: {len(content) / 1024:.1f}KB")
+        print(f"📹 [视频上传] 保存成功: {video_filename}, 大小: {len(content) / 1024:.1f}KB, 模式: {'测试' if room_id else '练习'}")
 
         return {
             "status": "ok",
@@ -1314,6 +1346,116 @@ async def upload_video(file: UploadFile = File(...), session_id: str = Header(de
 async def list_videos(session_id: str = Header(default="default", alias="X-Session-ID")):
     """获取已录制的视频列表"""
     return {"videos": get_session(session_id).get("videos", [])}
+
+
+# ==================== 导师端 API ====================
+class RoomCreateRequest(BaseModel):
+    teacher_name: str
+    config: Dict[str, Any]
+
+
+@app.post("/api/teacher/room/create")
+async def create_room(request: RoomCreateRequest):
+    """创建测试房间"""
+    try:
+        room_id = room_manager.create_room(request.teacher_name, request.config)
+        return {"status": "ok", "room_id": room_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/teacher/rooms")
+async def list_rooms():
+    """列出所有房间"""
+    rooms = room_manager.list_rooms()
+    return {"rooms": rooms}
+
+
+@app.get("/api/teacher/room/{room_id}")
+async def get_room_detail(room_id: str):
+    """获取房间详情"""
+    room = room_manager.get_room(room_id)
+    if not room:
+        raise HTTPException(status_code=404, detail="房间不存在")
+    return room
+
+
+@app.put("/api/teacher/room/{room_id}/close")
+async def close_room(room_id: str):
+    """关闭房间"""
+    success = room_manager.close_room(room_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="房间不存在")
+    return {"status": "ok"}
+
+
+@app.get("/api/teacher/room/{room_id}/results")
+async def get_room_results(room_id: str):
+    """获取房间所有学生结果"""
+    results = room_manager.get_room_results(room_id)
+    return {"results": results}
+
+
+@app.get("/api/teacher/room/{room_id}/student/{session_id}")
+async def get_student_result(room_id: str, session_id: str):
+    """获取单个学生详情"""
+    result = room_manager.get_student_result(room_id, session_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="学生结果不存在")
+    return result
+
+
+# ==================== 学生端 API ====================
+@app.post("/api/student/join/{room_id}")
+async def join_room(room_id: str, session_id: str = Header(default="default", alias="X-Session-ID")):
+    """学生加入测试房间"""
+    room = room_manager.get_room(room_id)
+    if not room:
+        raise HTTPException(status_code=404, detail="房间不存在")
+
+    if room["status"] != "active":
+        raise HTTPException(status_code=400, detail="房间已关闭")
+
+    # 关联会话到房间
+    link_session_to_room(session_id, room_id)
+
+    # 应用房间配置到会话
+    session = get_session(session_id)
+    session["settings"] = room["config"]
+
+    return {
+        "status": "ok",
+        "room": room,
+        "message": f"已加入房间 {room_id}"
+    }
+
+
+@app.post("/api/student/submit")
+async def submit_test_result(session_id: str = Header(default="default", alias="X-Session-ID")):
+    """学生提交测试结果"""
+    session = get_session(session_id)
+    room_id = session.get("room_id")
+
+    if not room_id:
+        raise HTTPException(status_code=400, detail="当前不在测试模式")
+
+    # 保存metadata
+    metadata = {
+        "session_id": session_id,
+        "room_id": room_id,
+        "start_time": session.get("start_time"),
+        "end_time": datetime.now().isoformat(),
+        "total_turns": len(session.get("history", [])),
+        "resume_uploaded": session.get("resume_uploaded", False),
+        "video_recorded": len(session.get("videos", [])) > 0,
+        "config_snapshot": session.get("settings", {})
+    }
+    room_manager.save_student_result(room_id, session_id, "metadata", metadata)
+
+    # 保存对话记录
+    room_manager.save_student_result(room_id, session_id, "conversation", session.get("history", []))
+
+    return {"status": "ok", "message": "测试结果已提交"}
 
 
 # ==================== 启动入口 ====================

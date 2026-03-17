@@ -100,11 +100,119 @@ class App {
         if (selector) selector.classList.add('hidden');
     }
 
+    async joinTestRoom(roomId) {
+        this.showLoading('正在加入房间...');
+
+        try {
+            const response = await fetch(`/api/student/join/${roomId}`, {
+                method: 'POST',
+                headers: window.getApiHeaders()
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || '加入房间失败');
+            }
+
+            const data = await response.json();
+            const room = data.room;
+
+            // 应用房间配置
+            this.settings = room.config;
+            await this.saveSettings();
+
+            // 标记为测试模式
+            this.interviewMode = 'test';
+            this.testRoomId = roomId;
+            this.testRoomInfo = room;
+            localStorage.setItem('testRoomId', roomId);
+            localStorage.setItem('interviewMode', 'test');
+
+            // 锁定设置
+            this.lockSettings();
+
+            // 隐藏模式选择器
+            this.hideModeSelector();
+
+            // 显示房间信息
+            this.showRoomInfo(room);
+
+            this.hideLoading();
+            alert(`已成功加入房间 ${roomId}\n导师：${room.teacher_name}\n配置已锁定，开始面试吧！`);
+
+        } catch (error) {
+            this.hideLoading();
+            alert('加入房间失败：' + error.message);
+        }
+    }
+
+    lockSettings() {
+        // 禁用所有设置控件
+        const controls = [
+            'prompt-select', 'system-prompt', 'enable-tts', 'auto-vad',
+            'enable-rag', 'rag-domain', 'rag-topk', 'compact-mode',
+            'enable-video', 'advisor-mode'
+        ];
+
+        controls.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.disabled = true;
+        });
+
+        // 在控制面板顶部显示锁定提示
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            const lockBanner = document.createElement('div');
+            lockBanner.style.cssText = 'background: #f56565; color: #fff; padding: 12px; text-align: center; font-weight: 600; border-radius: 8px; margin-bottom: 16px;';
+            lockBanner.innerHTML = '<i class="fas fa-lock"></i> 测试模式 - 配置已锁定';
+            sidebar.insertBefore(lockBanner, sidebar.firstChild);
+        }
+    }
+
+    showRoomInfo(room) {
+        // 在顶部显示房间信息
+        const commandBar = document.querySelector('.command-bar-center');
+        if (commandBar) {
+            const roomInfo = document.createElement('div');
+            roomInfo.style.cssText = 'background: rgba(99, 179, 237, 0.2); padding: 8px 16px; border-radius: 8px; color: #63b3ed; font-size: 14px;';
+            roomInfo.innerHTML = `<i class="fas fa-door-open"></i> 房间 ${room.room_id} | 导师：${room.teacher_name}`;
+            commandBar.appendChild(roomInfo);
+        }
+    }
+
+    async submitTestResult() {
+        if (this.interviewMode !== 'test') return;
+
+        try {
+            const response = await fetch('/api/student/submit', {
+                method: 'POST',
+                headers: window.getApiHeaders()
+            });
+
+            if (response.ok) {
+                console.log('✅ 测试结果已自动提交');
+            }
+        } catch (error) {
+            console.error('提交测试结果失败:', error);
+        }
+    }
+
     bindModeSelectorEvents() {
         document.querySelectorAll('.mode-option').forEach((option) => {
             option.addEventListener('click', () => {
                 const mode = option.getAttribute('data-mode');
                 if (!mode) return;
+
+                // 测试模式需要验证房间号
+                if (mode === 'test') {
+                    const roomId = document.getElementById('room-id-input').value.trim();
+                    if (!roomId || roomId.length !== 6) {
+                        alert('请输入6位房间号');
+                        return;
+                    }
+                    this.joinTestRoom(roomId);
+                    return;
+                }
 
                 option.classList.add('selecting');
                 setTimeout(() => {
@@ -906,6 +1014,10 @@ class App {
                                 }
                             } else if (data.type === 'done') {
                                 if (reportDownload) reportDownload.style.display = 'block';
+                                // 测试模式下自动提交结果
+                                if (this.interviewMode === 'test') {
+                                    await this.submitTestResult();
+                                }
                             } else if (data.type === 'error') {
                                 reportContent.textContent = `生成失败: ${data.message}`;
                             }
