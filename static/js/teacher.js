@@ -16,6 +16,20 @@ class TeacherApp {
     bindEvents() {
         document.getElementById('create-room-btn').addEventListener('click', () => this.createRoom());
         document.getElementById('refresh-rooms-btn').addEventListener('click', () => this.loadRooms());
+
+        // 导师文档上传
+        const docUploadBtn = document.getElementById('advisor-doc-upload-btn');
+        const docInput = document.getElementById('advisor-doc-input');
+
+        docUploadBtn.addEventListener('click', () => docInput.click());
+        docInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                this.uploadAdvisorDocument(e.target.files[0]);
+            }
+        });
+
+        // 加载已有文档列表
+        this.loadAdvisorDocuments();
     }
 
     async createRoom() {
@@ -219,6 +233,110 @@ class TeacherApp {
             URL.revokeObjectURL(url);
         } catch (error) {
             alert('下载失败：' + error.message);
+        }
+    }
+
+    async uploadAdvisorDocument(file) {
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            alert('只支持 PDF 文件格式');
+            return;
+        }
+
+        const progressArea = document.getElementById('advisor-doc-progress');
+        const progressFill = document.getElementById('advisor-doc-progress-fill');
+        const progressText = document.getElementById('advisor-doc-progress-text');
+
+        try {
+            if (progressArea) progressArea.style.display = 'block';
+            if (progressText) progressText.textContent = '正在上传并索引文档...';
+            if (progressFill) progressFill.style.width = '50%';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const school = document.getElementById('doc-advisor-school')?.value || '';
+            const lab = document.getElementById('doc-advisor-lab')?.value || '';
+            const name = document.getElementById('doc-advisor-name')?.value || '';
+
+            formData.append('advisor_school', school);
+            formData.append('advisor_lab', lab);
+            formData.append('advisor_name', name);
+
+            const response = await fetch('/api/advisor/document/upload', {
+                method: 'POST',
+                headers: { 'X-Session-ID': 'teacher-session' },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'ok') {
+                if (progressFill) progressFill.style.width = '100%';
+                if (progressText) progressText.textContent = '上传成功！';
+                setTimeout(() => {
+                    if (progressArea) progressArea.style.display = 'none';
+                    this.loadAdvisorDocuments();
+                }, 1000);
+            } else {
+                throw new Error(data.message || '上传失败');
+            }
+        } catch (error) {
+            console.error('文档上传失败:', error);
+            alert(`文档上传失败: ${error.message}`);
+            if (progressArea) progressArea.style.display = 'none';
+        }
+
+        document.getElementById('advisor-doc-input').value = '';
+    }
+
+    async loadAdvisorDocuments() {
+        try {
+            const response = await fetch('/api/advisor/document/list', {
+                headers: { 'X-Session-ID': 'teacher-session' }
+            });
+            const data = await response.json();
+
+            const docsList = document.getElementById('advisor-docs-list');
+            if (!docsList) return;
+
+            if (!data.documents || data.documents.length === 0) {
+                docsList.innerHTML = '<p class="hint-text" style="margin-top:8px;">暂无文档</p>';
+                return;
+            }
+
+            docsList.innerHTML = data.documents.map(doc => `
+                <div style="display: flex; align-items: center; background: rgba(45, 55, 72, 0.6); padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                    <i class="fas fa-file-pdf" style="color: #fc8181; margin-right: 10px; font-size: 18px;"></i>
+                    <span style="flex: 1; color: #e2e8f0; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${doc.filename}">${doc.filename}</span>
+                    <button class="cyber-btn cyber-btn-danger cyber-btn-sm" onclick="teacherApp.deleteAdvisorDocument('${doc.safe_filename}')" style="margin-left: 8px;">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('加载文档列表失败:', error);
+        }
+    }
+
+    async deleteAdvisorDocument(filename) {
+        if (!confirm('确定要删除这个文档吗？')) return;
+
+        try {
+            const response = await fetch(`/api/advisor/document/${filename}`, {
+                method: 'DELETE',
+                headers: { 'X-Session-ID': 'teacher-session' }
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'ok') {
+                this.loadAdvisorDocuments();
+            } else {
+                throw new Error(data.message || '删除失败');
+            }
+        } catch (error) {
+            console.error('删除文档失败:', error);
+            alert(`删除失败: ${error.message}`);
         }
     }
 
