@@ -76,6 +76,9 @@ class App {
         this.bindResumeEvents();
         this.bindAdvisorEvents();
         this.bindImmersiveEvents();
+        
+        // 设置全局音频解锁机制（移动端关键）
+        this.setupGlobalAudioUnlock();
 
         await this.loadPresets();
         await this.loadSettings();
@@ -88,6 +91,48 @@ class App {
         this.updateImmersiveMsgCount();
 
         console.log('✅ 初始化完成');
+    }
+    
+    /**
+     * 设置全局音频解锁机制
+     * 移动端需要用户交互才能播放音频，在首次点击时解锁
+     */
+    setupGlobalAudioUnlock() {
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        if (!isMobile) {
+            console.log('💻 桌面端无需全局音频解锁');
+            return;
+        }
+        
+        console.log('📱 设置移动端全局音频解锁机制');
+        
+        let audioUnlocked = false;
+        
+        const unlockHandler = async (event) => {
+            if (audioUnlocked) return;
+            
+            console.log('🔐 检测到用户交互，尝试解锁音频...');
+            
+            // 解锁 TTS 音频
+            if (window.ttsPlayer) {
+                const success = await window.ttsPlayer.unlockAudio();
+                if (success) {
+                    audioUnlocked = true;
+                    console.log('✅ 全局音频解锁成功');
+                    
+                    // 解锁成功后移除监听器
+                    document.removeEventListener('touchstart', unlockHandler, { capture: true });
+                    document.removeEventListener('touchend', unlockHandler, { capture: true });
+                    document.removeEventListener('click', unlockHandler, { capture: true });
+                }
+            }
+        };
+        
+        // 添加全局交互监听器
+        document.addEventListener('touchstart', unlockHandler, { capture: true, passive: true });
+        document.addEventListener('touchend', unlockHandler, { capture: true, passive: true });
+        document.addEventListener('click', unlockHandler, { capture: true, passive: true });
     }
 
     /* ==================== Mode Management ==================== */

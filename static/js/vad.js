@@ -105,6 +105,12 @@ class VADDetector {
     }
 
     async toggle() {
+        // 用户点击麦克风按钮是明确的用户交互，此时解锁 TTS 音频最可靠
+        if (window.ttsPlayer) {
+            console.log('🔐 用户点击麦克风，触发 TTS 音频解锁');
+            await window.ttsPlayer.unlockAudio();
+        }
+        
         // 如果 TTS 正在播放，强制打断并开始新的录音
         if (window.ttsPlayer && window.ttsPlayer.ttsStarted) {
             console.log('🎯 用户点击麦克风，强制打断 TTS');
@@ -133,6 +139,12 @@ class VADDetector {
             // 检查 getUserMedia 支持
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 throw new Error('您的浏览器不支持麦克风访问');
+            }
+            
+            // 在用户交互时解锁 TTS 音频（关键：这是在用户主动点击后调用）
+            if (window.ttsPlayer) {
+                console.log('🔐 VAD 启动时触发 TTS 音频解锁');
+                await window.ttsPlayer.unlockAudio();
             }
 
             this.mediaStream = await navigator.mediaDevices.getUserMedia({
