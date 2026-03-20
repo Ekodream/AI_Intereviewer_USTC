@@ -69,6 +69,7 @@ class App {
         this.bindModeSelectorEvents();
 
         this.bindSidebarEvents();
+        this.bindLandscapeQuickbarEvents(); // 横向模式快捷栏
         this.bindSettingsEvents();
         this.bindDrawerEvents();
         this.bindReportEvents();
@@ -619,6 +620,83 @@ class App {
         document.querySelectorAll('.side-drawer').forEach(d => d.classList.remove('show'));
         document.getElementById('toggle-rag-btn')?.classList.remove('active');
         document.getElementById('toggle-report-btn')?.classList.remove('active');
+    }
+
+    /* ==================== Landscape Quickbar ==================== */
+    bindLandscapeQuickbarEvents() {
+        const quickbar = document.getElementById('landscape-quickbar');
+        const quickbarToggle = document.getElementById('quickbar-toggle');
+        const quickbarMenu = document.getElementById('quickbar-menu');
+        
+        if (!quickbar || !quickbarToggle) return;
+        
+        // 快捷栏展开/收起切换
+        quickbarToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            quickbar.classList.toggle('expanded');
+        });
+        
+        // 点击外部关闭快捷栏
+        document.addEventListener('click', (e) => {
+            if (!quickbar.contains(e.target)) {
+                quickbar.classList.remove('expanded');
+            }
+        });
+        
+        // 快捷栏按钮事件
+        const qbSidebarToggle = document.getElementById('qb-sidebar-toggle');
+        const qbNewChat = document.getElementById('qb-new-chat');
+        const qbReport = document.getElementById('qb-report');
+        const qbIde = document.getElementById('qb-ide');
+        
+        // 控制面板按钮
+        if (qbSidebarToggle) {
+            qbSidebarToggle.addEventListener('click', () => {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) {
+                    sidebar.classList.toggle('show');
+                }
+                quickbar.classList.remove('expanded');
+            });
+        }
+        
+        // 新对话按钮
+        if (qbNewChat) {
+            qbNewChat.addEventListener('click', () => {
+                document.getElementById('new-chat-btn')?.click();
+                quickbar.classList.remove('expanded');
+            });
+        }
+        
+        // 报告按钮
+        if (qbReport) {
+            qbReport.addEventListener('click', () => {
+                document.getElementById('toggle-report-btn')?.click();
+                quickbar.classList.remove('expanded');
+            });
+        }
+        
+        // IDE按钮
+        if (qbIde) {
+            qbIde.addEventListener('click', () => {
+                document.getElementById('toggle-ide-btn')?.click();
+                quickbar.classList.remove('expanded');
+            });
+        }
+        
+        // 监听方向变化，在切换到竖屏时收起快捷栏
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                quickbar.classList.remove('expanded');
+            }, 100);
+        });
+        
+        // 触摸优化：防止快速点击时触发双击缩放
+        [quickbarToggle, qbSidebarToggle, qbNewChat, qbReport, qbIde].forEach(btn => {
+            if (btn) {
+                btn.style.touchAction = 'manipulation';
+            }
+        });
     }
 
     /* ==================== Settings ==================== */

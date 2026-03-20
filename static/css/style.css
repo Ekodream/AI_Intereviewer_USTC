@@ -3342,124 +3342,248 @@ body.immersive-mode .command-bar-left .sidebar-toggle-btn {
     margin-bottom: 8px;
 }
 
-/* ==================== 移动端横向模式优化 ==================== */
-@media (orientation: landscape) and (max-height: 500px) {
-    /* 顶部命令栏紧凑 */
+/* ==================== 横向模式快捷栏基础样式 ==================== */
+/* 默认隐藏，仅在横向小屏幕模式下显示 */
+.landscape-quickbar {
+    display: none;
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    z-index: 200;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.quickbar-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border-glow);
+    background: var(--bg-panel);
+    backdrop-filter: blur(12px);
+    color: var(--neon-blue);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-card);
+}
+
+.quickbar-toggle:hover {
+    background: rgba(0, 212, 255, 0.15);
+    box-shadow: var(--shadow-glow-sm);
+}
+
+.quickbar-toggle:active {
+    transform: scale(0.95);
+}
+
+.quickbar-menu {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--bg-panel);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 6px;
+    box-shadow: var(--shadow-panel);
+}
+
+.landscape-quickbar.expanded .quickbar-menu {
+    display: flex;
+}
+
+.landscape-quickbar.expanded .quickbar-toggle i {
+    transform: rotate(90deg);
+}
+
+.quickbar-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.quickbar-btn:hover {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--neon-blue);
+}
+
+.quickbar-btn:active {
+    transform: scale(0.9);
+}
+
+/* ==================== 移动端竖屏模式保障 ==================== */
+/* 确保竖屏模式下所有UI元素正常显示 */
+@media (orientation: portrait) {
+    /* 竖屏模式下快捷栏必须隐藏 */
+    .landscape-quickbar {
+        display: none !important;
+    }
+    
+    /* 竖屏模式下顶部命令栏必须显示 */
     .command-bar {
-        height: 48px;
-        padding: 0 12px;
+        display: flex !important;
     }
     
-    .brand-text h1 {
-        font-size: 14px;
-    }
-    
-    .brand-icon {
-        width: 32px;
-        height: 32px;
-        font-size: 14px;
-    }
-    
-    /* 主体区域调整 */
-    .command-body {
-        height: calc(100vh - 48px);
-    }
-    
-    /* 输入栏紧凑 */
+    /* 竖屏模式下输入栏正常显示 */
     .input-dock {
-        padding: 8px 12px;
+        position: relative;
+        padding: 12px 16px 16px;
     }
     
-    .record-orb {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
+    /* 录音指示器正常显示 */
+    .recording-badge,
+    .vad-status-badge {
+        position: relative;
+        left: auto;
+        bottom: auto;
+        display: inline-flex;
     }
     
-    /* 聊天区域 */
+    .recording-badge {
+        display: none; /* 默认隐藏，通过 JS 控制 */
+    }
+    
+    .recording-badge.show {
+        display: flex;
+    }
+    
+    .recording-badge span,
+    .vad-status-badge .vad-status-text {
+        display: inline; /* 显示文字 */
+    }
+    
+    /* TTS 浮层正常位置 */
+    .tts-float {
+        position: absolute;
+        bottom: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+        top: auto;
+        right: auto;
+    }
+    
+    /* 视频预览正常显示 */
+    .video-preview-container {
+        display: block;
+    }
+    
+    /* 聊天区域正常 padding */
     .chat-viewport {
-        padding: 8px 12px;
-    }
-    
-    .chat-message {
-        padding: 10px 14px;
-        font-size: 13px;
-    }
-    
-    /* 沉浸式模式横向优化 */
-    .immersive-header {
-        padding: 10px 16px;
-    }
-    
-    .immersive-brand {
-        font-size: 14px;
-    }
-    
-    .immersive-mic-btn {
-        width: 100px;
-        height: 100px;
-        font-size: 36px;
-    }
-    
-    .immersive-ring {
-        inset: -8px;
-    }
-    
-    .immersive-ring-2 {
-        inset: -16px;
-    }
-    
-    .immersive-ring-3 {
-        inset: -24px;
-    }
-    
-    .immersive-status {
-        font-size: 14px;
-        margin-top: 12px;
-    }
-    
-    .immersive-footer {
-        padding: 8px 16px;
-    }
-    
-    /* 模态框在横向模式下 */
-    .advisor-modal-content {
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-    
-    .mode-selector-container {
         padding: 16px;
-        max-height: 95vh;
-        overflow-y: auto;
     }
     
-    .mode-selector-header h1 {
-        font-size: 20px;
+    /* 沉浸式模式正常 */
+    .immersive-stage {
+        padding-right: 0;
     }
     
-    .mode-option {
-        padding: 12px 16px;
+    /* 侧边栏正常显示，不需要额外的顶部内边距 */
+    .control-panel.show {
+        padding-top: 0;
+    }
+    
+    .side-drawer {
+        padding-top: 0;
     }
 }
 
-/* 超小屏幕横向模式 */
-@media (orientation: landscape) and (max-height: 400px) {
-    .command-bar {
-        height: 40px;
-    }
-    
-    .brand-sub,
-    .brand-icon {
-        display: none;
-    }
-    
-    .command-body {
-        height: calc(100vh - 40px);
-    }
-    
+/* 移动端竖屏小屏幕优化 */
+@media (orientation: portrait) and (max-width: 600px) {
     .input-dock {
-        padding: 6px 10px;
+        padding: 10px 12px 14px;
+        gap: 10px;
+    }
+    
+    .chat-viewport {
+        padding: 12px;
+    }
+    
+    .recording-badge,
+    .vad-status-badge {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    
+    .tts-float {
+        bottom: 65px;
+        padding: 6px 12px;
+    }
+}
+
+/* ==================== 移动端横向模式优化 ==================== */
+/* 核心策略：隐藏顶部栏，显示右侧快捷栏，最大化聊天区域 */
+@media (orientation: landscape) and (max-height: 500px) {
+    /* ===== 完全隐藏顶部命令栏 ===== */
+    .command-bar {
+        display: none !important;
+    }
+    
+    /* ===== 显示横向模式快捷栏 ===== */
+    .landscape-quickbar {
+        display: flex;
+    }
+    
+    /* ===== 主体区域占据全屏 ===== */
+    .command-body {
+        height: 100vh;
+    }
+    
+    /* ===== 聊天区域优化 ===== */
+    .chat-viewport {
+        padding: 8px 50px 8px 10px; /* 右侧给快捷栏留空间 */
+        gap: 6px;
+    }
+    
+    .chat-message {
+        padding: 8px 12px;
+        font-size: 13px;
+        line-height: 1.4;
+        margin-bottom: 0;
+    }
+    
+    .chat-message .msg-meta {
+        font-size: 10px;
+        margin-bottom: 2px;
+    }
+    
+    /* 空状态紧凑 */
+    .empty-state {
+        gap: 6px;
+    }
+    
+    .empty-state-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    .empty-state h3 {
+        font-size: 14px;
+    }
+    
+    .empty-state p {
+        font-size: 11px;
+    }
+    
+    /* ===== 输入栏极简化设计 ===== */
+    .input-dock {
+        padding: 6px 50px 6px 10px; /* 右侧给快捷栏留空间 */
+        gap: 8px;
+        background: linear-gradient(to top, var(--bg-space) 0%, rgba(6, 10, 20, 0.95) 100%);
     }
     
     .record-orb {
@@ -3468,14 +3592,773 @@ body.immersive-mode .command-bar-left .sidebar-toggle-btn {
         font-size: 14px;
     }
     
-    .immersive-mic-btn {
+    .orb-ring {
+        inset: -3px;
+    }
+    
+    .orb-ring-2 {
+        inset: -6px;
+    }
+    
+    #chat-input {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    
+    .send-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+    
+    /* 录音指示器极简 - 内联化 */
+    .recording-badge,
+    .vad-status-badge {
+        position: absolute;
+        left: 10px;
+        bottom: 48px;
+        padding: 3px 8px;
+        font-size: 10px;
+        background: var(--bg-panel);
+        border-radius: var(--radius-pill);
+        box-shadow: var(--shadow-card);
+    }
+    
+    .recording-badge span:not(.rec-pulse) {
+        display: none; /* 隐藏文字，只保留脉冲点 */
+    }
+    
+    .vad-status-badge .vad-status-text {
+        display: none; /* 隐藏文字 */
+    }
+    
+    /* ===== TTS 浮层极简 - 移至左上角 ===== */
+    .tts-float {
+        position: fixed;
+        top: 8px;
+        left: 8px;
+        bottom: auto;
+        right: auto;
+        padding: 4px 10px;
+        border-radius: var(--radius-pill);
+        background: var(--bg-panel);
+        backdrop-filter: blur(12px);
+        box-shadow: var(--shadow-card);
+    }
+    
+    .tts-float-inner {
+        gap: 6px;
+    }
+    
+    .tts-info {
+        font-size: 11px;
+    }
+    
+    .tts-info span {
+        display: none; /* 隐藏文字，只保留图标 */
+    }
+    
+    .tts-controls-bar {
+        gap: 4px;
+    }
+    
+    .tts-ctrl-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+    }
+    
+    .tts-progress-track {
+        display: none; /* 横向模式隐藏进度条 */
+    }
+    
+    /* ===== 视频预览 - 移至左下角 ===== */
+    .video-preview-container {
+        position: fixed;
+        left: 8px;
+        bottom: 56px;
+        top: auto;
+        right: auto;
         width: 80px;
-        height: 80px;
-        font-size: 28px;
+        height: 60px;
+        z-index: 150;
+    }
+    
+    .video-preview-header {
+        display: none; /* 隐藏标题栏 */
+    }
+    
+    /* ===== 沉浸式模式横向优化 ===== */
+    .immersive-stage {
+        padding-right: 50px; /* 给快捷栏留空间 */
+    }
+    
+    .immersive-header {
+        padding: 6px 12px;
+    }
+    
+    .immersive-brand {
+        font-size: 12px;
+    }
+    
+    .immersive-brand span {
+        display: none; /* 只保留图标 */
+    }
+    
+    .immersive-phase {
+        font-size: 10px;
+        padding: 3px 8px;
     }
     
     .immersive-center {
+        gap: 6px;
+    }
+    
+    .immersive-mic-btn {
+        width: 70px;
+        height: 70px;
+        font-size: 24px;
+    }
+    
+    .immersive-ring {
+        inset: -5px;
+    }
+    
+    .immersive-ring-2 {
+        inset: -10px;
+    }
+    
+    .immersive-ring-3 {
+        inset: -15px;
+    }
+    
+    .immersive-status {
+        font-size: 12px;
+        margin-top: 6px;
+    }
+    
+    .immersive-footer {
+        padding: 4px 10px;
+    }
+    
+    .immersive-stats {
+        font-size: 10px;
+    }
+    
+    .immersive-tts-indicator {
+        padding: 3px 8px;
+        font-size: 10px;
+    }
+    
+    /* ===== 模态框横向适配 ===== */
+    .advisor-modal-content {
+        max-height: 85vh;
+        max-width: 90vw;
+        overflow-y: auto;
+    }
+    
+    .advisor-modal-body {
+        padding: 10px 14px;
+    }
+    
+    /* ===== 模式选择器横向布局 ===== */
+    .mode-selector-container {
+        padding: 10px;
+        max-height: 95vh;
+        overflow-y: auto;
+    }
+    
+    .mode-selector-header {
+        margin-bottom: 8px;
+    }
+    
+    .mode-selector-header h1 {
+        font-size: 16px;
+    }
+    
+    .mode-selector-header p {
+        font-size: 11px;
+    }
+    
+    .mode-selector-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+    
+    .mode-selector-options {
+        flex-direction: row;
+        flex-wrap: wrap;
         gap: 8px;
+        justify-content: center;
+    }
+    
+    .mode-option {
+        flex: 1 1 180px;
+        max-width: 250px;
+        padding: 8px 12px;
+    }
+    
+    .mode-option h3 {
+        font-size: 13px;
+    }
+    
+    .mode-option p {
+        font-size: 10px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .mode-option-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+    
+    .mode-option-features {
+        display: none; /* 隐藏特性列表 */
+    }
+    
+    .mode-option-highlight {
+        display: none; /* 隐藏提示 */
+    }
+    
+    .mode-recommend-badge {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+    
+    /* 侧边面板横向 */
+    .control-panel.show {
+        width: 220px;
+        padding-top: 50px; /* 给快捷栏留空间 */
+    }
+    
+    .side-drawer {
+        width: 260px;
+        padding-top: 50px;
+    }
+}
+
+/* 超小屏幕横向模式 - 极限紧凑布局 */
+@media (orientation: landscape) and (max-height: 400px) {
+    /* 快捷栏更紧凑 */
+    .landscape-quickbar {
+        top: 4px;
+        right: 4px;
+        gap: 4px;
+    }
+    
+    .quickbar-toggle {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+    
+    .quickbar-menu {
+        padding: 4px;
+        gap: 2px;
+    }
+    
+    .quickbar-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+    
+    /* 聊天区域更紧凑 */
+    .chat-viewport {
+        padding: 4px 44px 4px 8px;
+        gap: 4px;
+    }
+    
+    .chat-message {
+        padding: 6px 10px;
+        font-size: 12px;
+        line-height: 1.35;
+        border-radius: 8px;
+    }
+    
+    .chat-message .msg-meta {
+        font-size: 9px;
+        margin-bottom: 1px;
+    }
+    
+    .chat-message .msg-avatar {
+        width: 18px;
+        height: 18px;
+        font-size: 9px;
+    }
+    
+    /* 空状态极简 */
+    .empty-state {
+        gap: 4px;
+    }
+    
+    .empty-state-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+    
+    .empty-state h3 {
+        font-size: 12px;
+    }
+    
+    .empty-state p {
+        font-size: 10px;
+    }
+    
+    /* 输入栏极简 */
+    .input-dock {
+        padding: 4px 44px 4px 8px;
+        gap: 6px;
+    }
+    
+    .record-orb {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+    
+    .orb-ring {
+        inset: -2px;
+    }
+    
+    .orb-ring-2 {
+        inset: -4px;
+    }
+    
+    #chat-input {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    
+    .send-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+    
+    /* 录音指示器极简 */
+    .recording-badge,
+    .vad-status-badge {
+        bottom: 42px;
+        padding: 2px 6px;
+        font-size: 9px;
+    }
+    
+    /* TTS 浮层极简 */
+    .tts-float {
+        top: 4px;
+        left: 4px;
+        padding: 3px 8px;
+    }
+    
+    .tts-ctrl-btn {
+        width: 22px;
+        height: 22px;
+        font-size: 9px;
+    }
+    
+    /* 视频预览极小 */
+    .video-preview-container {
+        width: 60px;
+        height: 45px;
+        bottom: 50px;
+    }
+    
+    /* 沉浸式模式极度紧凑 */
+    .immersive-stage {
+        padding-right: 44px;
+    }
+    
+    .immersive-header {
+        padding: 4px 10px;
+    }
+    
+    .immersive-brand {
+        font-size: 11px;
+    }
+    
+    .immersive-phase {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+    
+    .immersive-center {
+        gap: 4px;
+    }
+    
+    .immersive-mic-btn {
+        width: 56px;
+        height: 56px;
+        font-size: 20px;
+    }
+    
+    .immersive-ring {
+        inset: -4px;
+    }
+    
+    .immersive-ring-2 {
+        inset: -8px;
+    }
+    
+    .immersive-ring-3 {
+        inset: -12px;
+    }
+    
+    .immersive-status {
+        font-size: 11px;
+        margin-top: 4px;
+    }
+    
+    .immersive-footer {
+        padding: 3px 8px;
+    }
+    
+    .immersive-stats {
+        font-size: 9px;
+    }
+    
+    .immersive-tts-indicator {
+        padding: 2px 6px;
+        font-size: 9px;
+    }
+    
+    /* 模式选择器极简 */
+    .mode-selector-container {
+        padding: 8px;
+    }
+    
+    .mode-selector-header {
+        margin-bottom: 6px;
+    }
+    
+    .mode-selector-header h1 {
+        font-size: 14px;
+    }
+    
+    .mode-selector-header p {
+        display: none;
+    }
+    
+    .mode-selector-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+    
+    .mode-option {
+        flex: 1 1 150px;
+        max-width: 200px;
+        padding: 6px 10px;
+    }
+    
+    .mode-option h3 {
+        font-size: 12px;
+    }
+    
+    .mode-option > p {
+        font-size: 9px;
+        -webkit-line-clamp: 1;
+    }
+    
+    .mode-option-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+    
+    /* 侧边面板极简 */
+    .control-panel.show {
+        width: 180px;
+        padding-top: 44px;
+    }
+    
+    .side-drawer {
+        width: 220px;
+        padding-top: 44px;
+    }
+    
+    .panel-section-title {
+        font-size: 10px;
+    }
+    
+    .cyber-select {
+        padding: 5px 8px;
+        font-size: 10px;
+    }
+    
+    .cyber-toggle {
+        font-size: 10px;
+    }
+    
+    .hint-text {
+        font-size: 9px;
+    }
+}
+
+/* 极端小屏幕横向模式 - 最小化布局 (350px以下) */
+@media (orientation: landscape) and (max-height: 350px) {
+    /* 快捷栏最小化 */
+    .landscape-quickbar {
+        top: 2px;
+        right: 2px;
+        gap: 2px;
+    }
+    
+    .quickbar-toggle {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+    
+    .quickbar-menu {
+        padding: 3px;
+        gap: 1px;
+    }
+    
+    .quickbar-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+    
+    /* 聊天区域最小化 */
+    .chat-viewport {
+        padding: 2px 36px 2px 6px;
+        gap: 2px;
+    }
+    
+    .chat-message {
+        padding: 4px 8px;
+        font-size: 11px;
+        line-height: 1.3;
+        border-radius: 6px;
+    }
+    
+    .chat-message .msg-meta {
+        display: none; /* 极端情况隐藏元信息 */
+    }
+    
+    .chat-message .msg-avatar {
+        width: 16px;
+        height: 16px;
+        font-size: 8px;
+    }
+    
+    /* 空状态最简 */
+    .empty-state-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    
+    .empty-state h3 {
+        font-size: 11px;
+    }
+    
+    .empty-state p {
+        display: none; /* 隐藏描述 */
+    }
+    
+    /* 输入栏最小化 */
+    .input-dock {
+        padding: 2px 36px 2px 6px;
+        gap: 4px;
+    }
+    
+    .record-orb {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+    
+    .orb-ring,
+    .orb-ring-2 {
+        display: none; /* 隐藏脉冲环 */
+    }
+    
+    #chat-input {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    
+    .send-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+    
+    /* 完全隐藏录音指示器 */
+    .recording-badge,
+    .vad-status-badge {
+        display: none !important;
+    }
+    
+    /* 录音状态通过录音按钮颜色指示 */
+    .record-orb.recording {
+        background: rgba(239, 68, 68, 0.3);
+        border-color: var(--error);
+        animation: pulse-recording 1s infinite;
+    }
+    
+    /* TTS 浮层最简 */
+    .tts-float {
+        top: 2px;
+        left: 2px;
+        padding: 2px 6px;
+    }
+    
+    .tts-float-inner {
+        gap: 4px;
+    }
+    
+    .tts-info {
+        font-size: 10px;
+    }
+    
+    .tts-ctrl-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 8px;
+    }
+    
+    /* 视频预览隐藏 */
+    .video-preview-container {
+        display: none !important;
+    }
+    
+    /* 沉浸式模式最小化 */
+    .immersive-stage {
+        padding-right: 36px;
+    }
+    
+    .immersive-header {
+        padding: 2px 8px;
+    }
+    
+    .immersive-brand {
+        display: none; /* 隐藏品牌 */
+    }
+    
+    .immersive-phase {
+        font-size: 8px;
+        padding: 2px 4px;
+    }
+    
+    .immersive-center {
+        gap: 2px;
+    }
+    
+    .immersive-mic-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 18px;
+    }
+    
+    .immersive-ring,
+    .immersive-ring-2,
+    .immersive-ring-3 {
+        display: none; /* 隐藏脉冲环 */
+    }
+    
+    .immersive-status {
+        font-size: 10px;
+        margin-top: 2px;
+    }
+    
+    .immersive-footer {
+        padding: 2px 6px;
+    }
+    
+    .immersive-stats {
+        font-size: 8px;
+    }
+    
+    .immersive-tts-indicator {
+        padding: 2px 4px;
+        font-size: 8px;
+    }
+    
+    /* 模式选择器最简 - 隐藏头部 */
+    .mode-selector-header {
+        display: none;
+    }
+    
+    .mode-option {
+        flex: 1 1 120px;
+        max-width: 160px;
+        padding: 4px 8px;
+    }
+    
+    .mode-option h3 {
+        font-size: 11px;
+    }
+    
+    .mode-option > p {
+        display: none; /* 隐藏描述 */
+    }
+    
+    .mode-option-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+        margin-bottom: 2px;
+    }
+    
+    .mode-recommend-badge {
+        font-size: 8px;
+        padding: 2px 4px;
+    }
+    
+    /* 侧边面板最简 */
+    .control-panel.show {
+        width: 160px;
+        padding-top: 36px;
+    }
+    
+    .side-drawer {
+        width: 180px;
+        padding-top: 36px;
+    }
+    
+    .panel-section-title {
+        font-size: 9px;
+    }
+    
+    .panel-section {
+        padding: 6px 8px;
+    }
+    
+    .cyber-select {
+        padding: 4px 6px;
+        font-size: 9px;
+    }
+    
+    .cyber-toggle {
+        font-size: 9px;
+    }
+    
+    .hint-text {
+        display: none; /* 隐藏提示文字 */
+    }
+}
+
+/* 录音状态脉冲动画 */
+@keyframes pulse-recording {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
     }
 }
 
@@ -3564,6 +4447,100 @@ body.immersive-mode .command-bar-left .sidebar-toggle-btn {
     .tts-ctrl-btn {
         min-width: 40px;
         min-height: 40px;
+    }
+}
+
+/* ==================== 横向模式触摸设备特殊处理 ==================== */
+/* 横向模式下允许较小的触摸目标，因为屏幕高度有限 */
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+    /* 快捷栏按钮触摸优化 */
+    .quickbar-toggle,
+    .quickbar-btn {
+        min-width: 36px;
+        min-height: 36px;
+    }
+    
+    .icon-btn {
+        min-width: 36px;
+        min-height: 36px;
+    }
+    
+    .record-orb {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .cyber-btn {
+        min-height: 36px;
+        min-width: 36px;
+    }
+    
+    .cyber-btn-sm {
+        min-height: 32px;
+    }
+    
+    .send-btn {
+        min-width: 36px;
+        min-height: 36px;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 400px) and (pointer: coarse) {
+    /* 超小横向屏幕允许更小触摸目标 */
+    .quickbar-toggle,
+    .quickbar-btn {
+        min-width: 32px;
+        min-height: 32px;
+    }
+    
+    .icon-btn {
+        min-width: 32px;
+        min-height: 32px;
+    }
+    
+    .record-orb {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .cyber-btn {
+        min-height: 32px;
+        min-width: 32px;
+    }
+    
+    .send-btn {
+        min-width: 32px;
+        min-height: 32px;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 350px) and (pointer: coarse) {
+    /* 极端小横向屏幕 - 最小可接受触摸目标 */
+    .quickbar-toggle,
+    .quickbar-btn {
+        min-width: 28px;
+        min-height: 28px;
+    }
+    
+    .icon-btn {
+        min-width: 28px;
+        min-height: 28px;
+    }
+    
+    .record-orb {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .cyber-btn {
+        min-height: 28px;
+        min-width: 28px;
+        padding: 6px 10px;
+    }
+    
+    .send-btn {
+        min-width: 28px;
+        min-height: 28px;
     }
 }
 
