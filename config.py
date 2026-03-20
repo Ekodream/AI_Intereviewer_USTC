@@ -5,24 +5,56 @@
 import os
 from pathlib import Path
 
+
+def _load_dotenv_file(dotenv_path: Path) -> None:
+    """Load simple KEY=VALUE pairs from .env into process environment."""
+    if not dotenv_path.exists():
+        return
+
+    for raw in dotenv_path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+# Load .env from project root so runtime can use values copied from .env.example.
+_load_dotenv_file(Path(__file__).parent / ".env")
+
+
+def _required_env(name: str) -> str:
+    """Read a required environment variable and fail fast if missing."""
+    value = os.getenv(name, "").strip()
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
+
 # ==================== API 密钥配置 ====================
 # StepFun API (用于 TTS 和 ASR) - 8 个 Key 轮询
 STEPFUN_API_KEYS = [
-    os.getenv("STEPFUN_API_KEY_1", "6pZ3jWJGHoMXAcZZpjF3ierYzYDqHEpQLU9gK6auHIWhB1uthsLfqUAnzGLcBiW5x"),
-    os.getenv("STEPFUN_API_KEY_2", "3ZrwQrJ6sG8i2AhNs89yejHYABzGnlT6pMpXaVxr1UDb4iSOQBeRzMwotRFXo3vP7"),  # 添加第 2 个 Key
-    os.getenv("STEPFUN_API_KEY_3", "4eZ2G2tgOlbaI3MfB54mDuCTpbreWWGjaUtMSTP42IsUHkbS8xkcQ1Zf9hqs6DGlt"),  # 添加第 3 个 Key
-    os.getenv("STEPFUN_API_KEY_4", "5FD40mZBI8s0NZx3NfOGpbLVDgWMUCGJwXxoxgxtm6GDpk7agpoRmkYtWTOSLWvCt"),  # 添加第 4 个 Key
-    os.getenv("STEPFUN_API_KEY_5", "50yWwsj0tsPglPPudVPGCHuivWP3kukyUTPaMNesmNzolxAOeBl6yktwS66GbUsQ"),  # 添加第 5 个 Key
-    os.getenv("STEPFUN_API_KEY_6", "7voYNQ6OdRV78nqvmaNEOTUOsvOr5vQDpf1QsDNWhdFHntWD9V2Dc61Qc9gcVD3Vm"),  # 添加第 6 个 Key
-    os.getenv("STEPFUN_API_KEY_7", "63AhrV0IbjdbVbFQVUqqCQJOQSuyJ3n9nUn3LXnNSZdBxKo2JLswf7qIXFEFn3ilp"),  # 添加第 7 个 Key
-    os.getenv("STEPFUN_API_KEY_8", "6cqW4gyXcWs2nVypU2jw3p6coQK9ZgG9Cj9UQtU0SrlIFtuwUvRSwimLMniD57t5G"),  # 添加第 8 个 Key
+    os.getenv("STEPFUN_API_KEY_1", "").strip(),
+    os.getenv("STEPFUN_API_KEY_2", "").strip(),
+    os.getenv("STEPFUN_API_KEY_3", "").strip(),
+    os.getenv("STEPFUN_API_KEY_4", "").strip(),
+    os.getenv("STEPFUN_API_KEY_5", "").strip(),
+    os.getenv("STEPFUN_API_KEY_6", "").strip(),
+    os.getenv("STEPFUN_API_KEY_7", "").strip(),
+    os.getenv("STEPFUN_API_KEY_8", "").strip(),
 ]
+STEPFUN_API_KEYS = [k for k in STEPFUN_API_KEYS if k]
+if not STEPFUN_API_KEYS:
+    raise RuntimeError("Missing StepFun API key. Set STEPFUN_API_KEY_1 at minimum.")
 
 # 兼容旧代码（使用第一个 Key）
 STEPFUN_API_KEY = STEPFUN_API_KEYS[0]
 
 # 阿里云 DashScope API (用于 LLM)
-DASHSCOPE_API_KEY ="sk-af8e9af4aae340bd86178117f7f3f33c" #os.getenv("DASHSCOPE_API_KEY", "sk-af8e9af4aae340bd86178117f7f3f33c")
+DASHSCOPE_API_KEY = _required_env("DASHSCOPE_API_KEY")
+DASHSCOPE_API_KEYS = [DASHSCOPE_API_KEY]
 
 # ==================== 模型配置 ====================
 # LLM 模型

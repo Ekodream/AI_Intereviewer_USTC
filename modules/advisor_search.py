@@ -5,6 +5,7 @@
 """
 
 import asyncio
+import os
 import re
 from urllib.parse import quote_plus
 from openai import OpenAI
@@ -12,8 +13,11 @@ from openai import OpenAI
 try:
     from config import DASHSCOPE_API_KEYS, DASHSCOPE_API_KEY
 except ImportError:
-    DASHSCOPE_API_KEYS = ["sk-af8e9af4aae340bd86178117f7f3f33c"]
-    DASHSCOPE_API_KEY = DASHSCOPE_API_KEYS[0]
+    DASHSCOPE_API_KEY = (os.getenv("DASHSCOPE_API_KEY", "")).strip()
+    DASHSCOPE_API_KEYS = [DASHSCOPE_API_KEY] if DASHSCOPE_API_KEY else []
+
+if not DASHSCOPE_API_KEYS:
+    raise RuntimeError("Missing DashScope API key. Set DASHSCOPE_API_KEY before startup.")
 
 class APIKeyManager:
     """API Key 轮询管理器"""
