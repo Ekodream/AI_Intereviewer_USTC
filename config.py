@@ -70,8 +70,6 @@ def init_directories():
     """创建必要的目录结构"""
     directories = [
         DATA_DIR,
-        RAW_KNOWLEDGE_DIR,
-        VECTOR_STORE_DIR,
         OUTPUT_DIR,
         REPORTS_DIR,
         VIDEOS_DIR,

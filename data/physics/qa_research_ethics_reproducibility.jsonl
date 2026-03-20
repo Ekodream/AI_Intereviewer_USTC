@@ -1,0 +1,12 @@
+{"question":"科研伦理在技术面试中为什么必须考察？","answer":"因为科研影响真实决策与社会系统，伦理失范会造成错误结论扩散与资源浪费。导师需要评估候选人的风险边界意识。","topic":"research-ethics","difficulty":"easy","type":"knowledge"}
+{"question":"什么是可复现性（reproducibility）与可重复性（repeatability）？","answer":"可重复性强调同团队同环境重复得到相近结果；可复现性强调独立团队在不同环境下也能得到一致结论。后者更能证明方法稳健。","topic":"research-ethics","difficulty":"medium","type":"theory"}
+{"question":"如何避免\"挑结果汇报\"带来的偏差？","answer":"预先定义主要指标与实验方案，完整记录并报告失败与负结果，避免仅展示最佳 run。必要时引入盲评和预注册。","topic":"research-ethics","difficulty":"medium","type":"playbook"}
+{"question":"数据集使用中常见的伦理风险有哪些？","answer":"隐私泄露、未授权采集、偏见放大、敏感属性滥用。应进行数据最小化、脱敏、访问控制与偏差审计。","topic":"research-ethics","difficulty":"easy","type":"knowledge"}
+{"question":"当模型在弱势群体上表现显著更差时应怎么做？","answer":"首先进行分群评估确认差异，再定位原因（样本不足、标注偏差、目标函数问题），最后通过重采样、再加权或约束优化改进，并持续监控。","topic":"research-ethics","difficulty":"hard","type":"design"}
+{"question":"为什么论文中必须明确披露实验限制？","answer":"限制披露可避免不当外推，帮助他人正确复用方法，并促进后续研究在已知边界上改进。","topic":"research-ethics","difficulty":"easy","type":"knowledge"}
+{"question":"学术署名争议的合理处理原则是什么？","answer":"基于实际贡献透明协商，遵循团队与机构规范，记录贡献证据并在项目早期明确署名原则，减少后期冲突。","topic":"research-ethics","difficulty":"medium","type":"behavior"}
+{"question":"如何在面试中判断候选人的学术诚信意识？","answer":"追问其如何记录实验、如何处理异常结果、是否保留原始日志、是否区分个人与团队贡献。诚信意识体现在具体流程而非口头承诺。","topic":"research-ethics","difficulty":"hard","type":"rubric"}
+{"question":"复现失败时，候选人的正确做法是什么？","answer":"先核查实现与配置差异，再检查数据与评测协议，再做误差分解；对外沟通时给出证据链与可验证复现实验记录。","topic":"research-ethics","difficulty":"medium","type":"playbook"}
+{"question":"何为\"负责任发布\"？","answer":"在发布模型或代码时同时提供适用范围、潜在风险、误用场景与防护建议，确保使用者理解边界与责任。","topic":"research-ethics","difficulty":"medium","type":"knowledge"}
+{"question":"为什么导师会问\"你如何处理不显著结果\"？","answer":"该问题检验候选人是否具备科学态度。严谨做法是分析统计功效、扩大样本或改进实验设计，而不是忽略或包装结果。","topic":"research-ethics","difficulty":"medium","type":"followup-template"}
+{"question":"如何建立实验室级别的复现规范？","answer":"统一代码结构与配置模板，强制版本记录，关键结论至少双人复现实验，发布前完成复现检查清单。","topic":"research-ethics","difficulty":"hard","type":"playbook"}

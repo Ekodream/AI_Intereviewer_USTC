@@ -1,0 +1,12 @@
+{"question":"为什么导师面试要单独评估候选人的反问质量？","answer":"反问反映候选人的问题意识、信息收集能力与长期规划。高质量反问通常意味着候选人对研究生态有主动理解。","topic":"student-questions-quality","difficulty":"easy","type":"knowledge"}
+{"question":"什么样的反问会被视为高质量？","answer":"围绕研究问题本身、方法路线、组内协作机制、资源约束与阶段目标，且问题具体、可操作、与个人规划相关。","topic":"student-questions-quality","difficulty":"medium","type":"rubric"}
+{"question":"哪些反问信号通常较弱？","answer":"仅关注待遇或泛泛问\"组里做什么\"且缺乏背景准备。弱信号不必直接否定，但说明研究准备可能不足。","topic":"student-questions-quality","difficulty":"easy","type":"knowledge"}
+{"question":"如何引导候选人提出更高质量反问？","answer":"可提示其从\"研究方向-培养方式-资源支持-成果预期\"四个维度提问，帮助其从被动转为主动探索。","topic":"student-questions-quality","difficulty":"easy","type":"followup-template"}
+{"question":"导师如何回答候选人反问才算专业？","answer":"回答应具体、透明、可执行，包含真实约束与预期，不应只给泛化承诺。专业回答可提升双向匹配效率。","topic":"student-questions-quality","difficulty":"medium","type":"knowledge"}
+{"question":"如何评价候选人反问中的批判性思维？","answer":"看其是否能识别方案权衡、提出边界条件、追问因果逻辑，并基于回答进一步深入，而非机械罗列问题。","topic":"student-questions-quality","difficulty":"hard","type":"rubric"}
+{"question":"反问环节如何避免变成\"信息套话\"？","answer":"使用场景化问题，例如\"若我第一学期承担 X 方向任务，组内资源如何配置\"，能迫使双方给出可验证信息。","topic":"student-questions-quality","difficulty":"medium","type":"design"}
+{"question":"如何把反问质量纳入总评而不过度放大？","answer":"可设置 10%-15% 权重，作为动机与沟通维度补充，不替代核心能力评估。","topic":"student-questions-quality","difficulty":"medium","type":"rubric"}
+{"question":"若候选人紧张导致反问很少，应该如何处理？","answer":"可给结构化提示并二次邀请反问，避免把情绪状态误判为动机不足。评估应关注引导后的表现。","topic":"student-questions-quality","difficulty":"medium","type":"behavior"}
+{"question":"如何判断候选人反问是否与其目标一致？","answer":"检查其提问是否与个人研究兴趣、能力短板、未来规划形成闭环。目标一致性越高，匹配质量通常越好。","topic":"student-questions-quality","difficulty":"hard","type":"knowledge"}
+{"question":"反问质量评分卡如何设计？","answer":"四维评分：相关性、深度、可执行性、追问能力。每维 1-5 分并附证据句，减少主观漂移。","topic":"student-questions-quality","difficulty":"medium","type":"rubric"}
+{"question":"候选人反问中提及\"失败容忍\"说明什么？","answer":"通常说明其关注真实科研过程而非表面成功率。若同时追问复盘机制，属于积极信号。","topic":"student-questions-quality","difficulty":"easy","type":"knowledge"}

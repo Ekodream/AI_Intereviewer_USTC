@@ -1,0 +1,8 @@
+{"question": "群、环、域的层级关系如何理解？", "answer": "群只有一个运算；环有加法群与乘法并满足分配律；域是在环基础上非零元对乘法成交换群。", "topic": "modern_algebra_number_theory", "difficulty": "easy", "type": "concept"}
+{"question": "为什么“子群判别法”常用闭性与逆元两条即可？", "answer": "在继承同一运算前提下，非空子集若对乘法与逆元封闭，即可继承单位元并满足群公理，从而构成子群。", "topic": "modern_algebra_number_theory", "difficulty": "medium", "type": "proof_idea"}
+{"question": "同态基本定理在代数结构中表达了什么核心思想？", "answer": "“先压缩再识别”：商结构 G/ker(phi) 与像 im(phi) 同构，核描述被压缩掉的信息。", "topic": "modern_algebra_number_theory", "difficulty": "medium", "type": "theorem_understanding"}
+{"question": "请解释“UFD 不一定是 PID，PID 不一定是 Euclidean”的层级差异。", "answer": "Euclidean => PID => UFD，但逆向一般不成立。不同层级对应可用算法与理想结构强度不同。", "topic": "modern_algebra_number_theory", "difficulty": "hard", "type": "concept"}
+{"question": "为什么中国剩余定理在计算中如此重要？", "answer": "它把一个大模数问题分解为多个互素小模数并行问题，再无损合成，显著提升计算效率并支撑密码算法实现。", "topic": "modern_algebra_number_theory", "difficulty": "easy", "type": "application"}
+{"question": "有限域 F_p 与 F_{p^n} 在结构上有何关键差别？", "answer": "F_p 可看作模 p 同余类；F_{p^n} 是 p 维扩域结构，需要不可约多项式构造，乘法结构更复杂。", "topic": "modern_algebra_number_theory", "difficulty": "medium", "type": "concept"}
+{"question": "“素元”与“不可约元”在一般整环中为什么要区分？", "answer": "在 UFD/PID 中两者等价，但在一般整环不必等价。区分有助于理解唯一分解失效的本质。", "topic": "modern_algebra_number_theory", "difficulty": "hard", "type": "concept"}
+{"question": "请给出一个“同构不等于相等”的口头解释。", "answer": "同构表示结构完全一致但元素标签可不同；相等要求元素与运算逐项完全一致。", "topic": "modern_algebra_number_theory", "difficulty": "easy", "type": "concept"}

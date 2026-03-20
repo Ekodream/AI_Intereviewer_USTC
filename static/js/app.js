@@ -1056,14 +1056,25 @@ class App {
     }
 
     async loadRagDomains() {
+        const fallbackDomains = ['cs ai', 'math', 'physics', 'ee_info'];
+        const aliasMap = { 'cs_ai': 'cs ai', 'cs-ai': 'cs ai' };
+        const domainLabelMap = {
+            'cs ai': '计算机与AI（CSAI）',
+            'cs_ai': '计算机与AI（CSAI）',
+            'math': '数学',
+            'physics': '物理',
+            'ee_info': '电子电气（EE）'
+        };
         try {
             const response = await fetch('/api/rag/domains', { headers: window.getApiHeaders() });
             const data = await response.json();
-            const domains = data.domains || [];
+            const domains = (data.domains || fallbackDomains)
+                .map((d) => aliasMap[d] || d)
+                .filter((d, idx, arr) => d && arr.indexOf(d) === idx);
             const ragDomain = document.getElementById('rag-domain');
             if (ragDomain && domains.length > 0) {
                 ragDomain.innerHTML = domains.map(d =>
-                    `<option value="${d}">${d}</option>`
+                    `<option value="${d}">${domainLabelMap[d] || d}</option>`
                 ).join('');
                 if (domains.includes(this.settings.rag_domain)) {
                     ragDomain.value = this.settings.rag_domain;
@@ -1075,6 +1086,17 @@ class App {
             }
         } catch (error) {
             console.error('加载 RAG 领域失败:', error);
+            const ragDomain = document.getElementById('rag-domain');
+            if (!ragDomain) return;
+
+            ragDomain.innerHTML = fallbackDomains.map(d =>
+                `<option value="${d}">${domainLabelMap[d] || d}</option>`
+            ).join('');
+
+            const normalized = aliasMap[this.settings.rag_domain] || this.settings.rag_domain;
+            this.settings.rag_domain = fallbackDomains.includes(normalized) ? normalized : 'cs ai';
+            ragDomain.value = this.settings.rag_domain;
+            this.saveSettings();
         }
     }
 
@@ -1092,17 +1114,25 @@ class App {
             }
 
             let html = `<p style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);">共 <strong>${history.length}</strong> 条检索记录</p>`;
+            const domainLabelMap = {
+                'cs ai': '计算机与AI（CSAI）',
+                'cs_ai': '计算机与AI（CSAI）',
+                'math': '数学',
+                'physics': '物理',
+                'ee_info': '电子电气（EE）'
+            };
             for (let i = history.length - 1; i >= 0; i--) {
                 const item = history[i];
                 const snippets = item.retrieved.split('\n').filter(s => s.trim());
                 const preview = snippets.slice(0, 3).map((s, idx) =>
                     `<div class="rag-snippet"><b>片段 ${idx + 1}:</b> ${this.escapeHtml(s.substring(0, 200))}${s.length > 200 ? '...' : ''}</div>`
                 ).join('');
+                const domainLabel = domainLabelMap[item.domain] || item.domain;
                 html += `
                     <div class="rag-card">
                         <div class="rag-query">Q: ${this.escapeHtml(item.query)}</div>
                         <div class="rag-content">${preview}</div>
-                        <div class="rag-meta">领域: ${item.domain} · Top-${item.top_k} · 共 ${snippets.length} 条片段</div>
+                        <div class="rag-meta">领域: ${domainLabel} · Top-${item.top_k} · 共 ${snippets.length} 条片段</div>
                     </div>`;
             }
             container.innerHTML = html;

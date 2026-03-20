@@ -1,0 +1,12 @@
+{"question":"针对跨专业候选人，导师应优先评估什么？","answer":"优先看基础补齐速度、迁移学习能力和问题定义能力，而非短期绝对技术深度。跨专业候选人的成长斜率通常比起点更关键。","topic":"candidate-adaptive","difficulty":"easy","type":"knowledge"}
+{"question":"对\"工程强、论文弱\"候选人应如何提问？","answer":"重点追问如何把工程问题抽象为研究问题、如何设计可验证假设、如何做对照与消融，从而评估其科研转化潜力。","topic":"candidate-adaptive","difficulty":"medium","type":"followup-template"}
+{"question":"对\"论文强、工程弱\"候选人应如何提问？","answer":"重点评估实现与落地能力：实验管线复现、代码质量、资源预算、部署约束与错误处理。","topic":"candidate-adaptive","difficulty":"medium","type":"followup-template"}
+{"question":"如何公平评估来自不同学校背景的候选人？","answer":"采用统一能力维度与证据标准，降低对资源差异的惩罚，强调可迁移能力和成长潜力，避免仅以平台标签判断。","topic":"candidate-adaptive","difficulty":"hard","type":"rubric"}
+{"question":"保研候选人与考研候选人的面试重点应有差异吗？","answer":"可以有轻微差异。保研候选人可更重视长期规划与研究连续性；考研候选人可更重视快速适配与独立推进能力。核心标准仍应一致。","topic":"candidate-adaptive","difficulty":"medium","type":"knowledge"}
+{"question":"如何评估候选人是否具备\"快速补短板\"能力？","answer":"追问其近半年具体学习闭环：目标、资料选择、实践验证、反馈修正、量化结果。抽象表述不足以证明能力。","topic":"candidate-adaptive","difficulty":"medium","type":"behavior"}
+{"question":"面对竞赛经历丰富但科研经历不足的候选人，导师应怎么判断？","answer":"看其是否能从竞赛中抽象通用方法、识别数据与指标偏差、解释方案边界。若只停留在技巧层，科研潜力仍待验证。","topic":"candidate-adaptive","difficulty":"hard","type":"design"}
+{"question":"如何防止面试问题对某类背景候选人系统性不利？","answer":"建立分层题库与等价难度映射，统一评分锚点，定期做分组统计检查评分偏移并校准。","topic":"candidate-adaptive","difficulty":"hard","type":"playbook"}
+{"question":"候选人背景较弱但动机很强，是否应给予机会？","answer":"可给予，但需以可执行培养计划为前提：明确补课路径、阶段里程碑和淘汰条件，避免仅凭主观印象决策。","topic":"candidate-adaptive","difficulty":"medium","type":"knowledge"}
+{"question":"如何设置背景自适应面试的\"保底公平线\"？","answer":"无论背景如何，至少要覆盖基础知识、研究动机、问题分析和沟通表达四项核心能力，防止标准漂移。","topic":"candidate-adaptive","difficulty":"medium","type":"rubric"}
+{"question":"当候选人回答出现知识盲区时，导师怎样追问更科学？","answer":"先确认盲区边界，再给最小提示，观察其吸收与推理能力。重点不是现成答案，而是学习与纠错速度。","topic":"candidate-adaptive","difficulty":"easy","type":"followup-template"}
+{"question":"背景自适应是否意味着降低标准？","answer":"不是。背景自适应是调整提问路径与证据获取方式，最终能力标准应保持一致。","topic":"candidate-adaptive","difficulty":"easy","type":"theory"}

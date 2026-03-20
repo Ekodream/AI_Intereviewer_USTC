@@ -1,0 +1,12 @@
+{"question":"一个规范的实验设计至少应包含哪些要素？","answer":"研究问题、假设、变量定义、数据来源、评价指标、对照与消融、统计方法、复现配置。缺任一关键要素都会降低结论可信度。","topic":"research-methodology","difficulty":"easy","type":"knowledge"}
+{"question":"如何区分研究问题与工程任务？","answer":"研究问题关注可推广规律与机制解释；工程任务关注特定场景的性能与稳定性。优秀候选人应能说明两者如何互相支撑。","topic":"research-methodology","difficulty":"medium","type":"theory"}
+{"question":"为什么要先写假设再做实验？","answer":"先验假设可约束实验空间，减少事后解释偏差。没有清晰假设的实验常沦为参数试错，难形成可复用知识。","topic":"research-methodology","difficulty":"medium","type":"knowledge"}
+{"question":"如何选择合适的评价指标？","answer":"指标需与任务目标一致，并兼顾主指标与安全指标。对于类别不平衡问题，除准确率外还应关注精确率、召回率、F1 或 AUC。","topic":"research-methodology","difficulty":"medium","type":"design"}
+{"question":"什么情况下必须做对照实验？","answer":"当你声称某个改动带来提升时，必须与强基线和合理替代方案对照。对照实验用于排除\"提升来自其他因素\"的解释。","topic":"research-methodology","difficulty":"easy","type":"knowledge"}
+{"question":"消融实验设计有哪些常见误区？","answer":"只删不加、一次改多个因素、忽略交互效应、样本量不足。科学做法是单因素控制、关键组合验证与多次重复。","topic":"research-methodology","difficulty":"hard","type":"theory"}
+{"question":"什么是数据泄漏，为什么会让实验结论失效？","answer":"数据泄漏是训练阶段间接使用了测试信息，导致评估被污染。模型看似高分但泛化能力虚高，真实部署会显著退化。","topic":"research-methodology","difficulty":"easy","type":"knowledge"}
+{"question":"如何解释模型在离线指标提升但线上效果下降？","answer":"常见原因包括分布漂移、目标错配、反馈延迟、评测指标不一致。应通过日志回放、分桶分析和在线 A/B 验证定位根因。","topic":"research-methodology","difficulty":"hard","type":"design"}
+{"question":"科研中何时需要统计显著性检验？","answer":"当性能差异接近噪声区间或结论用于关键决策时，应使用显著性检验并报告效应量与置信区间，避免过度解读微小差异。","topic":"research-methodology","difficulty":"medium","type":"knowledge"}
+{"question":"如何构建可复现实验流水线？","answer":"固定随机种子、记录数据版本与依赖版本、保存配置与日志、脚本化训练与评测流程、提供一键复现实验说明。","topic":"research-methodology","difficulty":"medium","type":"playbook"}
+{"question":"如何评价一个研究计划是否可执行？","answer":"检查问题边界是否清晰、里程碑是否量化、资源是否可得、风险是否有备选路径。可执行性强调时间与资源约束下的落地性。","topic":"research-methodology","difficulty":"hard","type":"rubric"}
+{"question":"实验失败后最科学的复盘方式是什么？","answer":"按\"现象-假设-验证-结论-行动\"闭环复盘，区分偶然波动与系统性问题，并形成下一轮实验优先级列表。","topic":"research-methodology","difficulty":"medium","type":"playbook"}

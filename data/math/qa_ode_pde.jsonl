@@ -1,0 +1,8 @@
+{"question": "常微分方程解的存在唯一性定理中，Lipschitz 条件起什么作用？", "answer": "连续性保证存在，Lipschitz 进一步控制解轨线分离速度，从而保证同一初值不会分叉，得到唯一性。", "topic": "ode_pde", "difficulty": "medium", "type": "theorem_understanding"}
+{"question": "为什么线性齐次 ODE 的解空间是线性空间？", "answer": "微分算子线性且右端为零，解对线性组合封闭，因此构成向量空间，维数由方程阶数决定。", "topic": "ode_pde", "difficulty": "easy", "type": "concept"}
+{"question": "稳定性分析里“李雅普诺夫稳定”与“渐近稳定”有何区别？", "answer": "李雅普诺夫稳定只要求轨线始终靠近平衡点；渐近稳定还要求随时间趋近平衡点。", "topic": "ode_pde", "difficulty": "easy", "type": "concept"}
+{"question": "PDE 中分类为椭圆/抛物/双曲的意义是什么？", "answer": "不同类型对应不同物理机制与边初值问题性质：椭圆偏平衡、抛物偏扩散、双曲偏传播。", "topic": "ode_pde", "difficulty": "medium", "type": "concept"}
+{"question": "热方程为什么具有“平滑效应”？", "answer": "扩散项会快速衰减高频分量，使粗糙初值随时间变得更光滑，体现耗散系统特征。", "topic": "ode_pde", "difficulty": "medium", "type": "concept"}
+{"question": "波动方程为什么有限传播速度是关键性质？", "answer": "扰动影响存在传播锥，某点只受有限区域初值影响，这与热方程“瞬时全域影响”形成对照。", "topic": "ode_pde", "difficulty": "hard", "type": "concept"}
+{"question": "分离变量法为什么要求边界条件与算子结构匹配？", "answer": "分离变量将 PDE 拆成特征值问题，若边界条件不匹配，正交基不成立，展开与系数求解将失效。", "topic": "ode_pde", "difficulty": "hard", "type": "method_understanding"}
+{"question": "弱解概念为何在 PDE 理论中不可或缺？", "answer": "许多问题经典解不存在，但可在积分意义下定义弱解；这使存在性理论与数值方法有统一基础。", "topic": "ode_pde", "difficulty": "hard", "type": "concept"}

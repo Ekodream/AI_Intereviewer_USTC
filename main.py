@@ -126,6 +126,47 @@ class CodeExecuteRequest(BaseModel):
 SESSION_TTL_HOURS = 2  # 会话超时时间（小时）
 sessions: Dict[str, Dict[str, Any]] = {}
 
+RAG_DOMAIN_ALIAS = {
+    "cs_ai": "cs ai",
+    "cs-ai": "cs ai",
+}
+
+PREFERRED_RAG_DOMAIN_ORDER = ["cs ai", "math", "physics", "ee_info"]
+ALLOWED_RAG_DOMAINS = set(PREFERRED_RAG_DOMAIN_ORDER)
+
+
+def normalize_rag_domain(domain: str) -> str:
+    """Normalize legacy aliases so frontend/backend/domain folders stay compatible."""
+    normalized = (domain or "").strip()
+    return RAG_DOMAIN_ALIAS.get(normalized, normalized or "cs ai")
+
+
+def get_available_rag_domains() -> List[str]:
+    """Collect domains from both built vector stores and source data folders."""
+    domains = set()
+
+    vdb_root = BASE_DIR / "vector_db"
+    if vdb_root.exists():
+        domains.update(d.name for d in vdb_root.iterdir() if d.is_dir())
+
+    data_root = BASE_DIR / "data"
+    if data_root.exists():
+        for d in data_root.iterdir():
+            if d.is_dir():
+                domains.add(normalize_rag_domain(d.name))
+
+    if not domains:
+        domains.add("cs ai")
+
+    # Keep backend output stable: only expose the four enabled channels.
+    domains = {d for d in domains if d in ALLOWED_RAG_DOMAINS}
+    if not domains:
+        domains.add("cs ai")
+
+    preferred = [d for d in PREFERRED_RAG_DOMAIN_ORDER if d in domains]
+    remaining = sorted(d for d in domains if d not in set(preferred))
+    return preferred + remaining
+
 
 def get_session(session_id: str) -> Dict[str, Any]:
     """获取或创建指定 session_id 的用户会话数据，保证用户间数据完全隔离。"""
@@ -523,10 +564,7 @@ async def get_rag_history(session_id: str = Header(default="default", alias="X-S
 @app.get("/api/rag/domains")
 async def get_rag_domains():
     """获取可用的 RAG 领域"""
-    vdb_root = BASE_DIR / "vector_db"
-    domains = []
-    if vdb_root.exists():
-        domains = sorted([d.name for d in vdb_root.iterdir() if d.is_dir()])
+    domains = get_available_rag_domains()
     return {"domains": domains}
 
 
@@ -857,9 +895,10 @@ async def chat_stream(request: ChatRequest, session_id: str = Header(default="de
             if request.enable_rag:
                 try:
                     persist_dir = str(BASE_DIR / "vector_db")
+                    rag_domain = normalize_rag_domain(request.rag_domain)
                     retrieved = get_retrieved_context(
                         request.message,
-                        domain=request.rag_domain,
+                        domain=rag_domain,
                         k=request.rag_top_k,
                         persist_dir=persist_dir,
                     )
@@ -868,7 +907,7 @@ async def chat_stream(request: ChatRequest, session_id: str = Header(default="de
                         get_session(session_id)["rag_history"].append({
                             "query": request.message,
                             "retrieved": retrieved,
-                            "domain": request.rag_domain,
+                            "domain": rag_domain,
                             "top_k": request.rag_top_k,
                             "timestamp": datetime.now().isoformat(),
                         })

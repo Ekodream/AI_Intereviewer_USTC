@@ -1,0 +1,8 @@
+{"question": "为什么数字通信系统强调 Eb/N0 而不仅是 SNR？", "answer": "Eb/N0 把噪声水平与每比特能量归一化，可跨不同码率、带宽和调制方式比较误码性能，是链路预算核心指标。", "topic": "communication_principles", "difficulty": "easy", "type": "theory"}
+{"question": "匹配滤波器在 AWGN 信道中的最优性体现在哪里？", "answer": "在采样判决时刻，匹配滤波器可最大化输出 SNR，因此在 AWGN 下达到最小误码概率的线性接收结构。", "topic": "communication_principles", "difficulty": "medium", "type": "theory"}
+{"question": "瑞利衰落与莱斯衰落场景差异是什么？", "answer": "瑞利衰落无显著直达径，包络服从瑞利分布；莱斯衰落存在强直达分量，K 因子越大，信道越接近确定性。", "topic": "communication_principles", "difficulty": "medium", "type": "theory"}
+{"question": "为什么 OFDM 需要循环前缀（CP）？", "answer": "CP 把多径导致的线性卷积近似转化为循环卷积，使子载波保持正交并可用单抽头均衡，显著简化接收机。", "topic": "communication_principles", "difficulty": "easy", "type": "theory"}
+{"question": "信道编码的编码增益如何理解？", "answer": "在相同误码率目标下，编码系统所需 Eb/N0 低于未编码系统，差值即编码增益，本质是以冗余换取可靠性。", "topic": "communication_principles", "difficulty": "medium", "type": "theory"}
+{"question": "MIMO 系统中的分集增益与复用增益为何冲突？", "answer": "天线自由度有限，用于发送独立数据流可提高吞吐（复用），用于发送冗余副本可提高可靠性（分集），二者需按场景权衡。", "topic": "communication_principles", "difficulty": "hard", "type": "theory"}
+{"question": "Nyquist 零 ISI 准则在脉冲成形中如何应用？", "answer": "要求整体脉冲在符号间隔整数倍处除 0 点外均为零，常用根升余弦成形与匹配滤波组合满足该条件并控制带宽。", "topic": "communication_principles", "difficulty": "hard", "type": "theory"}
+{"question": "为什么高阶 QAM 频谱效率高但对链路条件更敏感？", "answer": "星座点更密集，单位带宽可承载更多比特，但最小欧氏距离减小，噪声、相位误差与非线性失真更易触发判决错误。", "topic": "communication_principles", "difficulty": "easy", "type": "theory"}

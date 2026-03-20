@@ -1,0 +1,8 @@
+{"question": "一致连续与连续有什么本质区别？请给出一个连续但非一致连续的经典反例。", "answer": "一致连续要求同一个 delta 同时适用于定义域内所有点；连续允许 delta 依赖点。经典反例是 f(x)=1/x 在 (0,1) 上连续但非一致连续。", "topic": "math_analysis", "difficulty": "medium", "type": "concept_and_counterexample"}
+{"question": "函数可导是否必连续？连续是否必可导？请分别说明并举例。", "answer": "可导必连续；连续不必可导。反例可取 f(x)=|x| 在 0 处连续但不可导。", "topic": "math_analysis", "difficulty": "easy", "type": "concept"}
+{"question": "“有界导数蕴含函数一致连续”为什么成立？", "answer": "由拉格朗日中值定理，|f(x)-f(y)|<=M|x-y|，即 Lipschitz 条件成立，从而一致连续。", "topic": "math_analysis", "difficulty": "medium", "type": "proof_idea"}
+{"question": "逐点收敛与一致收敛在“交换极限与积分”上的差异是什么？", "answer": "一致收敛可直接保证极限与定积分交换；仅逐点收敛一般不行。典型反例是峰函数列在区间上逐点趋零但积分不趋零。", "topic": "math_analysis", "difficulty": "hard", "type": "concept_and_counterexample"}
+{"question": "“函数列一致收敛且每项连续”为什么能推出极限函数连续？", "answer": "一致收敛保证可将 n 无关的误差控制传递到极限，再叠加单项函数连续性，从而得到极限函数连续。", "topic": "math_analysis", "difficulty": "medium", "type": "proof_idea"}
+{"question": "紧致集在分析中为何关键？请说出两个直接后果。", "answer": "紧致集上连续函数可取到最大最小值，且必一致连续。这使存在性与误差控制问题更可操作。", "topic": "math_analysis", "difficulty": "easy", "type": "concept"}
+{"question": "绝对收敛与条件收敛有何区别？为什么绝对收敛更“稳定”？", "answer": "绝对收敛是 |a_n| 收敛，条件收敛是 a_n 收敛但 |a_n| 发散。绝对收敛下重排不改和，条件收敛可因重排改变和。", "topic": "math_analysis", "difficulty": "medium", "type": "concept"}
+{"question": "请给出“点态极限可失去可导性”的例子并解释原因。", "answer": "可取 f_n(x)=sqrt(x^2+1/n)，每个 f_n 可导，点态极限为 |x|，在 0 不可导。原因是导数极限控制不足。", "topic": "math_analysis", "difficulty": "hard", "type": "counterexample"}

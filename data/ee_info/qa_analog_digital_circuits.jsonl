@@ -1,0 +1,8 @@
+{"question": "差分放大器相比单端放大的核心优势是什么？", "answer": "差分结构对共模干扰天然抑制，能显著提升 CMRR 与电源扰动抑制能力，是高精度模拟前端的基础单元。", "topic": "analog_digital_circuits", "difficulty": "easy", "type": "theory"}
+{"question": "运放补偿为什么会影响带宽与相位裕度？", "answer": "补偿通过重塑极点零点位置提高稳定性，但通常降低单位增益带宽；补偿不足会振荡，过度补偿会牺牲速度。", "topic": "analog_digital_circuits", "difficulty": "medium", "type": "theory"}
+{"question": "ADC 中 ENOB 与 SNR 的关系是什么？", "answer": "理想近似下 ENOB=(SNR_dB-1.76)/6.02。ENOB 把噪声和失真综合映射为“等效有效位数”，比名义分辨率更反映真实性能。", "topic": "analog_digital_circuits", "difficulty": "medium", "type": "theory"}
+{"question": "采样保持电路中的孔径抖动会带来什么后果？", "answer": "采样时刻随机偏移会转化为幅度误差，且输入频率越高越敏感，直接恶化 SNR 并限制高速 ADC 可实现动态范围。", "topic": "analog_digital_circuits", "difficulty": "hard", "type": "theory"}
+{"question": "PLL 锁定时间由哪些关键环路参数决定？", "answer": "主要由环路带宽与阻尼系数决定。带宽大可加快响应但噪声穿透增加，阻尼不足会过冲振铃，需在速度与稳定性间折中。", "topic": "analog_digital_circuits", "difficulty": "medium", "type": "theory"}
+{"question": "数字电路中建立时间与保持时间违反会导致什么问题？", "answer": "触发器可能进入亚稳态，输出在不可预测时间后才收敛，进而在跨时钟域传播产生功能性故障。", "topic": "analog_digital_circuits", "difficulty": "easy", "type": "theory"}
+{"question": "为什么版图中常用 common-centroid 布局匹配关键器件？", "answer": "它可抵消工艺梯度、应力和温漂的一阶失配，显著降低电流镜与差分对的系统偏差。", "topic": "analog_digital_circuits", "difficulty": "hard", "type": "theory"}
+{"question": "时钟树综合（CTS）优化的核心目标是什么？", "answer": "在满足插入延迟约束下最小化时钟偏斜与抖动，同时控制功耗和缓冲器数量，保证同步时序裕量。", "topic": "analog_digital_circuits", "difficulty": "medium", "type": "theory"}

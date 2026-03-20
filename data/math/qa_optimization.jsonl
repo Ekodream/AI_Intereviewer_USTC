@@ -1,0 +1,8 @@
+{"question": "凸函数与局部极小点在优化中为什么重要？", "answer": "在凸优化中，任一局部极小都是全局极小，这极大降低了求解与验证难度。", "topic": "optimization", "difficulty": "easy", "type": "concept"}
+{"question": "梯度下降收敛速度与条件数有什么关系？", "answer": "条件数越大，等高线越“狭长”，迭代越易之字震荡，收敛更慢；预条件化可显著改善。", "topic": "optimization", "difficulty": "medium", "type": "concept"}
+{"question": "KKT 条件在约束优化中的角色是什么？", "answer": "它把最优性转化为一组可检验条件，在凸问题中常是充要条件，是理解拉格朗日乘子的核心工具。", "topic": "optimization", "difficulty": "hard", "type": "theorem_understanding"}
+{"question": "为什么牛顿法通常比一阶法快，但不总是更稳？", "answer": "牛顿法利用 Hessian 的二阶曲率，局部可二次收敛；但 Hessian 计算昂贵且在非凸区可能给出不良方向。", "topic": "optimization", "difficulty": "medium", "type": "concept"}
+{"question": "L1 正则与 L2 正则在模型性质上的关键差异是什么？", "answer": "L1 倾向产生稀疏解并可做特征选择；L2 倾向平滑收缩参数，常用于抑制过拟合但不强制稀疏。", "topic": "optimization", "difficulty": "easy", "type": "application"}
+{"question": "什么是对偶问题？为什么“对偶间隙”值得关注？", "answer": "对偶给出原问题下界（或上界），对偶间隙衡量当前解距离最优的程度，在凸问题中常可用于停机判据。", "topic": "optimization", "difficulty": "hard", "type": "concept"}
+{"question": "随机梯度法为何适合大规模学习问题？", "answer": "每步只用小批量样本估计梯度，单步成本低，能快速获得可用解，适配海量数据与在线训练。", "topic": "optimization", "difficulty": "easy", "type": "application"}
+{"question": "请说明“学习率过大/过小”各会导致什么现象。", "answer": "过大会震荡甚至发散，过小会收敛极慢并可能陷入平坦区域。实践中常配合衰减或自适应策略。", "topic": "optimization", "difficulty": "easy", "type": "concept"}

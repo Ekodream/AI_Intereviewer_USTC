@@ -1,0 +1,12 @@
+{"question":"请用\"问题-方法-证据-边界\"框架复述一篇论文。","answer":"问题：论文解决的核心痛点；方法：关键机制与创新位置；证据：主实验、消融、对比基线；边界：失败场景、适用条件、计算成本。该框架可快速判断候选人是否真正读懂论文。","topic":"paper-critical","difficulty":"medium","type":"followup-template"}
+{"question":"如何判断一篇论文的创新是否\"增量\"还是\"实质\"？","answer":"看创新是否改变问题建模、学习目标或关键约束，而非仅替换模块。若在多数据集、多设置下稳定提升且解释合理，实质创新概率更高。","topic":"paper-critical","difficulty":"hard","type":"theory"}
+{"question":"论文中的 SOTA 提升为什么不能直接等同于方法优越？","answer":"可能受数据清洗、训练预算、调参强度、对比不公平影响。必须核查同等资源、同等协议和统计波动范围。","topic":"paper-critical","difficulty":"medium","type":"knowledge"}
+{"question":"什么是公平对比协议？","answer":"使用一致的数据划分、预处理、评测指标、训练轮次与超参数搜索预算；对不可控因素需披露并做敏感性分析。","topic":"paper-critical","difficulty":"medium","type":"knowledge"}
+{"question":"如何从实验表格中识别\"可疑改进\"？","answer":"若仅在单一数据集显著、方差未报告、对照组过弱、消融不完整、关键超参数缺失，应提高审慎程度并要求补证据。","topic":"paper-critical","difficulty":"hard","type":"rubric"}
+{"question":"为什么消融实验是论文可信度核心证据之一？","answer":"消融用于验证每个组件的独立贡献，防止把整体性能误归因于某个模块。没有消融很难判断方法机制是否真实有效。","topic":"paper-critical","difficulty":"easy","type":"knowledge"}
+{"question":"如果论文没有报告方差或置信区间，应如何处理？","answer":"将结论视为初步证据，建议重复实验并报告多次运行统计；至少给出均值和标准差，必要时进行显著性检验。","topic":"paper-critical","difficulty":"medium","type":"design"}
+{"question":"如何评估论文方法的可迁移性？","answer":"看其是否依赖特定数据分布、特定特征工程或高成本基础设施；跨任务、跨域、跨规模的一致表现更能证明可迁移性。","topic":"paper-critical","difficulty":"hard","type":"theory"}
+{"question":"候选人复述论文时，导师最常追问哪三点？","answer":"关键假设是否合理、失败案例说明了什么、如果让你改进下一步怎么做。三者分别对应理解深度、批判能力和研究延展能力。","topic":"paper-critical","difficulty":"easy","type":"followup-template"}
+{"question":"如何科学地提出论文改进方向？","answer":"先定位误差来源，再提出可验证假设，最后设计最小可行实验。改进建议应包含预期收益、风险与资源成本。","topic":"paper-critical","difficulty":"medium","type":"design"}
+{"question":"为什么\"负结果\"在论文讨论中也有价值？","answer":"负结果帮助界定方法边界，避免社区重复踩坑，并为后续研究提供反例与约束条件。透明报告负结果是科研严谨性的体现。","topic":"paper-critical","difficulty":"easy","type":"knowledge"}
+{"question":"如何评价候选人的论文批判质量？","answer":"评分可按四项：证据意识、因果区分、边界识别、改进可执行性。每项分别看是否能给出具体、可验证、可复现的论据。","topic":"paper-critical","difficulty":"hard","type":"rubric"}

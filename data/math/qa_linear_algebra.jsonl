@@ -1,0 +1,8 @@
+{"question": "线性无关、张成与基的关系是什么？", "answer": "基是“线性无关 + 张成全空间”的向量组。只线性无关不一定张成，只张成不一定线性无关。", "topic": "linear_algebra", "difficulty": "easy", "type": "concept"}
+{"question": "为什么“矩阵可对角化”不等价于“有 n 个特征值（计重数）”？", "answer": "可对角化要求有 n 个线性无关特征向量。即使代数重数够，也可能几何重数不足，如 Jordan 块矩阵。", "topic": "linear_algebra", "difficulty": "medium", "type": "concept_and_counterexample"}
+{"question": "实对称矩阵为什么一定可以正交对角化？", "answer": "谱定理表明实对称矩阵有实特征值，不同特征值对应特征向量正交，可选标准正交基完成正交对角化。", "topic": "linear_algebra", "difficulty": "medium", "type": "theorem_understanding"}
+{"question": "秩-零度定理的直观意义是什么？", "answer": "对线性映射 T:V->W，定义域维数被分解为“被压扁的信息量（零空间维）+ 保留下来的信息量（像空间维）”。", "topic": "linear_algebra", "difficulty": "easy", "type": "concept"}
+{"question": "为什么最小二乘法会导出正规方程 A^T A x = A^T b？", "answer": "最优残差向量应与列空间正交，即 A^T(Ax-b)=0，整理得到正规方程。", "topic": "linear_algebra", "difficulty": "medium", "type": "proof_idea"}
+{"question": "“相似”与“合同”的区别是什么？", "answer": "相似关注同一线性变换在不同基下表示，保持特征值；合同常用于二次型分类，保持惯性指数，不必保持特征值。", "topic": "linear_algebra", "difficulty": "hard", "type": "concept"}
+{"question": "请给出一个“可逆不等于正交”的简短解释。", "answer": "可逆只要求行列式非零；正交还要求 Q^TQ=I，等价于保持长度和夹角。一般可逆矩阵并不满足这一几何约束。", "topic": "linear_algebra", "difficulty": "easy", "type": "concept"}
+{"question": "SVD 在面试中常被问“比特征分解更通用”是为什么？", "answer": "任意实矩阵都存在 SVD，而特征分解通常要求方阵且可对角化。SVD 同时给出主方向、能量分布与低秩近似。", "topic": "linear_algebra", "difficulty": "medium", "type": "concept"}

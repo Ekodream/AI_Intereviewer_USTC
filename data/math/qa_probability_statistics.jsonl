@@ -1,0 +1,8 @@
+{"question": "几乎处处收敛、依概率收敛、L2 收敛三者关系是什么？", "answer": "常见链路是 L2 收敛 => 依概率收敛；几乎处处收敛也可推出依概率收敛。反向一般不成立。", "topic": "probability_statistics", "difficulty": "hard", "type": "concept"}
+{"question": "独立与不相关有什么区别？", "answer": "独立蕴含不相关；不相关通常不蕴含独立，除非在联合正态等特殊分布族中。", "topic": "probability_statistics", "difficulty": "easy", "type": "concept_and_counterexample"}
+{"question": "大数定律与中心极限定理回答的是哪两类不同问题？", "answer": "大数定律回答样本均值是否收敛到真均值；中心极限定理回答归一化误差的极限分布形状。", "topic": "probability_statistics", "difficulty": "medium", "type": "concept"}
+{"question": "无偏估计与一致估计哪个更重要？", "answer": "两者关注点不同：无偏看有限样本期望是否准确，一致看样本增大后是否逼近真值。实践常权衡偏差与方差。", "topic": "probability_statistics", "difficulty": "medium", "type": "concept"}
+{"question": "充分统计量的直觉是什么？", "answer": "在给定充分统计量后，样本中关于参数的额外信息已被“压缩殆尽”，不会再提升推断。", "topic": "probability_statistics", "difficulty": "hard", "type": "concept"}
+{"question": "为什么最大似然估计在大样本下常被偏好？", "answer": "在常规条件下，MLE 具有一致性和渐近正态性，且常达到渐近有效，便于构造近似置信区间。", "topic": "probability_statistics", "difficulty": "medium", "type": "concept"}
+{"question": "假设检验里 p 值的正确解释是什么？", "answer": "p 值是“在原假设为真时，观察到当前或更极端统计量的概率”，不是“原假设为真的概率”。", "topic": "probability_statistics", "difficulty": "easy", "type": "concept"}
+{"question": "贝叶斯与频率学派在参数观上最核心的差别是什么？", "answer": "频率学派把参数视为固定未知常数；贝叶斯把参数视为随机变量并通过先验-后验更新不确定性。", "topic": "probability_statistics", "difficulty": "medium", "type": "concept"}

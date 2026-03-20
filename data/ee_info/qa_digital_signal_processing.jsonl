@@ -1,0 +1,8 @@
+{"question": "混叠在采样理论中如何产生？", "answer": "当采样频率低于奈奎斯特要求时，频谱周期延拓后发生重叠，高频分量折叠到低频，导致不可逆失真。", "topic": "digital_signal_processing", "difficulty": "easy", "type": "theory"}
+{"question": "为什么窗函数会引入主瓣与旁瓣的折中？", "answer": "时域截断等价于频域卷积。主瓣越窄分辨率越高，但旁瓣通常越高；降低旁瓣泄漏通常会牺牲主瓣宽度。", "topic": "digital_signal_processing", "difficulty": "medium", "type": "theory"}
+{"question": "FIR 与 IIR 滤波器在稳定性和相位特性上有何典型差异？", "answer": "FIR 天然可设计为严格线性相位且总是 BIBO 稳定；IIR 在同阶下幅度选择性更强但通常非线性相位，稳定性依赖极点位置。", "topic": "digital_signal_processing", "difficulty": "medium", "type": "theory"}
+{"question": "量化噪声常用什么模型，在哪些前提下成立？", "answer": "常近似为与信号不相关、均匀分布白噪声，方差约为 Δ^2/12。该模型在量化级数较多且信号充分“激励”量化器时更准确。", "topic": "digital_signal_processing", "difficulty": "hard", "type": "theory"}
+{"question": "多相滤波结构在抽取系统中为何高效？", "answer": "先分解再降采样可避免计算会被丢弃的样点，将运算量按抽取因子近似降低，特别适合大倍率采样率转换。", "topic": "digital_signal_processing", "difficulty": "hard", "type": "theory"}
+{"question": "FFT 为什么能把 DFT 复杂度从 O(N^2) 降到 O(N log N)？", "answer": "FFT 利用旋转因子周期性与对称性，把长序列 DFT 递归拆分为多个短序列子问题并复用中间结果。", "topic": "digital_signal_processing", "difficulty": "easy", "type": "theory"}
+{"question": "什么是频谱泄漏，如何缓解？", "answer": "有限长观测导致频率不落在 DFT 栅格点时，能量扩散到邻近频点。可通过加窗、同步采样或延长观测时长降低泄漏。", "topic": "digital_signal_processing", "difficulty": "medium", "type": "theory"}
+{"question": "线性卷积与循环卷积关系是什么？", "answer": "N 点 DFT 对应 N 点循环卷积。通过零填充到至少 L+M-1 点，可用循环卷积精确实现线性卷积。", "topic": "digital_signal_processing", "difficulty": "medium", "type": "theory"}

@@ -1,0 +1,8 @@
+{"question": "为什么 LTI 系统可以由冲激响应完全刻画？", "answer": "LTI 系统满足线性和时不变，任意输入都可表示为移位冲激的线性组合。系统对每个冲激的响应是 h(t) 的移位，按叠加原理求和后就得到输出，因此系统行为由 h(t) 唯一决定。", "topic": "signals_and_systems", "difficulty": "easy", "type": "theory"}
+{"question": "拉普拉斯变换中的 ROC 为什么重要？", "answer": "同一个代数表达式可能对应不同时间信号，ROC 用于消除歧义并决定系统因果性与稳定性。没有 ROC，传递函数只是一部分信息，无法唯一确定时域行为。", "topic": "signals_and_systems", "difficulty": "medium", "type": "theory"}
+{"question": "群时延在通信链路中有什么工程意义？", "answer": "群时延描述信号包络传播延迟。若群时延随频率显著变化，不同频率分量到达时间不同，会导致码间干扰与波形展宽，降低解调性能。", "topic": "signals_and_systems", "difficulty": "medium", "type": "theory"}
+{"question": "吉布斯现象出现的根本原因是什么？", "answer": "对含不连续点的信号做有限项频域截断，本质上是与 sinc 核卷积。该核在跳变处会产生振铃，且过冲比例不会因截断阶数增加而消失。", "topic": "signals_and_systems", "difficulty": "medium", "type": "theory"}
+{"question": "因果稳定离散系统在 z 平面的极点应满足什么条件？", "answer": "因果系统 ROC 在最外极点之外，稳定系统 ROC 必须包含单位圆。两者同时成立时，全部极点必须严格位于单位圆内。", "topic": "signals_and_systems", "difficulty": "hard", "type": "theory"}
+{"question": "Parseval 定理对频域滤波设计有什么直接价值？", "answer": "它保证时域能量与频域能量等价，工程上可直接通过频谱能量分布评估滤波器保留或抑制了多少有效信息与噪声功率。", "topic": "signals_and_systems", "difficulty": "easy", "type": "theory"}
+{"question": "Bode 图为什么采用对数频率轴和 dB 幅度？", "answer": "对数尺度可把宽频段行为压缩到可读范围；乘法传递函数在 dB 域变为加法，便于多级系统快速叠加与近似分析。", "topic": "signals_and_systems", "difficulty": "easy", "type": "theory"}
+{"question": "为什么复指数是 LTI 系统的特征函数？", "answer": "复指数经过微分、积分或时移后仍保持同形，仅幅相变化。对 LTI 系统输入 e^{st}，输出始终是 H(s)e^{st}，可将微分方程转化为代数问题。", "topic": "signals_and_systems", "difficulty": "hard", "type": "theory"}

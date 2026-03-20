@@ -1,0 +1,8 @@
+{"question": "位移电流概念为何是麦克斯韦方程组的关键补充？", "answer": "它使安培定律在时变电场场景下仍成立，解释了电场变化也能激发磁场，从而支持电磁波自洽传播。", "topic": "electromagnetic_fields_and_waves", "difficulty": "easy", "type": "theory"}
+{"question": "趋肤效应为什么在高频导体中显著？", "answer": "高频时导体内部感应电流产生反向磁场，抑制电流向深层分布，电流主要集中在表面薄层，等效电阻随频率上升。", "topic": "electromagnetic_fields_and_waves", "difficulty": "medium", "type": "theory"}
+{"question": "波导为什么存在截止频率？", "answer": "波导横向边界决定可传播模态，频率低于对应截止值时传播常数变为虚数，场沿传播方向指数衰减而非传输。", "topic": "electromagnetic_fields_and_waves", "difficulty": "medium", "type": "theory"}
+{"question": "天线方向图中的主瓣、旁瓣和前后比分别反映什么？", "answer": "主瓣表示主要辐射方向与能量集中度，旁瓣反映非期望方向泄漏，前后比衡量前向与反向辐射能力差异。", "topic": "electromagnetic_fields_and_waves", "difficulty": "easy", "type": "theory"}
+{"question": "特性阻抗与负载不匹配会导致什么链路现象？", "answer": "会产生反射，形成驻波并造成传输功率回损。工程上通过阻抗匹配网络降低反射系数和驻波比。", "topic": "electromagnetic_fields_and_waves", "difficulty": "medium", "type": "theory"}
+{"question": "电磁波极化在无线系统设计中的实际价值是什么？", "answer": "发射与接收极化一致可提升链路增益，交叉极化会带来失配损耗；双极化还能提升频谱复用能力。", "topic": "electromagnetic_fields_and_waves", "difficulty": "easy", "type": "theory"}
+{"question": "远场条件为何常写为 r >> 2D^2/lambda？", "answer": "该条件保证波前近似平面波，角向场分布与距离解耦，便于把天线辐射特性用方向图稳定描述。", "topic": "electromagnetic_fields_and_waves", "difficulty": "hard", "type": "theory"}
+{"question": "史密斯圆图在阻抗匹配中为什么实用？", "answer": "它把复阻抗与反射系数映射到单位圆内，可直观看到驻波与匹配轨迹，便于快速设计传输线与无源匹配网络。", "topic": "electromagnetic_fields_and_waves", "difficulty": "hard", "type": "theory"}

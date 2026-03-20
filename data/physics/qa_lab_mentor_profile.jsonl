@@ -1,0 +1,12 @@
+{"question":"导师在实验室招生时最看重的三类核心能力是什么？","answer":"常见排序是：研究潜力、执行与自驱、沟通协作。研究潜力体现在问题意识与假设能力；执行力体现在实验推进与复盘；沟通协作体现在汇报质量与团队配合。","topic":"lab-mentor-profile","difficulty":"easy","type":"knowledge"}
+{"question":"如何区分\"会做题\"与\"有科研潜力\"？","answer":"会做题通常体现为已知问题的快速解答；科研潜力更关注未知问题下的定义能力、假设提出、证据收集和迭代修正。导师更看后者在不确定环境中的稳定表现。","topic":"lab-mentor-profile","difficulty":"medium","type":"theory"}
+{"question":"导师为什么会关注候选人的长期投入意愿？","answer":"科研周期长、反馈慢，缺乏长期投入意愿会导致中途放弃或低质量产出。候选人应展示持续学习记录、阶段目标和遇挫后的恢复机制。","topic":"lab-mentor-profile","difficulty":"easy","type":"knowledge"}
+{"question":"在招生面试中，导师如何判断候选人是否适配本课题组？","answer":"通过方向匹配、方法栈匹配、协作方式匹配三层判断。即研究兴趣是否一致、技术路径是否可承接、工作节奏与沟通方式是否兼容。","topic":"lab-mentor-profile","difficulty":"medium","type":"design"}
+{"question":"导师面试中\"红线项\"通常包括哪些？","answer":"学术诚信风险、无法自洽的项目贡献陈述、明显回避证据、团队协作冲突历史且无反思。命中红线常导致直接降档或淘汰。","topic":"lab-mentor-profile","difficulty":"medium","type":"knowledge"}
+{"question":"为什么导师会追问候选人\"具体贡献边界\"？","answer":"因为科研产出往往是团队协作，必须区分个人贡献与团队贡献。清晰边界有助于判断真实能力与独立性。","topic":"lab-mentor-profile","difficulty":"easy","type":"followup-template"}
+{"question":"如何评价候选人讲述研究经历时的可信度？","answer":"看是否包含可核查细节：问题定义、数据规模、指标、失败尝试、关键决策依据、最终局限。仅有高层叙事且缺细节通常可信度较低。","topic":"lab-mentor-profile","difficulty":"hard","type":"rubric"}
+{"question":"导师在同等成绩下为何可能优先录取表达更清晰的候选人？","answer":"科研需要频繁汇报、写作、跨组合作。表达清晰可降低协作成本并提升研究推进效率，因此是重要的放大器能力。","topic":"lab-mentor-profile","difficulty":"easy","type":"knowledge"}
+{"question":"如何用结构化问题判断候选人的自驱力？","answer":"可追问\"目标设定-执行计划-阻碍-调整-结果\"闭环，重点看是否主动发现问题、主动补短板、主动复盘，而非仅被动完成任务。","topic":"lab-mentor-profile","difficulty":"medium","type":"followup-template"}
+{"question":"导师为何重视候选人的\"失败叙事\"？","answer":"失败叙事能反映候选人的因果分析能力、情绪稳定性和迭代能力。能把失败转化为可复用经验通常比一次成功更具预测价值。","topic":"lab-mentor-profile","difficulty":"medium","type":"behavior"}
+{"question":"如果候选人方向兴趣广泛，导师如何判断其是否\"泛而不精\"？","answer":"关注其是否能对一个问题给出深入分析和可执行计划。广度有价值，但若缺少深度样本，通常被判定为准备不足。","topic":"lab-mentor-profile","difficulty":"medium","type":"rubric"}
+{"question":"导师面试中，什么样的候选人会被评为\"可培养\"？","answer":"基础虽不完美但学习曲线陡峭、反馈接收快、执行稳定、对研究问题有真实兴趣且能持续投入。可培养性强调动态增益而非静态分数。","topic":"lab-mentor-profile","difficulty":"easy","type":"knowledge"}

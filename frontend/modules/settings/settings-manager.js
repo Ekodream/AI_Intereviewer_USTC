@@ -116,14 +116,25 @@ export class SettingsManager {
      * 加载 RAG 领域
      */
     async loadRagDomains() {
+        const fallbackDomains = ['cs ai', 'math', 'physics', 'ee_info'];
+        const aliasMap = { 'cs_ai': 'cs ai', 'cs-ai': 'cs ai' };
+        const domainLabelMap = {
+            'cs ai': '计算机与AI（CSAI）',
+            'cs_ai': '计算机与AI（CSAI）',
+            'math': '数学',
+            'physics': '物理',
+            'ee_info': '电子电气（EE）'
+        };
         try {
             const data = await apiClient.get('/api/rag/domains');
-            const domains = data.domains || [];
+            const domains = (data.domains || fallbackDomains)
+                .map((d) => aliasMap[d] || d)
+                .filter((d, idx, arr) => d && arr.indexOf(d) === idx);
             const ragDomain = document.getElementById('rag-domain');
             
             if (ragDomain && domains.length > 0) {
                 ragDomain.innerHTML = domains.map(d =>
-                    `<option value="${d}">${d}</option>`
+                    `<option value="${d}">${domainLabelMap[d] || d}</option>`
                 ).join('');
                 
                 if (domains.includes(this.settings.rag_domain)) {
@@ -136,6 +147,17 @@ export class SettingsManager {
             }
         } catch (error) {
             console.error('加载 RAG 领域失败:', error);
+            const ragDomain = document.getElementById('rag-domain');
+            if (!ragDomain) return;
+
+            ragDomain.innerHTML = fallbackDomains.map(d =>
+                `<option value="${d}">${domainLabelMap[d] || d}</option>`
+            ).join('');
+
+            const normalized = aliasMap[this.settings.rag_domain] || this.settings.rag_domain;
+            this.settings.rag_domain = fallbackDomains.includes(normalized) ? normalized : 'cs ai';
+            ragDomain.value = this.settings.rag_domain;
+            await this.saveSettings();
         }
     }
     

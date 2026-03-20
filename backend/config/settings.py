@@ -157,8 +157,6 @@ class Settings(BaseSettings):
         """创建必要的目录结构"""
         directories = [
             self.data_dir,
-            self.raw_knowledge_dir,
-            self.vector_store_dir,
             self.output_dir,
             self.reports_dir,
             self.videos_dir,

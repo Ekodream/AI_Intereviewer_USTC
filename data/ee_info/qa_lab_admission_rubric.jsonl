@@ -1,0 +1,12 @@
+{"question":"实验室导师面试总评分建议如何分配权重？","answer":"可参考：基础能力20、研究潜力25、实验方法20、论文理解15、沟通协作10、反问质量10。权重可按课题组目标微调。","topic":"lab-admission-rubric","difficulty":"easy","type":"rubric"}
+{"question":"如何定义\"研究潜力\"评分锚点？","answer":"1分:仅复述现成答案；3分:能提出合理假设并解释；5分:能独立拆解问题、提出可验证方案并预判风险。","topic":"lab-admission-rubric","difficulty":"medium","type":"rubric"}
+{"question":"实验方法维度应看哪些证据？","answer":"是否会构建对照与消融、是否关注数据泄漏、是否报告统计信息、是否能解释失败与边界。每项需对应具体案例。","topic":"lab-admission-rubric","difficulty":"medium","type":"rubric"}
+{"question":"沟通协作维度如何避免主观印象分？","answer":"采用行为证据评分：表达结构、信息完整度、回应针对性、反馈吸收速度。每项记录原句证据，减少印象偏差。","topic":"lab-admission-rubric","difficulty":"hard","type":"playbook"}
+{"question":"如何设置\"录取建议等级\"？","answer":"建议四档：A强烈建议录取、B建议录取、C候补观察、D不建议录取。每档必须附核心证据与风险说明。","topic":"lab-admission-rubric","difficulty":"easy","type":"rubric"}
+{"question":"为什么总分高也可能不录取？","answer":"若命中红线（诚信风险、严重协作风险、贡献不实）可触发否决条款。科研团队稳定性需要底线约束。","topic":"lab-admission-rubric","difficulty":"medium","type":"knowledge"}
+{"question":"如何在评分中体现\"可培养性\"？","answer":"可设单独附加项或在研究潜力中加入成长斜率指标，如反馈后修正质量、短时学习吸收能力。","topic":"lab-admission-rubric","difficulty":"medium","type":"design"}
+{"question":"面试官之间评分不一致时如何校准？","answer":"使用统一 rubric 和样例锚点，开展事后评分对齐会，分析分歧来源并更新评分说明。","topic":"lab-admission-rubric","difficulty":"hard","type":"playbook"}
+{"question":"如何把\"背景差异\"纳入公平评分？","answer":"保持统一能力标准，允许证据形式差异。评分关注能力表现，不以学校或资源标签直接加减分。","topic":"lab-admission-rubric","difficulty":"medium","type":"rubric"}
+{"question":"单轮表现波动大时，最终决策应如何处理？","answer":"结合多轮证据与关键维度稳定性，必要时安排补充面试。避免由一次异常表现主导决策。","topic":"lab-admission-rubric","difficulty":"medium","type":"knowledge"}
+{"question":"如何把评分结果转化为培养建议？","answer":"对低分维度给出4-8周可执行计划，包括学习资料、实践任务、验收指标。报告应支持\"评估-改进\"闭环。","topic":"lab-admission-rubric","difficulty":"easy","type":"playbook"}
+{"question":"导师面试报告最关键的输出结构是什么？","answer":"建议结构：结论等级、能力分项、证据摘录、主要风险、培养建议、是否建议复试。结构化输出便于团队决策。","topic":"lab-admission-rubric","difficulty":"easy","type":"knowledge"}
