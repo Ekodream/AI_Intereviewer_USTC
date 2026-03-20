@@ -1,40 +1,70 @@
-# 环境配置
+# ==================== 敏感配置 ====================
 .env
-.env.*
+.env.local
+.env.*.local
+# 保留示例文件
+!.env.example
+
+# ==================== IDE 配置 ====================
 .idea/
 .vscode/
+*.swp
+*.swo
 
-# Python 相关
+# ==================== Python 相关 ====================
 __pycache__/
 **/__pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.pdb
 .Python
 env/
 venv/
 .venv/
+*.egg-info/
+dist/
+build/
+.eggs/
 pip-log.txt
 pip-delete-this-directory.txt
 
-# 音频临时文件与输出
-temp_audio/
-output/
-output/advisor_docs/
+# ==================== 测试相关 ====================
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+*.pytest.ini
 
-# 日志
+# ==================== 音频临时文件 ====================
+temp_audio/
+*.mp3
+*.wav
+*.webm
+
+# ==================== 输出目录 ====================
+output/
+
+# ==================== 日志 ====================
 logs/
 *.log
 
-# 项目大文件 / 生成数据
+# ==================== 项目数据 / 生成文件 ====================
 data/raw_knowledge/
+vector_db/
 *.sqlite3
 
-# 系统文件
+# ==================== 系统文件 ====================
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# AI编程相关
+# ==================== AI 工具相关 ====================
 .qoder/
 .claudesignore
+
+# ==================== 前端模块构建产物 ====================
+frontend/dist/
+frontend/.cache/
+node_modules/
