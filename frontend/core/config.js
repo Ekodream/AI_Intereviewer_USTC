@@ -31,6 +31,40 @@ export const config = {
         videoBitRate: 1000000,
     },
     
+    // 移动端配置
+    mobile: {
+        // 触摸目标最小尺寸（遵循 WCAG 2.1 标准）
+        touchTargetSize: 44,
+        // 触摸目标间距
+        touchTargetSpacing: 8,
+        // 是否需要用户手势解锁音频
+        audioUnlockRequired: true,
+        // 移动端 VAD 阈值（移动端噪音环境不同）
+        vadThresholds: {
+            silenceThreshold: 0.04,
+            speechThreshold: 0.04,
+        },
+        // 响应式断点
+        breakpoints: {
+            mobile: 600,
+            tablet: 900,
+            desktop: 1200,
+        },
+        // 横向模式特殊配置
+        landscape: {
+            maxHeight: 500,  // 触发横向模式优化的最大高度
+        },
+        // TTS 配置
+        tts: {
+            // 移动端音频播放重试次数
+            maxRetries: 3,
+            // 重试延迟（毫秒）
+            retryDelay: 100,
+            // 使用 AudioContext 播放（更可靠）
+            useAudioContext: true,
+        },
+    },
+    
     // 面试阶段名称
     interviewStages: {
         0: '开始',

@@ -3341,3 +3341,308 @@ body.immersive-mode .command-bar-left .sidebar-toggle-btn {
     color: var(--text-secondary);
     margin-bottom: 8px;
 }
+
+/* ==================== 移动端横向模式优化 ==================== */
+@media (orientation: landscape) and (max-height: 500px) {
+    /* 顶部命令栏紧凑 */
+    .command-bar {
+        height: 48px;
+        padding: 0 12px;
+    }
+    
+    .brand-text h1 {
+        font-size: 14px;
+    }
+    
+    .brand-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+    
+    /* 主体区域调整 */
+    .command-body {
+        height: calc(100vh - 48px);
+    }
+    
+    /* 输入栏紧凑 */
+    .input-dock {
+        padding: 8px 12px;
+    }
+    
+    .record-orb {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    /* 聊天区域 */
+    .chat-viewport {
+        padding: 8px 12px;
+    }
+    
+    .chat-message {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+    
+    /* 沉浸式模式横向优化 */
+    .immersive-header {
+        padding: 10px 16px;
+    }
+    
+    .immersive-brand {
+        font-size: 14px;
+    }
+    
+    .immersive-mic-btn {
+        width: 100px;
+        height: 100px;
+        font-size: 36px;
+    }
+    
+    .immersive-ring {
+        inset: -8px;
+    }
+    
+    .immersive-ring-2 {
+        inset: -16px;
+    }
+    
+    .immersive-ring-3 {
+        inset: -24px;
+    }
+    
+    .immersive-status {
+        font-size: 14px;
+        margin-top: 12px;
+    }
+    
+    .immersive-footer {
+        padding: 8px 16px;
+    }
+    
+    /* 模态框在横向模式下 */
+    .advisor-modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .mode-selector-container {
+        padding: 16px;
+        max-height: 95vh;
+        overflow-y: auto;
+    }
+    
+    .mode-selector-header h1 {
+        font-size: 20px;
+    }
+    
+    .mode-option {
+        padding: 12px 16px;
+    }
+}
+
+/* 超小屏幕横向模式 */
+@media (orientation: landscape) and (max-height: 400px) {
+    .command-bar {
+        height: 40px;
+    }
+    
+    .brand-sub,
+    .brand-icon {
+        display: none;
+    }
+    
+    .command-body {
+        height: calc(100vh - 40px);
+    }
+    
+    .input-dock {
+        padding: 6px 10px;
+    }
+    
+    .record-orb {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+    
+    .immersive-mic-btn {
+        width: 80px;
+        height: 80px;
+        font-size: 28px;
+    }
+    
+    .immersive-center {
+        gap: 8px;
+    }
+}
+
+/* ==================== 触摸设备优化 ==================== */
+@media (pointer: coarse) {
+    /* 确保触摸目标最小 44x44px */
+    .cyber-btn {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 12px 18px;
+    }
+    
+    .cyber-btn-sm {
+        min-height: 40px;
+        padding: 10px 14px;
+    }
+    
+    .icon-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    .record-orb {
+        width: 56px;
+        height: 56px;
+    }
+    
+    /* 开关触摸区域 */
+    .cyber-toggle {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .toggle-slider {
+        min-width: 48px;
+        min-height: 26px;
+    }
+    
+    /* 下拉选择框 */
+    .cyber-select {
+        min-height: 44px;
+        padding: 10px 12px;
+    }
+    
+    /* 输入框 */
+    .cyber-input,
+    #chat-input {
+        min-height: 44px;
+        padding: 12px 14px;
+        font-size: 16px; /* 防止 iOS 自动缩放 */
+    }
+    
+    /* 文本域 */
+    textarea {
+        font-size: 16px;
+    }
+    
+    /* 标签页触摸区域 */
+    .io-tab {
+        min-height: 40px;
+        padding: 10px 16px;
+    }
+    
+    /* 触摸友好的间距 */
+    .panel-section {
+        padding: 14px 0;
+    }
+    
+    /* 进度条触摸区域 */
+    .cyber-range {
+        height: 8px;
+    }
+    
+    .cyber-range::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+    }
+    
+    /* 模式选择卡片 */
+    .mode-option {
+        padding: 20px;
+    }
+    
+    /* TTS 控制按钮 */
+    .tts-ctrl-btn {
+        min-width: 40px;
+        min-height: 40px;
+    }
+}
+
+/* ==================== 安全区域支持（刘海屏） ==================== */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .input-dock {
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+    
+    .immersive-footer {
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+    
+    .control-panel {
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+    
+    .side-drawer {
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+    
+    .mode-selector-container {
+        padding-bottom: max(24px, env(safe-area-inset-bottom));
+    }
+    
+    /* 顶部安全区域 */
+    .command-bar {
+        padding-top: max(0px, env(safe-area-inset-top));
+    }
+    
+    .immersive-header {
+        padding-top: max(12px, env(safe-area-inset-top));
+    }
+}
+
+/* ==================== 移动端特定优化 ==================== */
+@media (max-width: 600px) and (pointer: coarse) {
+    /* 禁止双击缩放的元素 */
+    .record-orb,
+    .immersive-mic-btn,
+    .cyber-btn,
+    .icon-btn {
+        touch-action: manipulation;
+    }
+    
+    /* 优化滚动性能 */
+    .chat-viewport,
+    .drawer-body,
+    .control-panel {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+    }
+    
+    /* 消息气泡优化 */
+    .chat-message {
+        max-width: 90%;
+    }
+    
+    /* 输入框聚焦时不缩放页面 */
+    #chat-input:focus {
+        font-size: 16px;
+    }
+}
+
+/* ==================== iOS 特定修复 ==================== */
+@supports (-webkit-touch-callout: none) {
+    /* 修复 iOS Safari 底部工具栏遮挡 */
+    .input-dock {
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+    
+    /* 修复 iOS 橡皮筋滚动 */
+    .chat-viewport {
+        overscroll-behavior: contain;
+    }
+    
+    /* 修复 iOS 输入框样式 */
+    input, textarea, select {
+        -webkit-appearance: none;
+        border-radius: var(--radius-sm);
+    }
+}

@@ -2,7 +2,18 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <!-- 移动端 PWA 支持 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AI Lab-InterReviewer">
+    <meta name="mobile-web-app-capable" content="yes">
+    <!-- 主题色 -->
+    <meta name="theme-color" content="#060a14">
+    <meta name="msapplication-TileColor" content="#060a14">
+    <!-- 其他移动端优化 -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="email=no">
     <title>AI Lab-InterReviewer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -856,6 +867,8 @@
     })();
     </script>
 
+    <!-- 移动端工具函数（必须在其他模块之前加载） -->
+    <script src="/static/js/mobile-utils.js"></script>
     <script src="/static/js/tts-stream.js"></script>
     <script src="/static/js/video.js?v=1"></script>
     <script src="/static/js/vad.js?v=2"></script>

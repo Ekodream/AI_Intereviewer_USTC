@@ -7,6 +7,11 @@
  * 2. 静音 > 特定秒 → 结束录音 → TTS 开始 → 关闭麦克风 + 关闭超时计时器
  * 3. TTS 播放结束 → 开始录音 + 启动超时计时器
  * 4. 如此循环
+ * 
+ * 移动端兼容性说明：
+ * - AudioContext 在移动端可能处于 suspended 状态，需要在用户交互后 resume
+ * - MediaRecorder 在部分移动浏览器上支持有限
+ * - 移动端噪音环境不同，阈值需要调整
  */
 
 class VADDetector {
@@ -18,10 +23,15 @@ class VADDetector {
         this.isSpeaking = false;
         this.autoMonitoring = true;
         this.animationFrameId = null;
+        
+        // 移动端检测
+        this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        this.isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+        // 配置（移动端使用略高的阈值）
         this.config = {
-            silenceThreshold: 0.03,
-            speechThreshold: 0.03,
+            silenceThreshold: this.isMobile ? 0.04 : 0.03,
+            speechThreshold: this.isMobile ? 0.04 : 0.03,
             silenceDuration: 1500,
             minSpeechDuration: 400,
             sampleRate: 16000,
@@ -47,6 +57,45 @@ class VADDetector {
         this.onError = null;
 
         this.bindEvents();
+        
+        // 移动端打印功能支持报告
+        if (this.isMobile) {
+            console.log('📱 VAD 移动端模式已启用');
+            this.logMediaSupport();
+        }
+    }
+    
+    /**
+     * 打印媒体支持信息
+     */
+    logMediaSupport() {
+        const support = {
+            getUserMedia: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+            AudioContext: !!(window.AudioContext || window.webkitAudioContext),
+            MediaRecorder: !!window.MediaRecorder,
+            supportedMimeTypes: this.getSupportedMimeTypes()
+        };
+        console.log('📱 VAD 媒体支持:', support);
+    }
+    
+    /**
+     * 获取支持的 MIME 类型列表
+     */
+    getSupportedMimeTypes() {
+        const types = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/ogg;codecs=opus',
+            'audio/mp4',
+            'audio/wav'
+        ];
+        return types.filter(type => {
+            try {
+                return window.MediaRecorder && MediaRecorder.isTypeSupported(type);
+            } catch (e) {
+                return false;
+            }
+        });
     }
 
     bindEvents() {
@@ -80,6 +129,11 @@ class VADDetector {
 
         try {
             this.updateStatus('requesting', '请求麦克风权限...');
+            
+            // 检查 getUserMedia 支持
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('您的浏览器不支持麦克风访问');
+            }
 
             this.mediaStream = await navigator.mediaDevices.getUserMedia({
                 audio: {
@@ -94,6 +148,17 @@ class VADDetector {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
                 sampleRate: this.config.sampleRate
             });
+            
+            // 移动端关键：恢复挂起的 AudioContext
+            if (this.audioContext.state === 'suspended') {
+                console.log('📱 AudioContext 处于挂起状态，尝试恢复...');
+                try {
+                    await this.audioContext.resume();
+                    console.log('✅ AudioContext 已恢复');
+                } catch (resumeError) {
+                    console.warn('⚠️ AudioContext 恢复失败:', resumeError);
+                }
+            }
 
             const source = this.audioContext.createMediaStreamSource(this.mediaStream);
             this.analyser = this.audioContext.createAnalyser();
@@ -130,7 +195,20 @@ class VADDetector {
 
         } catch (error) {
             console.error('VAD 启动失败:', error);
-            this.updateStatus('error', '麦克风权限被拒绝');
+            
+            // 移动端友好的错误提示
+            let errorMsg = '麦克风权限被拒绝';
+            if (error.name === 'NotAllowedError') {
+                errorMsg = this.isMobile ? '请在系统设置中允许浏览器访问麦克风' : '麦克风权限被拒绝';
+            } else if (error.name === 'NotFoundError') {
+                errorMsg = '未检测到麦克风设备';
+            } else if (error.name === 'NotSupportedError') {
+                errorMsg = '您的浏览器不支持音频录制';
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+            
+            this.updateStatus('error', errorMsg);
             if (this.onError) this.onError(error);
         }
     }
