@@ -2327,13 +2327,15 @@ body::before {
     inset: 0;
     z-index: 9999;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     background: var(--bg-deep);
     background-image: 
         radial-gradient(ellipse at 30% 40%, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
         radial-gradient(ellipse at 70% 60%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
     animation: modeSelectorFadeIn 0.5s ease-out;
+    overflow-y: auto;
+    padding: 40px 0;
 }
 
 .mode-selector-overlay.hidden {
@@ -2350,6 +2352,7 @@ body::before {
     width: 90%;
     padding: 40px;
     text-align: center;
+    margin: auto 0;
 }
 
 .mode-selector-header {
