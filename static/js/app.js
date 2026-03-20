@@ -335,6 +335,15 @@ class App {
             });
         }
 
+        // 沉浸模式导师文档按钮
+        const immersiveAdvisorDocsBtn = document.getElementById('immersive-advisor-docs-btn');
+        if (immersiveAdvisorDocsBtn) {
+            immersiveAdvisorDocsBtn.addEventListener('click', () => {
+                this.showAdvisorDocsModal();
+                this.closeImmersiveSettings();
+            });
+        }
+
         const immersiveIdeBtn = document.getElementById('immersive-ide-btn');
         if (immersiveIdeBtn) {
             immersiveIdeBtn.addEventListener('click', () => {
@@ -872,6 +881,8 @@ class App {
         const ragDomain = document.getElementById('rag-domain');
         const ragTopk = document.getElementById('rag-topk');
         const topkValue = document.getElementById('topk-value');
+        const autoVad = document.getElementById('auto-vad');
+        const immersiveAutoVad = document.getElementById('immersive-auto-vad');
 
         if (promptSelect) promptSelect.value = this.settings.prompt_choice;
         if (systemPrompt) systemPrompt.value = this.settings.system_prompt || this.presets[this.settings.prompt_choice] || '';
@@ -1216,6 +1227,177 @@ class App {
                     this.uploadAdvisorDocument(e.target.files[0]);
                 }
             });
+        }
+
+        // 导师文档模态框事件
+        this.bindAdvisorDocsModalEvents();
+    }
+
+    /**
+     * 绑定导师文档模态框事件
+     */
+    bindAdvisorDocsModalEvents() {
+        const modal = document.getElementById('advisor-docs-modal');
+        const closeBtn = document.getElementById('advisor-docs-modal-close');
+        const uploadBtn = document.getElementById('modal-advisor-doc-upload-btn');
+        const docInput = document.getElementById('modal-advisor-doc-input');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.hideAdvisorDocsModal());
+        }
+
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target.id === 'advisor-docs-modal') {
+                    this.hideAdvisorDocsModal();
+                }
+            });
+        }
+
+        if (uploadBtn && docInput) {
+            uploadBtn.addEventListener('click', () => docInput.click());
+            docInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    this.uploadAdvisorDocumentModal(e.target.files[0]);
+                }
+            });
+        }
+    }
+
+    /**
+     * 显示导师文档模态框
+     */
+    showAdvisorDocsModal() {
+        const modal = document.getElementById('advisor-docs-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            this.loadAdvisorDocsModal();
+        }
+    }
+
+    /**
+     * 隐藏导师文档模态框
+     */
+    hideAdvisorDocsModal() {
+        const modal = document.getElementById('advisor-docs-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    /**
+     * 加载导师文档列表到模态框
+     */
+    async loadAdvisorDocsModal() {
+        try {
+            const response = await fetch('/api/advisor/document/list', {
+                headers: window.getApiHeaders()
+            });
+            const data = await response.json();
+
+            const docsList = document.getElementById('modal-advisor-docs-list-content');
+            if (!docsList) return;
+
+            if (!data.documents || data.documents.length === 0) {
+                docsList.innerHTML = '<p class="hint-text">暂无文档</p>';
+                return;
+            }
+
+            docsList.innerHTML = data.documents.map(doc => `
+                <div class="resume-file-row" style="margin-top:8px;">
+                    <i class="fas fa-file-pdf file-icon"></i>
+                    <span class="file-name-text" title="${doc.filename}">${doc.filename}</span>
+                    <button class="cyber-btn cyber-btn-danger cyber-btn-sm" onclick="app.deleteAdvisorDocumentModal('${doc.safe_filename}')" style="margin-left:auto;">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('加载文档列表失败:', error);
+        }
+    }
+
+    /**
+     * 从模态框上传导师文档
+     */
+    async uploadAdvisorDocumentModal(file) {
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            alert('只支持 PDF 文件格式');
+            return;
+        }
+
+        const progressArea = document.getElementById('modal-advisor-doc-progress');
+        const progressFill = document.getElementById('modal-advisor-doc-progress-fill');
+        const progressText = document.getElementById('modal-advisor-doc-progress-text');
+
+        try {
+            if (progressArea) progressArea.style.display = 'block';
+            if (progressText) progressText.textContent = '正在上传并索引文档...';
+            if (progressFill) progressFill.style.width = '50%';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // 添加导师信息
+            const school = this.advisorSchool || document.getElementById('advisor-school-input')?.value || '';
+            const lab = this.advisorLab || document.getElementById('advisor-lab-input')?.value || '';
+            const name = this.advisorName || document.getElementById('advisor-name-input')?.value || '';
+
+            formData.append('advisor_school', school);
+            formData.append('advisor_lab', lab);
+            formData.append('advisor_name', name);
+
+            const response = await fetch('/api/advisor/document/upload', {
+                method: 'POST',
+                headers: window.getApiHeaders(),
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'ok') {
+                if (progressFill) progressFill.style.width = '100%';
+                if (progressText) progressText.textContent = '上传成功！';
+                setTimeout(() => {
+                    if (progressArea) progressArea.style.display = 'none';
+                    this.loadAdvisorDocsModal();
+                    // 同步更新侧边栏文档列表
+                    this.loadAdvisorDocuments();
+                }, 1000);
+            } else {
+                throw new Error(data.message || '上传失败');
+            }
+        } catch (error) {
+            console.error('文档上传失败:', error);
+            alert(`文档上传失败: ${error.message}`);
+            if (progressArea) progressArea.style.display = 'none';
+        }
+
+        document.getElementById('modal-advisor-doc-input').value = '';
+    }
+
+    /**
+     * 从模态框删除导师文档
+     */
+    async deleteAdvisorDocumentModal(filename) {
+        if (!confirm('确定要删除这个文档吗？')) return;
+
+        try {
+            const response = await fetch(`/api/advisor/document/${filename}`, {
+                method: 'DELETE',
+                headers: window.getApiHeaders()
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'ok') {
+                this.loadAdvisorDocsModal();
+                // 同步更新侧边栏文档列表
+                this.loadAdvisorDocuments();
+            } else {
+                throw new Error(data.message || '删除失败');
+            }
+        } catch (error) {
+            console.error('删除文档失败:', error);
+            alert(`删除失败: ${error.message}`);
         }
     }
 
